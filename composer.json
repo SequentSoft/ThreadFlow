@@ -1,0 +1,68 @@
+{
+    "name": "sequent-soft/thread-flow",
+    "description": "A messenger bot framework",
+    "keywords": [
+        "php",
+        "messenger",
+        "bot",
+        "laravel",
+        "framework"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Serhii Litvinchuk",
+            "email": "sergiy.litvinchuk@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "guzzlehttp/guzzle": "^7.3"
+    },
+    "require-dev": {
+        "pestphp/pest": "^2.8.0",
+        "friendsofphp/php-cs-fixer": "^3.0.0",
+        "phpstan/phpstan": "^0.12.85",
+        "symfony/var-dumper": "^5.2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "SequentSoft\\ThreadFlow\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SequentSoft\\ThreadFlow\\LaravelServiceProvider"
+            ],
+            "aliases": {
+                "ThreadFlow": "SequentSoft\\ThreadFlow\\LaravelFacade"
+            }
+        }
+    },
+    "scripts": {
+        "lint": "php-cs-fixer fix -v",
+        "test:lint": "php-cs-fixer fix -v --dry-run",
+        "test:types": "phpstan analyse --ansi --memory-limit=-1",
+        "test:unit": "pest --colors=always",
+        "test": [
+            "@test:lint",
+            "@test:types",
+            "@test:unit"
+        ]
+    }
+}
