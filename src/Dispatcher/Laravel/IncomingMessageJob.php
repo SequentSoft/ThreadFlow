@@ -8,6 +8,8 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
@@ -25,10 +27,14 @@ class IncomingMessageJob implements ShouldQueue
     ) {
     }
 
-    public function handle(BotInterface $bot)
-    {
-        $incomingChannel = $bot->getIncomingChannel($this->channelName);
-        $outgoingChannel = $bot->getOutgoingChannel($this->channelName);
+    public function handle(
+        BotInterface $bot,
+        IncomingChannelRegistryInterface $incomingChannelRegistry,
+        OutgoingChannelRegistryInterface $outgoingChannelRegistry,
+    ): void {
+        $channelConfig = $bot->getChannelConfig($this->channelName);
+        $incomingChannel = $incomingChannelRegistry->get($this->channelName, $channelConfig);
+        $outgoingChannel = $outgoingChannelRegistry->get($this->channelName, $channelConfig);
 
         $bot->process(
             $this->channelName,

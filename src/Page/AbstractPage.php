@@ -6,6 +6,7 @@ use Closure;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\OutgoingRegularMessage;
@@ -87,7 +88,7 @@ abstract class AbstractPage
     {
     }
 
-    protected function reply(OutgoingRegularMessage $message): OutgoingRegularMessage
+    protected function reply(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
     {
         if (! $message->getContext()) {
             $message->setContext($this->message->getContext());

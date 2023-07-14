@@ -5,7 +5,7 @@ use SequentSoft\ThreadFlow\Chat\Participant;
 use SequentSoft\ThreadFlow\Chat\Room;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 
-test('TextRegularIncomingMessage properly stores and retrieves properties', function () {
+it('TextRegularIncomingMessage properly stores and retrieves properties', function () {
     $participant = new Participant('participant_id');
     $room = new Room('room_id');
     $context = new MessageContext($participant, $room);

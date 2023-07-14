@@ -8,7 +8,7 @@ use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 
 class MessageContext implements MessageContextInterface
 {
-    public function __construct(
+    final public function __construct(
         protected ParticipantInterface $participant,
         protected RoomInterface $room
     ) {
@@ -22,5 +22,15 @@ class MessageContext implements MessageContextInterface
     public function getRoom(): RoomInterface
     {
         return $this->room;
+    }
+
+    public static function createFromIds(
+        string $participantId,
+        string $roomId
+    ): static {
+        return new static(
+            new Participant($participantId),
+            new Room($roomId)
+        );
     }
 }

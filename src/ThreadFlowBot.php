@@ -4,13 +4,7 @@ namespace SequentSoft\ThreadFlow;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
-use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
-use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
@@ -31,9 +25,6 @@ class ThreadFlowBot implements BotInterface
         protected Config $config,
         protected SessionStoreFactoryInterface $sessionStoreFactory,
         protected RouterInterface $router,
-        protected IncomingChannelRegistryInterface $incomingChannelRegistry,
-        protected OutgoingChannelRegistryInterface $outgoingChannelRegistry,
-        protected DispatcherFactoryInterface $dispatcherFactory,
     ) {
     }
 
@@ -48,27 +39,7 @@ class ThreadFlowBot implements BotInterface
         }
     }
 
-    public function getIncomingChannel(string $channelName): IncomingChannelInterface
-    {
-        return $this->incomingChannelRegistry
-            ->get($channelName, $this->getChannelConfig($channelName));
-    }
-
-    public function getOutgoingChannel(string $channelName): OutgoingChannelInterface
-    {
-        return $this->outgoingChannelRegistry
-            ->get($channelName, $this->getChannelConfig($channelName));
-    }
-
-    public function getDispatcher(string $channelName): DispatcherInterface
-    {
-        return $this->dispatcherFactory->make(
-            $this->getChannelConfig($channelName)
-                ->get('dispatcher', 'sync')
-        );
-    }
-
-    public function getSessionStore(string $channelName): SessionStoreInterface
+    protected function getSessionStore(string $channelName): SessionStoreInterface
     {
         return $this->sessionStoreFactory->make(
             $this->getChannelConfig($channelName)
@@ -78,7 +49,7 @@ class ThreadFlowBot implements BotInterface
         );
     }
 
-    public function getDefaultEntryPoint(string $channelName): string
+    protected function getDefaultEntryPoint(string $channelName): string
     {
         return $this->getChannelConfig($channelName)
             ->get('entry');
@@ -116,6 +87,22 @@ class ThreadFlowBot implements BotInterface
             : $message;
     }
 
+    protected function makePendingPage(
+        string $pageClass,
+        array $attributes,
+        SessionInterface $session,
+        IncomingMessageInterface $message,
+        RouterInterface $router
+    ): PendingDispatchPage {
+        return new PendingDispatchPage(
+            $pageClass,
+            $attributes,
+            $session,
+            $message,
+            $router
+        );
+    }
+
     public function process(
         string $channelName,
         IncomingMessageInterface $message,
@@ -133,17 +120,19 @@ class ThreadFlowBot implements BotInterface
 
         $message = $this->processIncomingMessage($message, $channelName, $session, $incomingCallback);
 
-        $pendingDispatchPage = new PendingDispatchPage(
+        $this->makePendingPage(
             $pageClassWithAttributes->getPageClass(),
             $pageClassWithAttributes->getAttributes(),
             $session,
             $message,
             $this->router
-        );
-
-        $pendingDispatchPage->dispatch(
-            fn (OutgoingMessageInterface $message) =>
-                $this->processOutgoingMessage($message, $channelName, $session, $outgoingCallback)
+        )->dispatch(
+            fn(OutgoingMessageInterface $message) => $this->processOutgoingMessage(
+                $message,
+                $channelName,
+                $session,
+                $outgoingCallback
+            )
         );
 
         $session->close();
@@ -151,11 +140,11 @@ class ThreadFlowBot implements BotInterface
 
     public function incoming(string $channelName, Closure $callback): void
     {
-        $this->incomingCallbacks[$channelName] = $callback;
+        $this->incomingCallbacks[$channelName][] = $callback;
     }
 
     public function outgoing(string $channelName, Closure $callback): void
     {
-        $this->outgoingCallbacks[$channelName] = $callback;
+        $this->outgoingCallbacks[$channelName][] = $callback;
     }
 }

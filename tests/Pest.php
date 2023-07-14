@@ -1,5 +1,13 @@
 <?php
 
+use SequentSoft\ThreadFlow\Config;
+use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
+use SequentSoft\ThreadFlow\Session\ArraySessionStore;
+use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
+use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
+use SequentSoft\ThreadFlow\ThreadFlowBot;
+use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -39,7 +47,28 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function setupBot(array $channelsConfig = []): ThreadFlowBot
 {
-    // ..
+    $config = new Config(['channels' => $channelsConfig]);
+
+    $sessionStoreFactory = new SessionStoreFactory();
+
+    $sessionStorage = new ArraySessionStoreStorage();
+
+    $sessionStoreFactory->register(
+        'array',
+        fn(string $channelName, ConfigInterface $config) => new ArraySessionStore(
+            $channelName,
+            $config,
+            $sessionStorage
+        )
+    );
+
+    $router = new StatefulPageRouter();
+
+    return new ThreadFlowBot(
+        config: $config,
+        sessionStoreFactory: $sessionStoreFactory,
+        router: $router,
+    );
 }
