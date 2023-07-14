@@ -14,7 +14,8 @@ class Participant implements ParticipantInterface
 
     public function __construct(
         protected string $id,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

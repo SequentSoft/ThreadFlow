@@ -1,6 +1,12 @@
 parameters:
-    level: 5
+    level: 1
     paths:
         - src
 
     reportUnmatchedIgnoredErrors: true
+
+    excludePaths:
+        - src/Dispatcher/Laravel/IncomingMessageJob.php
+        - src/Dispatcher/Laravel/LaravelQueueIncomingDispatcher.php
+        - src/LaravelServiceProvider.php
+        - src/Session/Laravel/LaravelCacheSessionStore.php

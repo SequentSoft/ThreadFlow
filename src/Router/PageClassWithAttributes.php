@@ -8,7 +8,8 @@ class PageClassWithAttributes
         protected string $pageClass,
         protected array $attributes,
         protected bool $isFallback,
-    ) {}
+    ) {
+    }
 
     public function getPageClass(): string
     {

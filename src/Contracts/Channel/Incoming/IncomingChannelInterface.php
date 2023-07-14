@@ -6,7 +6,7 @@ use Closure;
 use SequentSoft\ThreadFlow\Contracts\Config\SimpleConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
-use SequentSoft\ThreadFlowTelegram\Contracts\DataFetchers\DataFetcherInterface;
+use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 
 interface IncomingChannelInterface
 {

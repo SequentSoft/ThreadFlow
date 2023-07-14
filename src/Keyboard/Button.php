@@ -6,7 +6,7 @@ use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
 
 class Button implements ButtonInterface
 {
-    public function __construct(
+    final public function __construct(
         protected string $text,
         protected ?string $callbackData = null,
     ) {

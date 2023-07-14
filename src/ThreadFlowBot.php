@@ -34,7 +34,8 @@ class ThreadFlowBot implements BotInterface
         protected IncomingChannelRegistryInterface $incomingChannelRegistry,
         protected OutgoingChannelRegistryInterface $outgoingChannelRegistry,
         protected DispatcherFactoryInterface $dispatcherFactory,
-    ) {}
+    ) {
+    }
 
     public function getChannelConfig(string $channelName): ConfigInterface
     {
@@ -71,7 +72,7 @@ class ThreadFlowBot implements BotInterface
     {
         return $this->sessionStoreFactory->make(
             $this->getChannelConfig($channelName)
-                ->get('session','array'),
+                ->get('session', 'array'),
             $channelName,
             $this->getChannelConfig($channelName)
         );

@@ -6,7 +6,7 @@ use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 
 class Keyboard implements KeyboardInterface
 {
-    public function __construct(
+    final public function __construct(
         protected array $rows,
     ) {
     }

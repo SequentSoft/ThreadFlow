@@ -2,7 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Chat;
 
-interface MessageContextInterface {
+interface MessageContextInterface
+{
     public function getParticipant(): ParticipantInterface;
     public function getRoom(): RoomInterface;
 }

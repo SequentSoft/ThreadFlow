@@ -45,7 +45,7 @@ it('can set an array keyboard on a TextOutgoingRegularMessage', function () {
     $this->assertEquals('text2', $rows[1]->getButtons()[0]->getText());
 });
 
-it('can set and get message context', function() {
+it('can set and get message context', function () {
     $participant = new Participant('test_participant_id');
     $room = new Room('test_room_id');
     $context = new MessageContext($participant, $room);
@@ -57,7 +57,7 @@ it('can set and get message context', function() {
     $this->assertSame($context, $message->getContext());
 });
 
-it('can set and get message id', function() {
+it('can set and get message id', function () {
     $messageId = 'test_message_id';
 
     $text = 'Hello, World!';

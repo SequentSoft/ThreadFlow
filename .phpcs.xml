@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="MyProject">
+ <description>The coding standard for my project.</description>
+
+ <!-- Paths to scan -->
+ <file>src/</file>
+ <file>tests/</file>
+
+ <!-- Exclude folders -->
+ <exclude-pattern>vendor/</exclude-pattern>
+ <exclude-pattern>tests/Pest.php</exclude-pattern>
+
+ <!-- Include PSR-12 standard -->
+ <rule ref="PSR12"/>
+</ruleset>

@@ -38,7 +38,8 @@ it('loads an existing session if one is found', function () {
 
     // Simulate storing a session in storage
     $sessionData = ['key' => 'value'];
-    $sessionStore->save($context, new Session($sessionData, function() {}));
+    $sessionStore->save($context, new Session($sessionData, function () {
+    }));
 
     $session = $sessionStore->load($context);
 
@@ -58,7 +59,8 @@ it('saves a session', function () {
     $context = new MessageContext($participant, $room);
 
     $sessionData = ['key' => 'value'];
-    $session = new Session($sessionData, function() {});
+    $session = new Session($sessionData, function () {
+    });
 
     $sessionStore->save($context, $session);
 

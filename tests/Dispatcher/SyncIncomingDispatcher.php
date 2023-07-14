@@ -8,8 +8,10 @@ it('dispatches the message to the bot', function () {
     $channelName = 'channelName';
     $incomingMessageMock = $this->createMock(IncomingMessageInterface::class);
 
-    $incomingCallback = function ($message, $session) {};
-    $outgoingCallback = function ($message, $session) {};
+    $incomingCallback = function ($message, $session) {
+    };
+    $outgoingCallback = function ($message, $session) {
+    };
 
     $botMock = $this->createMock(BotInterface::class);
     $botMock->expects($this->once())

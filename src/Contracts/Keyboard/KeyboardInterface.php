@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Keyboard;
 
-interface KeyboardInterface {
+interface KeyboardInterface
+{
     public function getRows(): array;
 }

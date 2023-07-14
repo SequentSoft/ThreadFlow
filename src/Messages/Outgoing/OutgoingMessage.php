@@ -7,5 +7,4 @@ use SequentSoft\ThreadFlow\Messages\Message;
 
 abstract class OutgoingMessage extends Message implements OutgoingMessageInterface
 {
-
 }

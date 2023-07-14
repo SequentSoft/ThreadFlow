@@ -1,5 +1,7 @@
 <?php
 
+use SequentSoft\ThreadFlow\Session\ArraySessionStore;
+use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
 use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
@@ -7,7 +9,7 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 it('registers a session store', function () {
     $factory = new SessionStoreFactory();
     $factory->register('array', function ($channelName, ConfigInterface $config) {
-        return new \SequentSoft\ThreadFlow\Session\ArraySessionStore($channelName, $config, new \SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage());
+        return new ArraySessionStore($channelName, $config, new ArraySessionStoreStorage());
     });
 
     // Access the protected property using ReflectionClass
@@ -22,7 +24,7 @@ it('registers a session store', function () {
 it('makes a session store', function () {
     $factory = new SessionStoreFactory();
     $factory->register('array', function ($channelName, ConfigInterface $config) {
-        return new \SequentSoft\ThreadFlow\Session\ArraySessionStore($channelName, $config, new \SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage());
+        return new ArraySessionStore($channelName, $config, new ArraySessionStoreStorage());
     });
 
     // Mock the dependencies

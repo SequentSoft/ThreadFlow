@@ -6,7 +6,7 @@ use SequentSoft\ThreadFlow\Contracts\Keyboard\RowInterface;
 
 class Row implements RowInterface
 {
-    public function __construct(
+    final public function __construct(
         protected array $buttons,
     ) {
     }

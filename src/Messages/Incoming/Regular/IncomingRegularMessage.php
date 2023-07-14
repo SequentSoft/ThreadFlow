@@ -9,7 +9,7 @@ use SequentSoft\ThreadFlow\Messages\Incoming\IncomingMessage;
 
 class IncomingRegularMessage extends IncomingMessage implements IncomingRegularMessageInterface
 {
-     protected string $text = '[message]';
+    protected string $text = '[message]';
 
     public function getText(): string
     {

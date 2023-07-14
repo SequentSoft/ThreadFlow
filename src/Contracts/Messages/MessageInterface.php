@@ -4,7 +4,8 @@ namespace SequentSoft\ThreadFlow\Contracts\Messages;
 
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 
-interface MessageInterface {
+interface MessageInterface
+{
     public function getId(): ?string;
     public function getContext(): ?MessageContextInterface;
 }

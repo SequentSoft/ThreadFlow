@@ -4,7 +4,7 @@ use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
 use SequentSoft\ThreadFlow\Dispatcher\Laravel\LaravelQueueIncomingDispatcher;
 
 it('registers and makes a dispatcher', function () {
-    $factory = new DispatcherFactory;
+    $factory = new DispatcherFactory();
 
     $factory->register('sync', function () {
         return new LaravelQueueIncomingDispatcher();
@@ -16,7 +16,7 @@ it('registers and makes a dispatcher', function () {
 });
 
 it('throws exception when dispatcher is not registered', function () {
-    $factory = new DispatcherFactory;
+    $factory = new DispatcherFactory();
 
     $this->expectException(InvalidArgumentException::class);
 

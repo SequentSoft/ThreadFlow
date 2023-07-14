@@ -6,5 +6,4 @@ use SequentSoft\ThreadFlow\Contracts\Messages\MessageInterface;
 
 interface OutgoingMessageInterface extends MessageInterface
 {
-
 }

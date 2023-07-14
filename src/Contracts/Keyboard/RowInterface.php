@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Keyboard;
 
-interface RowInterface {
+interface RowInterface
+{
     public function getButtons(): array;
 }

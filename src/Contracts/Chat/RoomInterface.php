@@ -2,7 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Chat;
 
-interface RoomInterface {
+interface RoomInterface
+{
     public function getId(): string;
     public function getName(): ?string;
     public function getType(): ?string;

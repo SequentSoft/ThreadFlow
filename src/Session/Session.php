@@ -10,11 +10,12 @@ class Session implements SessionInterface
 {
     protected bool $isClosed = false;
 
-    public function __construct(
+    final public function __construct(
         protected array $data,
         protected Closure $saveCallback,
         protected ?Closure $discardCallback = null
-    ) {}
+    ) {
+    }
 
     public function __destruct()
     {

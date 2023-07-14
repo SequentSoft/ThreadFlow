@@ -2,7 +2,6 @@
 
 namespace SequentSoft\ThreadFlow;
 
-
 use Illuminate\Support\ServiceProvider;
 use SequentSoft\ThreadFlow\Channel\Incoming\IncomingChannelRegistry;
 use SequentSoft\ThreadFlow\Channel\Outgoing\OutgoingChannelRegistry;

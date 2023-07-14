@@ -2,7 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Keyboard;
 
-interface ButtonInterface {
+interface ButtonInterface
+{
     public function getText(): string;
     public function getCallbackData(): ?string;
 }

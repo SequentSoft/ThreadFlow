@@ -14,7 +14,8 @@ class Room implements RoomInterface
 
     public function __construct(
         protected string $id,
-    ) {}
+    ) {
+    }
 
     public function getId(): string
     {

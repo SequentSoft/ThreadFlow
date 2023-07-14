@@ -21,17 +21,18 @@ abstract class AbstractPage
         protected SessionInterface $session,
         protected IncomingMessageInterface $message,
         protected RouterInterface $router,
-    ) {}
+    ) {
+    }
 
     public function execute(Closure $callback)
     {
         $this->outgoingCallback = $callback;
 
         $isEntering = $this->router->getCurrentPage(
-                $this->message,
-                $this->session,
-                ''
-            )->getPageClass() !== static::class;
+            $this->message,
+            $this->session,
+            ''
+        )->getPageClass() !== static::class;
 
         $this->router->setCurrentPage(
             $this->session,
@@ -84,7 +85,6 @@ abstract class AbstractPage
 
     protected function handleServiceMessage(IncomingServiceMessageInterface $message)
     {
-
     }
 
     protected function reply(OutgoingRegularMessage $message): OutgoingRegularMessage

@@ -1,18 +1,19 @@
 <?php
 
 use SequentSoft\ThreadFlow\Session\Session;
-use RuntimeException;
 
 it('gets data', function () {
     $data = ['key' => 'value'];
-    $session = new Session($data, function() {});
+    $session = new Session($data, function () {
+    });
 
     $this->assertEquals($data, $session->getData());
 });
 
 it('deletes data', function () {
     $data = ['key' => 'value'];
-    $session = new Session($data, function() {});
+    $session = new Session($data, function () {
+    });
 
     $session->delete('key');
 
@@ -21,7 +22,8 @@ it('deletes data', function () {
 
 it('throws when deleting data from a closed session', function () {
     $data = ['key' => 'value'];
-    $session = new Session($data, function() {});
+    $session = new Session($data, function () {
+    });
 
     $session->close();
     $session->delete('key'); // This should throw a RuntimeException
@@ -29,14 +31,16 @@ it('throws when deleting data from a closed session', function () {
 
 it('gets value by key with default', function () {
     $data = ['key' => 'value'];
-    $session = new Session($data, function() {});
+    $session = new Session($data, function () {
+    });
 
     $this->assertEquals('value', $session->get('key'));
     $this->assertEquals('default', $session->get('nonexistent', 'default'));
 });
 
 it('sets data', function () {
-    $session = new Session([], function() {});
+    $session = new Session([], function () {
+    });
 
     $session->set('key', 'value');
 
@@ -44,14 +48,16 @@ it('sets data', function () {
 });
 
 it('throws when setting data to a closed session', function () {
-    $session = new Session([], function() {});
+    $session = new Session([], function () {
+    });
 
     $session->close();
     $session->set('key', 'value'); // This should throw a RuntimeException
 })->throws(RuntimeException::class);
 
 it('creates a nested session', function () {
-    $session = new Session([], function() {});
+    $session = new Session([], function () {
+    });
 
     $nested = $session->nested('key');
     $nested->set('nestedKey', 'nestedValue');
@@ -61,7 +67,8 @@ it('creates a nested session', function () {
 });
 
 it('closes the session', function () {
-    $session = new Session(['key' => 'value'], function() {});
+    $session = new Session(['key' => 'value'], function () {
+    });
 
     $session->close();
     $this->assertTrue(true); // If we've reached this point, then the test passed.

@@ -8,7 +8,7 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegul
 
 class TextOutgoingRegularMessage extends OutgoingRegularMessage implements TextOutgoingRegularMessageInterface
 {
-    public function __construct(
+    final public function __construct(
         protected string $text,
         KeyboardInterface|array|null $keyboard = null,
     ) {

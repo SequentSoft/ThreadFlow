@@ -17,7 +17,8 @@ class PendingDispatchPage
         protected SessionInterface $session,
         protected IncomingMessageInterface $message,
         protected RouterInterface $router,
-    ) {}
+    ) {
+    }
 
     public function getPageClass(): string
     {
