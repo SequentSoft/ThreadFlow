@@ -1,0 +1,28 @@
+<?php
+
+namespace {{ namespace }};
+
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingRegularMessage;
+use SequentSoft\ThreadFlow\Page\AbstractPage;
+
+class {{ class }} extends AbstractPage
+{
+    protected function show()
+    {
+        $this->reply(new TextOutgoingRegularMessage('This is {{class}}', [
+            ['next' => 'Go to next page'],
+        ]));
+    }
+
+    protected function handleMessage(IncomingRegularMessageInterface $message)
+    {
+        if ($message->isText('next')) {
+            $this->reply(new TextOutgoingRegularMessage('Next page not defined'));
+        }
+
+        $this->reply(new TextOutgoingRegularMessage('Please enter message or press button', [
+            ['next' => 'Go to next page'],
+        ]));
+    }
+}

@@ -18,8 +18,10 @@ use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
 use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
+use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
 use SequentSoft\ThreadFlow\Session\Laravel\LaravelCacheSessionStore;
 use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
+use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 
 class LaravelServiceProvider extends ServiceProvider
 {
@@ -34,9 +36,6 @@ class LaravelServiceProvider extends ServiceProvider
                 new Config($this->app->make('config')->get('thread-flow', [])),
                 $this->app->make(SessionStoreFactoryInterface::class),
                 $this->app->make(RouterInterface::class),
-                $this->app->make(IncomingChannelRegistryInterface::class),
-                $this->app->make(OutgoingChannelRegistryInterface::class),
-                $this->app->make(DispatcherFactoryInterface::class),
             );
         });
 
@@ -99,5 +98,12 @@ class LaravelServiceProvider extends ServiceProvider
         $this->publishes([
             $this->getPackageConfigPath() => $this->app->configPath('thread-flow.php'),
         ], 'config');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                GenerateThreadFlowPageCommand::class,
+                CliThreadFlowCommand::class,
+            ]);
+        }
     }
 }

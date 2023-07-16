@@ -10,8 +10,6 @@ use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 
 interface IncomingChannelInterface
 {
-    public function config(): SimpleConfigInterface;
-
     /**
      * @param DataFetcherInterface $fetcher
      * @param Closure(IncomingMessageInterface $message): void $callback

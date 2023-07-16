@@ -1,0 +1,20 @@
+<?php
+
+namespace {{ namespace }};
+
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingRegularMessage;
+use SequentSoft\ThreadFlow\Page\AbstractPage;
+
+class {{ class }} extends AbstractPage
+{
+    protected function show()
+    {
+        //
+    }
+
+    protected function handleMessage(IncomingRegularMessageInterface $message)
+    {
+        //
+    }
+}
