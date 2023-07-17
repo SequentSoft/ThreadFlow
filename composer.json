@@ -16,13 +16,13 @@
         }
     ],
     "require": {
-        "php": "^8.1"
+        "php": "^8.1",
+        "sequentsoft/threadflow-telegram": "^0.0.2"
     },
     "require-dev": {
         "mockery/mockery": "^1.6",
         "pestphp/pest": "^2.8.0",
         "phpstan/phpstan": "^1.10",
-        "sequentsoft/threadflow-telegram": "^0.0.1",
         "squizlabs/php_codesniffer": "^3.7"
     },
     "autoload": {
