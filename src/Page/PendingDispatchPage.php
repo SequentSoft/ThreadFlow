@@ -39,6 +39,7 @@ class PendingDispatchPage
 
     public function dispatch(Closure $callback): AbstractPage
     {
+        /** @var AbstractPage $page */
         $page = new $this->pageClass(
             $this->attributes,
             $this->session,

@@ -25,7 +25,7 @@ abstract class AbstractPage
     ) {
     }
 
-    public function execute(Closure $callback)
+    public function execute(Closure $callback): ?PendingDispatchPage
     {
         $this->outgoingCallback = $callback;
 

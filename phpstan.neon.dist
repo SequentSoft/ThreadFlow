@@ -10,3 +10,5 @@ parameters:
         - src/Dispatcher/Laravel/LaravelQueueIncomingDispatcher.php
         - src/LaravelServiceProvider.php
         - src/Session/Laravel/LaravelCacheSessionStore.php
+        - src/Laravel/Console/CliThreadFlowCommand.php
+        - src/Laravel/Console/GenerateThreadFlowPageCommand.php

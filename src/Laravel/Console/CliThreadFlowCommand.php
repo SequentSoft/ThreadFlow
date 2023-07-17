@@ -7,10 +7,6 @@ use Illuminate\Support\Str;
 use SequentSoft\ThreadFlow\Channel\Incoming\CliIncomingChannel;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
-use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
-use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
-use SequentSoft\ThreadFlow\Contracts\Keyboard\RowInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingRegularMessageInterface;
@@ -28,8 +24,10 @@ class CliThreadFlowCommand extends Command
 
     protected array $lastKeyboardOptions = [];
 
-    protected function processOutgoing(OutgoingMessageInterface $message, SessionInterface $session): OutgoingMessageInterface
-    {
+    protected function processOutgoing(
+        OutgoingMessageInterface $message,
+        SessionInterface $session
+    ): OutgoingMessageInterface {
         $this->lastOutgoingMessage = $message;
         $this->lastKeyboardOptions = [];
 
@@ -44,7 +42,8 @@ class CliThreadFlowCommand extends Command
                     $buttons = $row->getButtons();
                     foreach ($buttons as $button) {
                         $this->lastKeyboardOptions[] = $button->getCallbackData();
-                        $data[$rowIndex][] = '<comment>' . $button->getCallbackData() . '</comment>: ' . $button->getText();
+                        $data[$rowIndex][] = '<comment>' . $button->getCallbackData(
+                        ) . '</comment>: ' . $button->getText();
                     }
                 }
 
@@ -77,15 +76,21 @@ class CliThreadFlowCommand extends Command
 
         $this->output->title('ThreadFlow Cli');
 
-        $incomingChannel->listen($dataFetcher, function (IncomingMessageInterface $message) use ($channelName, $dispatcher) {
-            $outgoingCallback = fn (OutgoingMessageInterface $message, SessionInterface $session) => $this->processOutgoing($message, $session);
+        $incomingChannel->listen(
+            $dataFetcher,
+            function (IncomingMessageInterface $message) use ($channelName, $dispatcher) {
+                $outgoingCallback = fn(
+                    OutgoingMessageInterface $message,
+                    SessionInterface $session
+                ) => $this->processOutgoing($message, $session);
 
-            $dispatcher->dispatch(
-                channelName: $channelName,
-                message: $message,
-                outgoingCallback: $outgoingCallback,
-            );
-        });
+                $dispatcher->dispatch(
+                    channelName: $channelName,
+                    message: $message,
+                    outgoingCallback: $outgoingCallback,
+                );
+            }
+        );
 
         while (true) {
             $text = $this->anticipate('Enter message text', $this->lastKeyboardOptions);

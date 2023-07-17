@@ -46,4 +46,9 @@ abstract class IncomingMessage extends Message implements IncomingMessageInterfa
     {
         return $this->context;
     }
+
+    public function ignore(): IgnoreIncomingMessage
+    {
+        return new IgnoreIncomingMessage($this->getId(), $this->getContext(), $this->getTimestamp());
+    }
 }

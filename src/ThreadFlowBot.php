@@ -13,6 +13,8 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
 use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
+use SequentSoft\ThreadFlow\Messages\Incoming\IgnoreIncomingMessage;
+use SequentSoft\ThreadFlow\Messages\Outgoing\IgnoreOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 
 class ThreadFlowBot implements BotInterface
@@ -60,13 +62,17 @@ class ThreadFlowBot implements BotInterface
         string $channelName,
         SessionInterface $session,
         ?Closure $incomingCallback = null
-    ): IncomingMessageInterface {
+    ): ?IncomingMessageInterface {
         foreach ($this->incomingCallbacks[$channelName] ?? [] as $callback) {
             $message = $callback($message, $session);
         }
 
         if ($incomingCallback) {
-            $message = $incomingCallback($message, $session);
+            $message = $incomingCallback($message, $session) ?? $message;
+        }
+
+        if ($message instanceof IgnoreIncomingMessage) {
+            return null;
         }
 
         return $message;
@@ -79,7 +85,11 @@ class ThreadFlowBot implements BotInterface
         ?Closure $outgoingCallback = null
     ): OutgoingMessageInterface {
         foreach ($this->outgoingCallbacks[$channelName] ?? [] as $callback) {
-            $message = $callback($message, $session);
+            $message = $callback($message, $session) ?? $message;
+        }
+
+        if ($message instanceof IgnoreOutgoingMessage) {
+            return $message;
         }
 
         return $outgoingCallback
@@ -119,6 +129,11 @@ class ThreadFlowBot implements BotInterface
         );
 
         $message = $this->processIncomingMessage($message, $channelName, $session, $incomingCallback);
+
+        if (is_null($message)) {
+            $session->close();
+            return;
+        }
 
         $this->makePendingPage(
             $pageClassWithAttributes->getPageClass(),

@@ -10,5 +10,15 @@ interface IncomingRegularMessageInterface extends IncomingMessageInterface
 
     public function setText(string $text);
 
-    public function isText(string $text): bool;
+    public function isText(?string $text = null): bool;
+
+    public function isLocation(): bool;
+
+    public function isSticker(): bool;
+
+    public function isVideo(): bool;
+
+    public function isImage(): bool;
+
+    public function isAudio(): bool;
 }
