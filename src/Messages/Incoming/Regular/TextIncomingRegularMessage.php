@@ -9,7 +9,7 @@ use SequentSoft\ThreadFlow\Messages\Incoming\IncomingMessage;
 
 class TextIncomingRegularMessage extends IncomingRegularMessage implements TextIncomingRegularMessageInterface
 {
-    public function __construct(
+    final public function __construct(
         string $id,
         MessageContextInterface $context,
         DateTimeImmutable $timestamp,
