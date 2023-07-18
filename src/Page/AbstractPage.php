@@ -55,15 +55,15 @@ abstract class AbstractPage
     protected function handleIncoming(bool $isEntering)
     {
         if ($isEntering) {
-            return $this->show();
+            return $this->executeShowHandler();
         }
 
         if ($this->message instanceof IncomingRegularMessageInterface) {
-            return $this->handleMessage($this->message);
+            return $this->executeRegularMessageHandler($this->message);
         }
 
         if ($this->message instanceof IncomingServiceMessageInterface) {
-            return $this->handleServiceMessage($this->message);
+            return $this->executeServiceMessageHandler($this->message);
         }
     }
 
@@ -74,18 +74,31 @@ abstract class AbstractPage
         return $this;
     }
 
-    protected function show()
+    protected function executeShowHandler(): ?PendingDispatchPage
     {
-        //
+        if (method_exists($this, 'show')) {
+            return $this->show();
+        }
+
+        return null;
     }
 
-    protected function handleMessage(IncomingRegularMessageInterface $message)
+    protected function executeRegularMessageHandler(IncomingRegularMessageInterface $message): ?PendingDispatchPage
     {
-        //
+        if (method_exists($this, 'handleMessage')) {
+            return $this->handleMessage($message);
+        }
+
+        return null;
     }
 
-    protected function handleServiceMessage(IncomingServiceMessageInterface $message)
+    protected function executeServiceMessageHandler(IncomingServiceMessageInterface $message): ?PendingDispatchPage
     {
+        if (method_exists($this, 'handleServiceMessage')) {
+            return $this->handleServiceMessage($message);
+        }
+
+        return null;
     }
 
     protected function reply(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface

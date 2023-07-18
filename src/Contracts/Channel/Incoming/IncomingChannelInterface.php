@@ -17,4 +17,6 @@ interface IncomingChannelInterface
     public function listen(DataFetcherInterface $fetcher, Closure $callback): void;
 
     public function preprocess(IncomingMessageInterface $message, SessionInterface $session): IncomingMessageInterface;
+
+    public function getConfig(): SimpleConfigInterface;
 }

@@ -61,12 +61,14 @@ class CliThreadFlowCommand extends Command
     {
         $channelName = $this->option('channel');
 
+        $config = app(BotInterface::class)->getChannelConfig($channelName);
+
         $messageContext = MessageContext::createFromIds(
             $this->option('participant-id'),
             $this->option('room-id'),
         );
 
-        $incomingChannel = new CliIncomingChannel($messageContext);
+        $incomingChannel = new CliIncomingChannel($messageContext, $config);
 
         $dispatcher = new SyncIncomingDispatcher(
             app(BotInterface::class),

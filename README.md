@@ -15,7 +15,7 @@ composer require sequentsoft/threadflow
 After installation, you need to publish the ThreadFlow configuration file:
 
 ```bash
-php artisan vendor:publish --provider="SequentSoft\ThreadFlow\ThreadFlowServiceProvider"
+php artisan vendor:publish --provider="SequentSoft\ThreadFlow\LaravelServiceProvider"
 ```
 
 This command will create a `thread-flow.php` configuration file in your `config` directory. Here is an example of the published configuration file:

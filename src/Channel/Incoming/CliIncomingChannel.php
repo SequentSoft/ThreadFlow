@@ -6,6 +6,7 @@ use Closure;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
+use SequentSoft\ThreadFlow\Contracts\Config\SimpleConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
@@ -15,7 +16,13 @@ class CliIncomingChannel implements IncomingChannelInterface
 {
     public function __construct(
         protected MessageContextInterface $messageContext,
+        protected SimpleConfigInterface $config,
     ) {
+    }
+
+    public function getConfig(): SimpleConfigInterface
+    {
+        return $this->config;
     }
 
     public function listen(DataFetcherInterface $fetcher, Closure $callback): void
