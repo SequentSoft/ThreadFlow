@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": "^8.1",
-        "sequentsoft/threadflow-telegram": "^0.0.2"
+        "sequentsoft/threadflow-telegram": "^0.0"
     },
     "require-dev": {
         "mockery/mockery": "^1.6",
