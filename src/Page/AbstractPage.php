@@ -3,6 +3,7 @@
 namespace SequentSoft\ThreadFlow\Page;
 
 use Closure;
+use ReflectionMethod;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
@@ -17,12 +18,61 @@ abstract class AbstractPage
 
     protected array $pageEvents = [];
 
+    protected array $breadcrumbs = [];
+
     public function __construct(
         protected array $attributes,
         protected SessionInterface $session,
         protected IncomingMessageInterface $message,
         protected RouterInterface $router,
     ) {
+    }
+
+    public function getAttributes(): array
+    {
+        return $this->attributes;
+    }
+
+    public function setBreadcrumbs(array $breadcrumbs): static
+    {
+        $this->breadcrumbs = $breadcrumbs;
+
+        return $this;
+    }
+
+    public function back(?string $fallbackPageClass = null, array $fallbackPageAttributes = []): ?PendingDispatchPage
+    {
+        $breadcrumbs = $this->breadcrumbs;
+        $latestBreadcrumb = array_slice($breadcrumbs, -1)[0] ?? null;
+        $this->breadcrumbs = array_slice($breadcrumbs, 0, -1);
+
+        if ($latestBreadcrumb) {
+            return $this->next(
+                $latestBreadcrumb->getPageClass(),
+                $latestBreadcrumb->getAttributes(),
+            )->withBreadcrumbsReplace();
+        }
+
+        if ($fallbackPageClass) {
+            return $this->next($fallbackPageClass, $fallbackPageAttributes);
+        }
+
+        return null;
+    }
+
+    protected function next(string $pageClass, array $attributes = []): PendingDispatchPage
+    {
+        $pendingDispatchPage = new PendingDispatchPage(
+            $pageClass,
+            $attributes,
+            $this->session,
+            $this->message,
+            $this->router,
+        );
+
+        $pendingDispatchPage->setBreadcrumbs($this->breadcrumbs);
+
+        return $pendingDispatchPage;
     }
 
     public function execute(Closure $callback): ?PendingDispatchPage
@@ -39,6 +89,7 @@ abstract class AbstractPage
             $this->session,
             static::class,
             $this->attributes,
+            $this->breadcrumbs,
         );
 
         $result = $this->handleIncoming($isEntering);
@@ -47,6 +98,7 @@ abstract class AbstractPage
             $this->session,
             static::class,
             $this->attributes,
+            $this->breadcrumbs,
         );
 
         return $result;
@@ -65,13 +117,6 @@ abstract class AbstractPage
         if ($this->message instanceof IncomingServiceMessageInterface) {
             return $this->executeServiceMessageHandler($this->message);
         }
-    }
-
-    public function on(string $eventName, Closure $callback): static
-    {
-        $this->pageEvents[$eventName][] = $callback;
-
-        return $this;
     }
 
     protected function executeShowHandler(): ?PendingDispatchPage
@@ -101,6 +146,25 @@ abstract class AbstractPage
         return null;
     }
 
+    public function on(string $eventName, Closure $callback): static
+    {
+        $this->pageEvents[$eventName][] = $callback;
+
+        return $this;
+    }
+
+    protected function setAttribute(string $key, mixed $value): static
+    {
+        $this->attributes[$key] = $value;
+
+        return $this;
+    }
+
+    protected function getAttribute(string $key, mixed $default = null): mixed
+    {
+        return $this->attributes[$key] ?? $default;
+    }
+
     protected function reply(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
     {
         if (! $message->getContext()) {
@@ -108,17 +172,6 @@ abstract class AbstractPage
         }
 
         return call_user_func($this->outgoingCallback, $message);
-    }
-
-    protected function next(string $pageClass, array $attributes = []): PendingDispatchPage
-    {
-        return new PendingDispatchPage(
-            $pageClass,
-            $attributes,
-            $this->session,
-            $this->message,
-            $this->router,
-        );
     }
 
     protected function embed(string $pageClass, array $attributes = [])

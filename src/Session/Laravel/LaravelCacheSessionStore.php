@@ -49,10 +49,6 @@ class LaravelCacheSessionStore implements SessionStoreInterface
 
         $data = Cache::store($this->getCacheStoreName())->get($key);
 
-        if ($data) {
-            $data = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
-        }
-
         return new Session(
             $data ?? [],
             fn(SessionInterface $session) => $this->save(
@@ -68,9 +64,7 @@ class LaravelCacheSessionStore implements SessionStoreInterface
     {
         $key = $this->makeKeyString($this->channelName, $context);
 
-        $data = json_encode($session->getData(), JSON_THROW_ON_ERROR);
-
-        Cache::store($this->getCacheStoreName())->put($key, $data);
+        Cache::store($this->getCacheStoreName())->put($key, $session->getData());
 
         $lock?->release();
     }

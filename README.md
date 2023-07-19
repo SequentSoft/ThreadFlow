@@ -10,6 +10,11 @@ Install the library via Composer:
 composer require sequentsoft/threadflow
 ```
 
+And telegram driver:
+```bash
+composer require sequentsoft/threadflow-telegram
+```
+
 ## Configuration
 
 After installation, you need to publish the ThreadFlow configuration file:
@@ -141,7 +146,7 @@ class IndexPage extends AbstractPage
     protected function handleMessage(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('login')) {
-            return $this->next(LoginPage::class);
+            return $this->next(LoginPage::class)->withBreadcrumbs();
         }
 
          if ($message->isText('products')) {
@@ -228,13 +233,14 @@ class LoginPage extends AbstractPage
     protected function handleMessage(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('back')) {
-            return $this->next(IndexPage::class);
+            return $this->back();
         }
 
         $login = $message->getText();
 
         if (validateLogin($login)) {
-            return $this->next(EnterPasswordPage::class, ['login' => $login]);
+            return $this->next(EnterPasswordPage::class, ['login' => $login])
+                ->withBreadcrumbs();
         }
 
         $this->reply(
@@ -253,7 +259,7 @@ class EnterPasswordPage extends AbstractPage
 {
     protected function show()
     {
-        $this->reply(new TextOutgoingRegularMessage('Enter your password', [
+        $this->reply(TextOutgoingRegularMessage::make('Enter your password', [
             ['back' => 'Back'],
         ]));
     }
@@ -261,18 +267,18 @@ class EnterPasswordPage extends AbstractPage
     protected function handleMessage(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('back')) {
-            return $this->next(IndexPage::class);
+            return $this->back(LoginPage::class);
         }
 
         $password = $message->getText();
-        $login = $this->getInput('login');
+        $login = $this->getAttribute('login');
 
         if (validatePassword($login, $password)) {
             return $this->next(IndexPage::class);
         }
 
         $this->reply(
-            new TextOutgoingRegularMessage('Password is not valid. Please try again', [
+            TextOutgoingRegularMessage::make('Password is not valid. Please try again', [
                 ['back' => 'Back'],
             ])
         );

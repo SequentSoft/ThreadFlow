@@ -11,6 +11,12 @@ class PendingDispatchPage
 {
     protected array $pageEvents = [];
 
+    protected array $breadcrumbs = [];
+
+    protected bool $withBreadcrumbs = false;
+
+    protected ?bool $withBreadcrumbsReplace = null;
+
     public function __construct(
         protected string $pageClass,
         protected array $attributes,
@@ -18,6 +24,13 @@ class PendingDispatchPage
         protected IncomingMessageInterface $message,
         protected RouterInterface $router,
     ) {
+    }
+
+    public function setBreadcrumbs(array $breadcrumbs): static
+    {
+        $this->breadcrumbs = $breadcrumbs;
+
+        return $this;
     }
 
     public function getPageClass(): string
@@ -30,6 +43,22 @@ class PendingDispatchPage
         return $this->attributes;
     }
 
+    public function withBreadcrumbs(): static
+    {
+        $this->withBreadcrumbs = true;
+        $this->withBreadcrumbsReplace = false;
+
+        return $this;
+    }
+
+    public function withBreadcrumbsReplace(): static
+    {
+        $this->withBreadcrumbs = true;
+        $this->withBreadcrumbsReplace = true;
+
+        return $this;
+    }
+
     public function on(string $eventName, Closure $callback): static
     {
         $this->pageEvents[$eventName][] = $callback;
@@ -37,7 +66,7 @@ class PendingDispatchPage
         return $this;
     }
 
-    public function dispatch(Closure $callback): AbstractPage
+    public function dispatch(?AbstractPage $contextPage, Closure $callback): AbstractPage
     {
         /** @var AbstractPage $page */
         $page = new $this->pageClass(
@@ -46,6 +75,14 @@ class PendingDispatchPage
             $this->message,
             $this->router,
         );
+
+        if ($this->withBreadcrumbs) {
+            $breadcrumbs = $this->breadcrumbs;
+            if (! $this->withBreadcrumbsReplace && $contextPage) {
+                $breadcrumbs[] = new Breadcrumb(get_class($contextPage), $contextPage->getAttributes());
+            }
+            $page->setBreadcrumbs($breadcrumbs);
+        }
 
         foreach ($this->pageEvents as $eventName => $pageEvents) {
             $page->on($eventName, $pageEvents);
@@ -58,7 +95,7 @@ class PendingDispatchPage
                 $page->on($eventName, $pageEvents);
             }
 
-            $next->dispatch($callback);
+            $next->dispatch($page, $callback);
         }
 
         return $page;

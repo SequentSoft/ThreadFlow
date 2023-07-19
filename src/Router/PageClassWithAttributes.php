@@ -7,6 +7,7 @@ class PageClassWithAttributes
     public function __construct(
         protected string $pageClass,
         protected array $attributes,
+        protected array $breadcrumbs,
         protected bool $isFallback,
     ) {
     }
@@ -19,6 +20,11 @@ class PageClassWithAttributes
     public function getAttributes(): array
     {
         return $this->attributes;
+    }
+
+    public function getBreadcrumbs(): array
+    {
+        return $this->breadcrumbs;
     }
 
     public function isFallback(): bool

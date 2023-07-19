@@ -10,7 +10,8 @@ class MessageContext implements MessageContextInterface
 {
     final public function __construct(
         protected ParticipantInterface $participant,
-        protected RoomInterface $room
+        protected RoomInterface $room,
+        protected ?ParticipantInterface $forwardFrom = null,
     ) {
     }
 
@@ -24,13 +25,20 @@ class MessageContext implements MessageContextInterface
         return $this->room;
     }
 
+    public function getForwardFrom(): ?ParticipantInterface
+    {
+        return $this->forwardFrom;
+    }
+
     public static function createFromIds(
         string $participantId,
-        string $roomId
+        string $roomId,
+        ?string $forwardFromId = null,
     ): static {
         return new static(
             new Participant($participantId),
-            new Room($roomId)
+            new Room($roomId),
+            $forwardFromId ? new Participant($forwardFromId) : null,
         );
     }
 }

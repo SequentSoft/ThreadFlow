@@ -16,6 +16,7 @@ use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
 use SequentSoft\ThreadFlow\Messages\Incoming\IgnoreIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\IgnoreOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
+use SequentSoft\ThreadFlow\Router\PageClassWithAttributes;
 
 class ThreadFlowBot implements BotInterface
 {
@@ -98,19 +99,24 @@ class ThreadFlowBot implements BotInterface
     }
 
     protected function makePendingPage(
-        string $pageClass,
-        array $attributes,
+        PageClassWithAttributes $pageClassWithAttributes,
         SessionInterface $session,
         IncomingMessageInterface $message,
         RouterInterface $router
     ): PendingDispatchPage {
-        return new PendingDispatchPage(
-            $pageClass,
-            $attributes,
+        $pendingDispatchPage = new PendingDispatchPage(
+            $pageClassWithAttributes->getPageClass(),
+            $pageClassWithAttributes->getAttributes(),
             $session,
             $message,
             $router
         );
+
+        $pendingDispatchPage->setBreadcrumbs(
+            $pageClassWithAttributes->getBreadcrumbs()
+        )->withBreadcrumbs();
+
+        return $pendingDispatchPage;
     }
 
     public function process(
@@ -136,12 +142,12 @@ class ThreadFlowBot implements BotInterface
         }
 
         $this->makePendingPage(
-            $pageClassWithAttributes->getPageClass(),
-            $pageClassWithAttributes->getAttributes(),
+            $pageClassWithAttributes,
             $session,
             $message,
             $this->router
         )->dispatch(
+            null,
             fn(OutgoingMessageInterface $message) => $this->processOutgoingMessage(
                 $message,
                 $channelName,

@@ -10,6 +10,7 @@ class StatefulPageRouter implements RouterInterface
 {
     protected const SESSION_CURRENT_PAGE_CLASS_KEY = '$router:currentPageClass';
     protected const SESSION_CURRENT_PAGE_ATTRIBUTES_KEY = '$router:currentPageAttributes';
+    protected const SESSION_CURRENT_PAGE_BREADCRUMBS_KEY = '$router:breadcrumbs';
 
     public function getCurrentPage(
         IncomingMessageInterface $message,
@@ -19,6 +20,7 @@ class StatefulPageRouter implements RouterInterface
         return new PageClassWithAttributes(
             $session->get(self::SESSION_CURRENT_PAGE_CLASS_KEY, $fallbackClass),
             $session->get(self::SESSION_CURRENT_PAGE_ATTRIBUTES_KEY, []),
+            $session->get(self::SESSION_CURRENT_PAGE_BREADCRUMBS_KEY, []),
             is_null($session->get(self::SESSION_CURRENT_PAGE_CLASS_KEY)),
         );
     }
@@ -27,8 +29,10 @@ class StatefulPageRouter implements RouterInterface
         SessionInterface $session,
         string $class,
         array $attributes = [],
+        array $breadcrumbs = [],
     ): void {
         $session->set(self::SESSION_CURRENT_PAGE_CLASS_KEY, $class);
         $session->set(self::SESSION_CURRENT_PAGE_ATTRIBUTES_KEY, $attributes);
+        $session->set(self::SESSION_CURRENT_PAGE_BREADCRUMBS_KEY, $breadcrumbs);
     }
 }

@@ -9,7 +9,7 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 class PendingDispatchEmbedPage extends PendingDispatchPage
 {
-    public function dispatch(Closure $callback): AbstractPage
+    public function dispatch(?AbstractPage $contextPage, Closure $callback): AbstractPage
     {
         $nestedSession = $this->session->nested('$embed');
 
@@ -43,7 +43,7 @@ class PendingDispatchEmbedPage extends PendingDispatchPage
                 $next->on($eventName, $pageEvents);
             }
 
-            $next->dispatch($callback);
+            $next->dispatch($page, $callback);
         }
 
         $nestedSession->close();
