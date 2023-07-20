@@ -21,4 +21,8 @@ interface IncomingRegularMessageInterface extends IncomingMessageInterface
     public function isImage(): bool;
 
     public function isAudio(): bool;
+
+    public function isContact(): bool;
+
+    public function isFile(): bool;
 }
