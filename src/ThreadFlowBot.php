@@ -31,6 +31,11 @@ class ThreadFlowBot implements BotInterface
     ) {
     }
 
+    public function getAvailableChannels(): array
+    {
+        return array_keys($this->config->getNested('channels')->all());
+    }
+
     public function getChannelConfig(string $channelName): ConfigInterface
     {
         try {
@@ -65,7 +70,7 @@ class ThreadFlowBot implements BotInterface
         ?Closure $incomingCallback = null
     ): ?IncomingMessageInterface {
         foreach ($this->incomingCallbacks[$channelName] ?? [] as $callback) {
-            $message = $callback($message, $session);
+            $message = $callback($message, $session) ?? $message;
         }
 
         if ($incomingCallback) {
@@ -94,7 +99,7 @@ class ThreadFlowBot implements BotInterface
         }
 
         return $outgoingCallback
-            ? $outgoingCallback($message, $session)
+            ? ($outgoingCallback($message, $session) ?? $message)
             : $message;
     }
 

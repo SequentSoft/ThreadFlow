@@ -24,4 +24,6 @@ interface BotInterface
     public function outgoing(string $channelName, Closure $callback): void;
 
     public function getChannelConfig(string $channelName): ConfigInterface;
+
+    public function getAvailableChannels(): array;
 }
