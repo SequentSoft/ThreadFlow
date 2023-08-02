@@ -11,6 +11,8 @@ abstract class IncomingMessage extends Message implements IncomingMessageInterfa
 {
     protected ?array $raw;
 
+    protected ?string $stateId = null;
+
     public function __construct(
         string $id,
         MessageContextInterface $context,
@@ -18,6 +20,18 @@ abstract class IncomingMessage extends Message implements IncomingMessageInterfa
     ) {
         $this->setId($id);
         $this->setContext($context);
+    }
+
+    public function getStateId(): ?string
+    {
+        return $this->stateId;
+    }
+
+    public function setStateId(?string $stateId): static
+    {
+        $this->stateId = $stateId;
+
+        return $this;
     }
 
     public function getRaw(): ?array
@@ -45,10 +59,5 @@ abstract class IncomingMessage extends Message implements IncomingMessageInterfa
     public function getContext(): MessageContextInterface
     {
         return $this->context;
-    }
-
-    public function ignore(): IgnoreIncomingMessage
-    {
-        return new IgnoreIncomingMessage($this->getId(), $this->getContext(), $this->getTimestamp());
     }
 }

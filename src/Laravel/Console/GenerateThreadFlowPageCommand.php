@@ -13,7 +13,7 @@ class GenerateThreadFlowPageCommand extends GeneratorCommand
 
     protected $type = 'ThreadFlow page';
 
-    protected function getStub()
+    protected function getStub(): string
     {
         return $this->option('empty')
                         ? $this->resolveStubPath('/stubs/thread-flow-page-empty.stub')
@@ -25,14 +25,14 @@ class GenerateThreadFlowPageCommand extends GeneratorCommand
         return $rootNamespace . '\ThreadFlow\Pages';
     }
 
-    protected function getOptions()
+    protected function getOptions(): array
     {
         return [
             ['empty', 'e', InputOption::VALUE_NONE, 'Create an empty page'],
         ];
     }
 
-    protected function resolveStubPath($stub)
+    protected function resolveStubPath(string $stub): string
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
                         ? $customPath

@@ -3,44 +3,36 @@
 namespace SequentSoft\ThreadFlow\Page;
 
 use Closure;
+use Exception;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
-class PendingDispatchPage
+class PendingDispatchPage implements PendingDispatchPageInterface
 {
-    protected array $pageEvents = [];
-
-    protected array $breadcrumbs = [];
+    protected bool $keepAliveContextPage = false;
 
     protected bool $withBreadcrumbs = false;
 
     protected ?bool $withBreadcrumbsReplace = null;
 
     public function __construct(
-        protected string $pageClass,
-        protected array $attributes,
+        protected PageStateInterface $state,
         protected SessionInterface $session,
-        protected IncomingMessageInterface $message,
-        protected RouterInterface $router,
+        protected MessageContextInterface $messageContext,
+        protected ?IncomingMessageInterface $message,
     ) {
     }
 
-    public function setBreadcrumbs(array $breadcrumbs): static
+    public function keepAliveCurrentPage(): static
     {
-        $this->breadcrumbs = $breadcrumbs;
+        $this->keepAliveContextPage = true;
 
         return $this;
-    }
-
-    public function getPageClass(): string
-    {
-        return $this->pageClass;
-    }
-
-    public function getAttributes(): array
-    {
-        return $this->attributes;
     }
 
     public function withBreadcrumbs(): static
@@ -59,42 +51,42 @@ class PendingDispatchPage
         return $this;
     }
 
-    public function on(string $eventName, Closure $callback): static
+    public function dispatch(?PageInterface $contextPage, Closure $callback): PageInterface
     {
-        $this->pageEvents[$eventName][] = $callback;
+        if ($this->keepAliveContextPage && $contextPage) {
+            $this->session->getBackgroundPageStates()->set($contextPage->getState());
+        }
 
-        return $this;
-    }
+        if ($contextPage) {
+            $this->session->setPageState($this->state);
+            $this->session->getBackgroundPageStates()->remove($this->state->getId());
+        }
 
-    public function dispatch(?AbstractPage $contextPage, Closure $callback): AbstractPage
-    {
-        /** @var AbstractPage $page */
-        $page = new $this->pageClass(
-            $this->attributes,
+        $pageClass = $this->state->getPageClass();
+
+        if (is_null($pageClass)) {
+            throw new Exception('Page class is not defined');
+        }
+
+        /** @var PageInterface $page */
+        $page = new $pageClass(
+            $this->state,
             $this->session,
+            $this->messageContext,
             $this->message,
-            $this->router,
         );
 
         if ($this->withBreadcrumbs) {
-            $breadcrumbs = $this->breadcrumbs;
             if (! $this->withBreadcrumbsReplace && $contextPage) {
-                $breadcrumbs[] = new Breadcrumb(get_class($contextPage), $contextPage->getAttributes());
+                $this->session->getBreadcrumbs()->push($contextPage->getState());
             }
-            $page->setBreadcrumbs($breadcrumbs);
-        }
-
-        foreach ($this->pageEvents as $eventName => $pageEvents) {
-            $page->on($eventName, $pageEvents);
+        } else {
+            $this->session->getBreadcrumbs()->clear();
         }
 
         $next = $page->execute($callback);
 
         if ($next instanceof static) {
-            foreach ($this->pageEvents as $eventName => $pageEvents) {
-                $page->on($eventName, $pageEvents);
-            }
-
             $next->dispatch($page, $callback);
         }
 

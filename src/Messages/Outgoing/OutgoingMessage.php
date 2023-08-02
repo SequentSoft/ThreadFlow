@@ -7,8 +7,4 @@ use SequentSoft\ThreadFlow\Messages\Message;
 
 abstract class OutgoingMessage extends Message implements OutgoingMessageInterface
 {
-    public function ignore(): IgnoreOutgoingMessage
-    {
-        return new IgnoreOutgoingMessage();
-    }
 }

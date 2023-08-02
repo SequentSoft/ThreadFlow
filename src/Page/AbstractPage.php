@@ -3,54 +3,133 @@
 namespace SequentSoft\ThreadFlow\Page;
 
 use Closure;
-use ReflectionMethod;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
-use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\OutgoingRegularMessage;
+use SequentSoft\ThreadFlow\Session\PageState;
 
-abstract class AbstractPage
+abstract class AbstractPage implements PageInterface
 {
-    protected Closure $outgoingCallback;
-
-    protected array $pageEvents = [];
-
-    protected array $breadcrumbs = [];
+    private Closure $outgoingCallback;
 
     public function __construct(
-        protected array $attributes,
-        protected SessionInterface $session,
-        protected IncomingMessageInterface $message,
-        protected RouterInterface $router,
+        private readonly PageStateInterface $state,
+        private readonly SessionInterface $session,
+        private readonly MessageContextInterface $messageContext,
+        private readonly ?IncomingMessageInterface $message,
     ) {
     }
 
-    public function getAttributes(): array
+    public function isBackground(): bool
     {
-        return $this->attributes;
+        return $this->state !== $this->session->getPageState();
     }
 
-    public function setBreadcrumbs(array $breadcrumbs): static
+    public function getState(): PageStateInterface
     {
-        $this->breadcrumbs = $breadcrumbs;
-
-        return $this;
+        return $this->state;
     }
 
-    public function back(?string $fallbackPageClass = null, array $fallbackPageAttributes = []): ?PendingDispatchPage
+    public function execute(Closure $callback): ?PendingDispatchPage
     {
-        $breadcrumbs = $this->breadcrumbs;
-        $latestBreadcrumb = array_slice($breadcrumbs, -1)[0] ?? null;
-        $this->breadcrumbs = array_slice($breadcrumbs, 0, -1);
+        $this->outgoingCallback = $callback;
 
-        if ($latestBreadcrumb) {
-            return $this->next(
-                $latestBreadcrumb->getPageClass(),
-                $latestBreadcrumb->getAttributes(),
-            )->withBreadcrumbsReplace();
+        $this->populateAttributes();
+
+        $result = $this->handleIncoming();
+
+        $this->storeAttributes();
+
+        return $result;
+    }
+
+    private function populateAttributes(): void
+    {
+        $attributes = $this->state->getAttributes();
+
+        (function (array $attributes) {
+            foreach ($attributes as $key => $value) {
+                $this->{$key} = $value;
+            }
+        })->call($this, $attributes);
+    }
+
+    private function handleIncoming(): ?PendingDispatchPageInterface
+    {
+        if ($this->message instanceof IncomingRegularMessageInterface) {
+            return $this->executeRegularMessageHandler($this->message);
+        }
+
+        if ($this->message instanceof IncomingServiceMessageInterface) {
+            return $this->executeServiceMessageHandler($this->message);
+        }
+
+        return $this->executeShowHandler();
+    }
+
+    private function executeShowHandler(): ?PendingDispatchPage
+    {
+        if (method_exists($this, 'show')) {
+            return $this->show();
+        }
+
+        return null;
+    }
+
+    private function executeRegularMessageHandler(
+        IncomingRegularMessageInterface $message
+    ): ?PendingDispatchPageInterface {
+        if (method_exists($this, 'handleMessage')) {
+            return $this->handleMessage($message);
+        }
+
+        return null;
+    }
+
+    private function executeServiceMessageHandler(
+        IncomingServiceMessageInterface $message
+    ): ?PendingDispatchPageInterface {
+        if (method_exists($this, 'handleServiceMessage')) {
+            return $this->handleServiceMessage($message);
+        }
+
+        return null;
+    }
+
+    private function storeAttributes(): void
+    {
+        $attributes = (function () {
+            return get_object_vars($this);
+        })->call($this);
+
+        $this->state->setAttributes($attributes);
+    }
+
+    protected function session(): SessionDataInterface
+    {
+        return $this->session->getData();
+    }
+
+    protected function back(
+        ?string $fallbackPageClass = null,
+        array $fallbackPageAttributes = []
+    ): ?PendingDispatchPageInterface {
+        $prevState = $this->session->getBreadcrumbs()->pop();
+
+        if ($prevState) {
+            return (new PendingDispatchPage(
+                $prevState,
+                $this->session,
+                $this->messageContext,
+                null
+            ))->withBreadcrumbsReplace();
         }
 
         if ($fallbackPageClass) {
@@ -60,135 +139,22 @@ abstract class AbstractPage
         return null;
     }
 
-    protected function next(string $pageClass, array $attributes = []): PendingDispatchPage
+    protected function next(string $pageClass, array $attributes = []): PendingDispatchPageInterface
     {
-        $pendingDispatchPage = new PendingDispatchPage(
-            $pageClass,
-            $attributes,
+        return new PendingDispatchPage(
+            PageState::create($pageClass, $attributes),
             $this->session,
-            $this->message,
-            $this->router,
+            $this->messageContext,
+            null
         );
-
-        $pendingDispatchPage->setBreadcrumbs($this->breadcrumbs);
-
-        return $pendingDispatchPage;
-    }
-
-    public function execute(Closure $callback): ?PendingDispatchPage
-    {
-        $this->outgoingCallback = $callback;
-
-        $isEntering = $this->router->getCurrentPage(
-            $this->message,
-            $this->session,
-            ''
-        )->getPageClass() !== static::class;
-
-        $this->router->setCurrentPage(
-            $this->session,
-            static::class,
-            $this->attributes,
-            $this->breadcrumbs,
-        );
-
-        $result = $this->handleIncoming($isEntering);
-
-        $this->router->setCurrentPage(
-            $this->session,
-            static::class,
-            $this->attributes,
-            $this->breadcrumbs,
-        );
-
-        return $result;
-    }
-
-    protected function handleIncoming(bool $isEntering)
-    {
-        if ($isEntering) {
-            return $this->executeShowHandler();
-        }
-
-        if ($this->message instanceof IncomingRegularMessageInterface) {
-            return $this->executeRegularMessageHandler($this->message);
-        }
-
-        if ($this->message instanceof IncomingServiceMessageInterface) {
-            return $this->executeServiceMessageHandler($this->message);
-        }
-    }
-
-    protected function executeShowHandler(): ?PendingDispatchPage
-    {
-        if (method_exists($this, 'show')) {
-            return $this->show();
-        }
-
-        return null;
-    }
-
-    protected function executeRegularMessageHandler(IncomingRegularMessageInterface $message): ?PendingDispatchPage
-    {
-        if (method_exists($this, 'handleMessage')) {
-            return $this->handleMessage($message);
-        }
-
-        return null;
-    }
-
-    protected function executeServiceMessageHandler(IncomingServiceMessageInterface $message): ?PendingDispatchPage
-    {
-        if (method_exists($this, 'handleServiceMessage')) {
-            return $this->handleServiceMessage($message);
-        }
-
-        return null;
-    }
-
-    public function on(string $eventName, Closure $callback): static
-    {
-        $this->pageEvents[$eventName][] = $callback;
-
-        return $this;
-    }
-
-    protected function setAttribute(string $key, mixed $value): static
-    {
-        $this->attributes[$key] = $value;
-
-        return $this;
-    }
-
-    protected function getAttribute(string $key, mixed $default = null): mixed
-    {
-        return $this->attributes[$key] ?? $default;
     }
 
     protected function reply(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
     {
         if (! $message->getContext()) {
-            $message->setContext($this->message->getContext());
+            $message->setContext($this->messageContext);
         }
 
-        return call_user_func($this->outgoingCallback, $message);
-    }
-
-    protected function embed(string $pageClass, array $attributes = [])
-    {
-        return new PendingDispatchEmbedPage(
-            $pageClass,
-            $attributes,
-            $this->session,
-            $this->message,
-            $this->router,
-        );
-    }
-
-    protected function emit(string $event, mixed $data): void
-    {
-        foreach ($this->pageEvents[$event] ?? [] as $callback) {
-            $callback($data);
-        }
+        return call_user_func($this->outgoingCallback, $message, $this);
     }
 }

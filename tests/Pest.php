@@ -46,29 +46,3 @@ expect()->extend('toBeOne', function () {
 | global functions to help you to reduce the number of lines of code in your test files.
 |
 */
-
-function setupBot(array $channelsConfig = []): ThreadFlowBot
-{
-    $config = new Config(['channels' => $channelsConfig]);
-
-    $sessionStoreFactory = new SessionStoreFactory();
-
-    $sessionStorage = new ArraySessionStoreStorage();
-
-    $sessionStoreFactory->register(
-        'array',
-        fn(string $channelName, ConfigInterface $config) => new ArraySessionStore(
-            $channelName,
-            $config,
-            $sessionStorage
-        )
-    );
-
-    $router = new StatefulPageRouter();
-
-    return new ThreadFlowBot(
-        config: $config,
-        sessionStoreFactory: $sessionStoreFactory,
-        router: $router,
-    );
-}

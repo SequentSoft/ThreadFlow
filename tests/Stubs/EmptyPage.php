@@ -1,7 +1,20 @@
 <?php
 
-namespace Test;
+namespace Tests\Stubs;
 
-class EmptyPage extends \SequentSoft\ThreadFlow\Page\AbstractPage
+use SequentSoft\ThreadFlow\Page\AbstractPage;
+
+class EmptyPage extends AbstractPage
 {
+    public function show()
+    {
+    }
+
+    public function handleMessage()
+    {
+    }
+
+    public function handleServiceMessage()
+    {
+    }
 }

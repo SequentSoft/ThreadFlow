@@ -2,9 +2,19 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Session;
 
+use Closure;
+
 interface SessionInterface
 {
-    public function getData(): array;
+    public function getData(): SessionDataInterface;
+
+    public function getPageState(): PageStateInterface;
+
+    public function setPageState(PageStateInterface $pageState): void;
+
+    public function getBackgroundPageStates(): BackgroundPageStatesCollectionInterface;
+
+    public function getBreadcrumbs(): BreadcrumbsCollectionInterface;
 
     public function delete(string $key): void;
 
@@ -12,7 +22,7 @@ interface SessionInterface
 
     public function set(string $key, mixed $data): void;
 
-    public function nested(string $key): SessionInterface;
+    public function save(): void;
 
     public function close(): void;
 }

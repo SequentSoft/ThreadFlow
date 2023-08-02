@@ -25,7 +25,7 @@ use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 
 class LaravelServiceProvider extends ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom($this->getPackageConfigPath(), 'thread-flow');
 
@@ -36,6 +36,7 @@ class LaravelServiceProvider extends ServiceProvider
                 new Config($this->app->make('config')->get('thread-flow', [])),
                 $this->app->make(SessionStoreFactoryInterface::class),
                 $this->app->make(RouterInterface::class),
+                $this->app->make(OutgoingChannelRegistryInterface::class),
             );
         });
 
@@ -46,11 +47,11 @@ class LaravelServiceProvider extends ServiceProvider
 
             $factory->register(
                 'array',
-                function (string $channelName, ConfigInterface $config) {
-                    return $this->app->make(
-                        ArraySessionStore::class,
-                        ['channelName' => $channelName, 'config' => $config]
-                    );
+                function (string $channelName) {
+                    return $this->app->make(ArraySessionStore::class, [
+                        'channelName' => $channelName,
+                        'storage' => $this->app->make(ArraySessionStoreStorage::class),
+                    ]);
                 }
             );
 
@@ -93,7 +94,7 @@ class LaravelServiceProvider extends ServiceProvider
         return __DIR__ . '/../config/thread-flow.php';
     }
 
-    public function boot()
+    public function boot(): void
     {
         $this->publishes([
             $this->getPackageConfigPath() => $this->app->configPath('thread-flow.php'),

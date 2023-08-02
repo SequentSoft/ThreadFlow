@@ -3,15 +3,19 @@
 namespace SequentSoft\ThreadFlow\Contracts;
 
 use Closure;
-use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
-use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 
 interface BotInterface
 {
+    public function showPage(
+        string $channelName,
+        MessageContextInterface|string $context,
+        string $pageClass,
+        array $pageAttributes = []
+    ): void;
+
     public function process(
         string $channelName,
         IncomingMessageInterface $message,

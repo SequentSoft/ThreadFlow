@@ -4,35 +4,39 @@ namespace SequentSoft\ThreadFlow\Router;
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 class StatefulPageRouter implements RouterInterface
 {
-    protected const SESSION_CURRENT_PAGE_CLASS_KEY = '$router:currentPageClass';
-    protected const SESSION_CURRENT_PAGE_ATTRIBUTES_KEY = '$router:currentPageAttributes';
-    protected const SESSION_CURRENT_PAGE_BREADCRUMBS_KEY = '$router:breadcrumbs';
-
-    public function getCurrentPage(
+    public function getCurrentPageState(
         IncomingMessageInterface $message,
         SessionInterface $session,
         string $fallbackClass
-    ): PageClassWithAttributes {
-        return new PageClassWithAttributes(
-            $session->get(self::SESSION_CURRENT_PAGE_CLASS_KEY, $fallbackClass),
-            $session->get(self::SESSION_CURRENT_PAGE_ATTRIBUTES_KEY, []),
-            $session->get(self::SESSION_CURRENT_PAGE_BREADCRUMBS_KEY, []),
-            is_null($session->get(self::SESSION_CURRENT_PAGE_CLASS_KEY)),
-        );
+    ): PageStateInterface {
+        $stateId = $message->getStateId();
+
+        if ($stateId) {
+            $backgroundPageState = $session->getBackgroundPageStates()->get($stateId);
+
+            if ($backgroundPageState) {
+                return $backgroundPageState;
+            }
+        }
+
+        $state = $session->getPageState();
+
+        if (is_null($state->getPageClass())) {
+            $state->setPageClass($fallbackClass);
+        }
+
+        return $state;
     }
 
-    public function setCurrentPage(
+    public function setCurrentPageState(
         SessionInterface $session,
-        string $class,
-        array $attributes = [],
-        array $breadcrumbs = [],
+        PageStateInterface $pageState,
     ): void {
-        $session->set(self::SESSION_CURRENT_PAGE_CLASS_KEY, $class);
-        $session->set(self::SESSION_CURRENT_PAGE_ATTRIBUTES_KEY, $attributes);
-        $session->set(self::SESSION_CURRENT_PAGE_BREADCRUMBS_KEY, $breadcrumbs);
+        $session->setPageState($pageState);
     }
 }

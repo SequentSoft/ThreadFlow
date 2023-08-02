@@ -26,8 +26,14 @@ class OutgoingChannelRegistry implements OutgoingChannelRegistryInterface
     {
         $driverName = $config->get('driver');
 
-        if (!isset($this->channelDrivers[$driverName])) {
-            throw new ChannelNotFoundException("Outgoing channel {$driverName} is not registered.");
+        if ($driverName === null) {
+            throw new ChannelNotConfiguredException(
+                "Incoming channel [{$name}] is not configured. Driver name is missing."
+            );
+        }
+
+        if (! isset($this->channelDrivers[$driverName])) {
+            throw new ChannelNotFoundException("Outgoing channel driver [{$driverName}] is not registered.");
         }
 
         return call_user_func($this->channelDrivers[$driverName], $config);

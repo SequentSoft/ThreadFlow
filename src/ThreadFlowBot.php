@@ -1,22 +1,28 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SequentSoft\ThreadFlow;
 
 use Closure;
+use Exception;
+use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelRegistryInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface as OMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
 use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
-use SequentSoft\ThreadFlow\Messages\Incoming\IgnoreIncomingMessage;
-use SequentSoft\ThreadFlow\Messages\Outgoing\IgnoreOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
-use SequentSoft\ThreadFlow\Router\PageClassWithAttributes;
+use SequentSoft\ThreadFlow\Session\PageState;
 
 class ThreadFlowBot implements BotInterface
 {
@@ -28,14 +34,70 @@ class ThreadFlowBot implements BotInterface
         protected Config $config,
         protected SessionStoreFactoryInterface $sessionStoreFactory,
         protected RouterInterface $router,
+        protected OutgoingChannelRegistryInterface $outgoingChannelRegistry,
     ) {
     }
 
-    public function getAvailableChannels(): array
-    {
-        return array_keys($this->config->getNested('channels')->all());
+    /**
+     * @throws ChannelNotConfiguredException
+     * @throws Exception
+     */
+    public function showPage(
+        string $channelName,
+        MessageContextInterface|string $context,
+        string $pageClass,
+        array $pageAttributes = []
+    ): void {
+        if (is_string($context)) {
+            $context = MessageContext::createFromIds($context, $context);
+        }
+
+        $session = $this->getSessionStore($channelName)
+            ->load($context);
+
+        $session->setPageState(
+            PageState::create($pageClass, $pageAttributes)
+        );
+
+        $outgoingChannel = $this->outgoingChannelRegistry
+            ->get($channelName, $this->getChannelConfig($channelName));
+
+        $pendingDispatch = $this->makePendingPage($session->getPageState(), $session, $context, null);
+
+        $pendingDispatch->dispatch(
+            null,
+            fn(OMessageInterface $message, ?PageInterface $contextPage) => $this->processOutgoingMessage(
+                $message,
+                $channelName,
+                $session,
+                $contextPage,
+                fn(
+                    OMessageInterface $message,
+                    SessionInterface $session,
+                    ?PageInterface $contextPage
+                ) => $outgoingChannel->send($message, $session, $contextPage)
+            )
+        );
+
+        $session->save();
     }
 
+    /**
+     * @throws ChannelNotConfiguredException
+     */
+    protected function getSessionStore(string $channelName): SessionStoreInterface
+    {
+        return $this->sessionStoreFactory->make(
+            $this->getChannelConfig($channelName)
+                ->get('session', 'array'),
+            $channelName,
+            $this->getChannelConfig($channelName)
+        );
+    }
+
+    /**
+     * @throws ChannelNotConfiguredException
+     */
     public function getChannelConfig(string $channelName): ConfigInterface
     {
         try {
@@ -47,16 +109,57 @@ class ThreadFlowBot implements BotInterface
         }
     }
 
-    protected function getSessionStore(string $channelName): SessionStoreInterface
+    /**
+     * @throws InvalidNestedConfigException
+     */
+    public function getAvailableChannels(): array
     {
-        return $this->sessionStoreFactory->make(
-            $this->getChannelConfig($channelName)
-                ->get('session', 'array'),
-            $channelName,
-            $this->getChannelConfig($channelName)
-        );
+        return array_keys($this->config->getNested('channels')->all());
     }
 
+    /**
+     * @param string $channelName
+     * @param IMessageInterface $message
+     * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
+     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     * @throws ChannelNotConfiguredException
+     */
+    public function process(
+        string $channelName,
+        IMessageInterface $message,
+        ?Closure $incomingCallback = null,
+        ?Closure $outgoingCallback = null,
+    ): void {
+        $session = $this->getSessionStore($channelName)
+            ->load($message->getContext());
+
+        $pageState = $this->router->getCurrentPageState(
+            $message,
+            $session,
+            $this->getDefaultEntryPoint($channelName),
+        );
+
+        $message = $this->processIncomingMessage($message, $channelName, $session, $incomingCallback);
+
+        $pendingDispatchPage = $this->makePendingPage($pageState, $session, $message->getContext(), $message);
+
+        $pendingDispatchPage->dispatch(
+            null,
+            fn(OMessageInterface $message, ?PageInterface $contextPage) => $this->processOutgoingMessage(
+                $message,
+                $channelName,
+                $session,
+                $contextPage,
+                $outgoingCallback
+            )
+        );
+
+        $session->save();
+    }
+
+    /**
+     * @throws ChannelNotConfiguredException
+     */
     protected function getDefaultEntryPoint(string $channelName): string
     {
         return $this->getChannelConfig($channelName)
@@ -64,11 +167,11 @@ class ThreadFlowBot implements BotInterface
     }
 
     protected function processIncomingMessage(
-        IncomingMessageInterface $message,
+        IMessageInterface $message,
         string $channelName,
         SessionInterface $session,
         ?Closure $incomingCallback = null
-    ): ?IncomingMessageInterface {
+    ): IMessageInterface {
         foreach ($this->incomingCallbacks[$channelName] ?? [] as $callback) {
             $message = $callback($message, $session) ?? $message;
         }
@@ -77,91 +180,41 @@ class ThreadFlowBot implements BotInterface
             $message = $incomingCallback($message, $session) ?? $message;
         }
 
-        if ($message instanceof IgnoreIncomingMessage) {
-            return null;
-        }
-
         return $message;
     }
 
-    protected function processOutgoingMessage(
-        OutgoingMessageInterface $message,
-        string $channelName,
-        SessionInterface $session,
-        ?Closure $outgoingCallback = null
-    ): OutgoingMessageInterface {
-        foreach ($this->outgoingCallbacks[$channelName] ?? [] as $callback) {
-            $message = $callback($message, $session) ?? $message;
-        }
-
-        if ($message instanceof IgnoreOutgoingMessage) {
-            return $message;
-        }
-
-        return $outgoingCallback
-            ? ($outgoingCallback($message, $session) ?? $message)
-            : $message;
-    }
-
     protected function makePendingPage(
-        PageClassWithAttributes $pageClassWithAttributes,
+        PageStateInterface $pageState,
         SessionInterface $session,
-        IncomingMessageInterface $message,
-        RouterInterface $router
+        MessageContextInterface $messageContext,
+        ?IMessageInterface $message,
     ): PendingDispatchPage {
         $pendingDispatchPage = new PendingDispatchPage(
-            $pageClassWithAttributes->getPageClass(),
-            $pageClassWithAttributes->getAttributes(),
+            $pageState,
             $session,
+            $messageContext,
             $message,
-            $router
         );
 
-        $pendingDispatchPage->setBreadcrumbs(
-            $pageClassWithAttributes->getBreadcrumbs()
-        )->withBreadcrumbs();
+        $pendingDispatchPage->withBreadcrumbs();
 
         return $pendingDispatchPage;
     }
 
-    public function process(
+    protected function processOutgoingMessage(
+        OMessageInterface $message,
         string $channelName,
-        IncomingMessageInterface $message,
-        ?Closure $incomingCallback = null,
-        ?Closure $outgoingCallback = null,
-    ): void {
-        $session = $this->getSessionStore($channelName)
-            ->load($message->getContext());
-
-        $pageClassWithAttributes = $this->router->getCurrentPage(
-            $message,
-            $session,
-            $this->getDefaultEntryPoint($channelName),
-        );
-
-        $message = $this->processIncomingMessage($message, $channelName, $session, $incomingCallback);
-
-        if (is_null($message)) {
-            $session->close();
-            return;
+        SessionInterface $session,
+        ?PageInterface $contextPage = null,
+        ?Closure $outgoingCallback = null
+    ): OMessageInterface {
+        foreach ($this->outgoingCallbacks[$channelName] ?? [] as $callback) {
+            $message = $callback($message, $session, $contextPage) ?? $message;
         }
 
-        $this->makePendingPage(
-            $pageClassWithAttributes,
-            $session,
-            $message,
-            $this->router
-        )->dispatch(
-            null,
-            fn(OutgoingMessageInterface $message) => $this->processOutgoingMessage(
-                $message,
-                $channelName,
-                $session,
-                $outgoingCallback
-            )
-        );
-
-        $session->close();
+        return $outgoingCallback
+            ? ($outgoingCallback($message, $session, $contextPage) ?? $message)
+            : $message;
     }
 
     public function incoming(string $channelName, Closure $callback): void

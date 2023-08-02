@@ -3,20 +3,19 @@
 namespace SequentSoft\ThreadFlow\Contracts\Router;
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
-use SequentSoft\ThreadFlow\Router\PageClassWithAttributes;
 
 interface RouterInterface
 {
-    public function getCurrentPage(
+    public function getCurrentPageState(
         IncomingMessageInterface $message,
         SessionInterface $session,
         string $fallbackClass
-    ): PageClassWithAttributes;
+    ): PageStateInterface;
 
-    public function setCurrentPage(
+    public function setCurrentPageState(
         SessionInterface $session,
-        string $class,
-        array $attributes = [],
+        PageStateInterface $pageState,
     ): void;
 }

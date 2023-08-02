@@ -10,5 +10,6 @@ interface IncomingMessageInterface extends MessageInterface
 {
     public function getRaw(): ?array;
     public function getTimestamp(): DateTimeImmutable;
-    public function ignore(): IgnoreIncomingMessage;
+    public function getStateId(): ?string;
+    public function setStateId(?string $stateId): static;
 }

@@ -20,6 +20,11 @@ class TextOutgoingRegularMessage extends OutgoingRegularMessage implements TextO
         return $this->text;
     }
 
+    public function setText(string $text): void
+    {
+        $this->text = $text;
+    }
+
     public static function make(
         string $text,
         KeyboardInterface|array|null $keyboard = null,

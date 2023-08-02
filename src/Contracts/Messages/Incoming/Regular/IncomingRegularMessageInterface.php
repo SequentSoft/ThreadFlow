@@ -8,7 +8,7 @@ interface IncomingRegularMessageInterface extends IncomingMessageInterface
 {
     public function getText(): string;
 
-    public function setText(string $text);
+    public function setText(string $text): void;
 
     public function isText(?string $text = null): bool;
 

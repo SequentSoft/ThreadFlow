@@ -20,15 +20,11 @@ class CliThreadFlowCommand extends Command
 
     protected $description = 'Starts ThreadFlow CLI';
 
-    protected ?OutgoingMessageInterface $lastOutgoingMessage = null;
-
     protected array $lastKeyboardOptions = [];
 
     protected function processOutgoing(
-        OutgoingMessageInterface $message,
-        SessionInterface $session
+        OutgoingMessageInterface $message
     ): OutgoingMessageInterface {
-        $this->lastOutgoingMessage = $message;
         $this->lastKeyboardOptions = [];
 
         if ($message instanceof OutgoingRegularMessageInterface) {
@@ -49,15 +45,36 @@ class CliThreadFlowCommand extends Command
 
                 $this->table(['Keyboard'], $data);
             }
+
+            $this->newLine();
         }
 
         return $message;
     }
 
+    protected function inputTextFromUser(): string
+    {
+        if ($this->lastKeyboardOptions && function_exists('Laravel\Prompts\suggest')) {
+            return \Laravel\Prompts\suggest(
+                'Message or keyboard button',
+                $this->lastKeyboardOptions,
+            );
+        }
+
+        if (function_exists('Laravel\Prompts\text')) {
+            return \Laravel\Prompts\text(
+                'Message',
+                'Enter message text'
+            );
+        }
+
+        return $this->anticipate('Enter message text', $this->lastKeyboardOptions);
+    }
+
     /**
      * Handles the console command.
      */
-    public function handle()
+    public function handle(): void
     {
         $channelName = $this->option('channel');
 
@@ -81,10 +98,7 @@ class CliThreadFlowCommand extends Command
         $incomingChannel->listen(
             $dataFetcher,
             function (IncomingMessageInterface $message) use ($channelName, $dispatcher) {
-                $outgoingCallback = fn(
-                    OutgoingMessageInterface $message,
-                    SessionInterface $session
-                ) => $this->processOutgoing($message, $session);
+                $outgoingCallback = fn(OutgoingMessageInterface $message) => $this->processOutgoing($message);
 
                 $dispatcher->dispatch(
                     channelName: $channelName,
@@ -95,10 +109,9 @@ class CliThreadFlowCommand extends Command
         );
 
         while (true) {
-            $text = $this->anticipate('Enter message text', $this->lastKeyboardOptions);
             $dataFetcher([
                 'id' => Str::uuid(),
-                'text' => $text,
+                'text' => $this->inputTextFromUser(),
             ]);
         }
     }

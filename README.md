@@ -1,3 +1,12 @@
+
+<p align="center">
+<a href="https://github.com/SequentSoft/ThreadFlow/actions"><img src="https://github.com/SequentSoft/ThreadFlow/actions/workflows/tests.yml/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/sequentsoft/threadflow"><img src="https://img.shields.io/packagist/dt/sequentsoft/threadflow" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/sequentsoft/threadflow"><img src="https://img.shields.io/packagist/v/sequentsoft/threadflow" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/sequentsoft/threadflow"><img src="https://img.shields.io/packagist/l/sequentsoft/threadflow" alt="License"></a>
+</p>
+
+
 # ThreadFlow
 
 ThreadFlow is a flexible PHP library designed to simplify the process of developing chatbots, especially for the Laravel framework. It allows developers to easily structure chatbot logic with the concept of "pages". Depending on the driver, ThreadFlow can be used to create bots for different messaging platforms such as Telegram, Viber, and more.
@@ -100,16 +109,16 @@ ThreadFlow supports various types of incoming messages, making it a versatile to
 
 Below is a table that outlines each type of incoming message that ThreadFlow supports:
 
-| Type of Message | Corresponding Interface |
-|-----------------|-------------------------|
-| Audio | `AudioIncomingRegularMessageInterface` |
-| Contact | `ContactIncomingRegularMessageInterface` |
-| File | `FileIncomingRegularMessageInterface` |
-| Image | `ImageIncomingRegularMessageInterface` |
-| Location | `LocationIncomingRegularMessageInterface` |
-| Sticker | `StickerIncomingRegularMessageInterface` |
-| Text | `TextIncomingRegularMessageInterface` |
-| Video | `VideoIncomingRegularMessageInterface` |
+| Type of Message | Corresponding Interface                   |
+|-----------------|-------------------------------------------|
+| Audio           | `AudioIncomingRegularMessageInterface`    |
+| Contact         | `ContactIncomingRegularMessageInterface`  |
+| File            | `FileIncomingRegularMessageInterface`     |
+| Image           | `ImageIncomingRegularMessageInterface`    |
+| Location        | `LocationIncomingRegularMessageInterface` |
+| Sticker         | `StickerIncomingRegularMessageInterface`  |
+| Text            | `TextIncomingRegularMessageInterface`     |
+| Video           | `VideoIncomingRegularMessageInterface`    |
 
 Each of these interfaces in the namespace: `SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular`.
 
@@ -177,7 +186,18 @@ return $this->back(FallbackPage::class);
 ThreadFlow provides method to send messages back to the user. The `reply()` method sends a message to the user. It takes an argument that is an instance of a class that implements OutgoingRegularMessageInterface.
 
 ```php
-$this->reply(new TextOutgoingRegularMessage('Hello, user!'));
+$this->reply(
+    new TextOutgoingRegularMessage('Hello, user!')
+);
+```
+or
+```php
+$this->reply(
+    TextOutgoingRegularMessage::make('Hello, user!')
+        ->withKeyboard([
+            ['next' => 'Go to the next page'],
+        ])
+);
 ```
 
 ## Working with Keyboards
@@ -372,6 +392,8 @@ EnterPasswordPage:
 ```php
 class EnterPasswordPage extends AbstractPage
 {
+    protected string $login;
+
     protected function show()
     {
         $this->reply(TextOutgoingRegularMessage::make('Enter your password', [
@@ -386,9 +408,8 @@ class EnterPasswordPage extends AbstractPage
         }
 
         $password = $message->getText();
-        $login = $this->getAttribute('login');
 
-        if (validatePassword($login, $password)) {
+        if (validatePassword($this->login, $password)) {
             return $this->next(IndexPage::class);
         }
 

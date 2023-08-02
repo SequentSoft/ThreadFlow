@@ -14,11 +14,6 @@ class Config implements ConfigInterface
         $this->config = $config;
     }
 
-    public function isEmpty(): bool
-    {
-        return empty($this->config);
-    }
-
     /**
      * Get a config value by its key.
      *
@@ -34,13 +29,6 @@ class Config implements ConfigInterface
     public function all(): array
     {
         return $this->config;
-    }
-
-    public function merge(ConfigInterface $config): self
-    {
-        $this->config = array_merge($this->config, $config->all());
-
-        return $this;
     }
 
     public function getNested(string $key): ConfigInterface

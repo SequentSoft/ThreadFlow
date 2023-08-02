@@ -19,10 +19,15 @@
         "php": "^8.1"
     },
     "require-dev": {
+        "laravel/framework": "^9.0|^10.0",
         "mockery/mockery": "^1.6",
-        "pestphp/pest": "^2.8.0",
+        "pestphp/pest": "^2.9.0",
+        "pestphp/pest-plugin-type-coverage": "^2.0",
         "phpstan/phpstan": "^1.10",
         "squizlabs/php_codesniffer": "^3.7"
+    },
+    "suggest": {
+        "laravel/prompts": "Required for interactive cli commands"
     },
     "autoload": {
         "psr-4": {
@@ -49,7 +54,7 @@
                 "SequentSoft\\ThreadFlow\\LaravelServiceProvider"
             ],
             "aliases": {
-                "ThreadFlow": "SequentSoft\\ThreadFlow\\LaravelFacade"
+                "ThreadFlowBot": "SequentSoft\\ThreadFlow\\Laravel\\Facades\\ThreadFlowBot"
             }
         }
     },
@@ -58,6 +63,7 @@
         "test:lint": "phpcs",
         "test:types": "phpstan analyse --ansi --memory-limit=-1",
         "test:unit": "pest --colors=always",
+        "test:type-coverage": "pest --type-coverage --min=99",
         "test": [
             "@test:lint",
             "@test:types",
