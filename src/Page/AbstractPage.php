@@ -14,6 +14,7 @@ use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Session\PageState;
+use SequentSoft\ThreadFlow\Session\Session;
 
 abstract class AbstractPage implements PageInterface
 {
@@ -117,6 +118,23 @@ abstract class AbstractPage implements PageInterface
         return $this->session->getData();
     }
 
+    protected function embed($class)
+    {
+        $embedSession = $this->session()->get('embedSession');
+
+        if (! $embedSession) {
+            $embedSession = new Session($this->session(), PageState::create($class));
+            $this->session()->set('embedSession', $embedSession);
+        }
+
+        return new PendingDispatchPage(
+            $embedSession->getPageState(),
+            $embedSession,
+            $this->message->getContext(),
+            $this->message,
+        );
+    }
+
     protected function back(
         ?string $fallbackPageClass = null,
         array $fallbackPageAttributes = []
@@ -149,8 +167,33 @@ abstract class AbstractPage implements PageInterface
         );
     }
 
+    /**
+     * @phpstan-template T of OutgoingRegularMessageInterface
+     * @phpstan-param T $param
+     * @phpstan-return T
+     */
     protected function reply(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
     {
+        $message->setId(null);
+
+        if (! $message->getContext()) {
+            $message->setContext($this->messageContext);
+        }
+
+        return call_user_func($this->outgoingCallback, $message, $this);
+    }
+
+    /**
+     * @phpstan-template T of OutgoingRegularMessageInterface
+     * @phpstan-param T $param
+     * @phpstan-return T
+     */
+    protected function updateMessage(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
+    {
+        if (! $message->getId()) {
+            throw new \InvalidArgumentException('Message id is required for update');
+        }
+
         if (! $message->getContext()) {
             $message->setContext($this->messageContext);
         }

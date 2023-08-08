@@ -4,6 +4,7 @@ namespace SequentSoft\ThreadFlow\Page;
 
 use Closure;
 use Exception;
+use RuntimeException;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -51,6 +52,9 @@ class PendingDispatchPage implements PendingDispatchPageInterface
         return $this;
     }
 
+    /**
+     * @throws Exception
+     */
     public function dispatch(?PageInterface $contextPage, Closure $callback): PageInterface
     {
         if ($this->keepAliveContextPage && $contextPage) {
@@ -65,7 +69,7 @@ class PendingDispatchPage implements PendingDispatchPageInterface
         $pageClass = $this->state->getPageClass();
 
         if (is_null($pageClass)) {
-            throw new Exception('Page class is not defined');
+            throw new RuntimeException('Page class is not defined');
         }
 
         /** @var PageInterface $page */

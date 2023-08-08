@@ -15,14 +15,17 @@ class Row implements RowInterface
     public static function createFromArray(array $row): RowInterface
     {
         $buttons = [];
+
+        $isList = array_is_list($row);
+
         foreach ($row as $callbackData => $buttonOrText) {
             if ($buttonOrText instanceof ButtonInterface) {
                 if (is_null($buttonOrText->getCallbackData())) {
-                    $buttonOrText->setCallbackData($callbackData);
+                    $buttonOrText->callbackData($isList ? $buttonOrText->getText() : $callbackData);
                 }
                 $buttons[] = $buttonOrText;
             } else {
-                $buttons[] = Button::text($buttonOrText, $callbackData);
+                $buttons[] = Button::text($buttonOrText, $isList ? $buttonOrText : $callbackData);
             }
         }
         return new static($buttons);

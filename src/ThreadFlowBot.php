@@ -8,9 +8,13 @@ use Closure;
 use Exception;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
+use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
+use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface as OMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -35,7 +39,20 @@ class ThreadFlowBot implements BotInterface
         protected SessionStoreFactoryInterface $sessionStoreFactory,
         protected RouterInterface $router,
         protected OutgoingChannelRegistryInterface $outgoingChannelRegistry,
+        protected IncomingChannelRegistryInterface $incomingChannelRegistry,
+        protected DispatcherFactoryInterface $dispatcherFactory,
+        protected EventBusInterface $eventBus,
     ) {
+    }
+
+    /**
+     * @param class-string $event
+     * @param callable $callback
+     * @return void
+     */
+    public function on(string $event, callable $callback): void
+    {
+        $this->eventBus->listen($event, $callback);
     }
 
     /**
@@ -118,11 +135,12 @@ class ThreadFlowBot implements BotInterface
     }
 
     /**
-     * @param string $channelName
+     * @param class-string<PageInterface> $channelName
      * @param IMessageInterface $message
      * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
      * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
      * @throws ChannelNotConfiguredException
+     * @throws Exception
      */
     public function process(
         string $channelName,
@@ -133,13 +151,13 @@ class ThreadFlowBot implements BotInterface
         $session = $this->getSessionStore($channelName)
             ->load($message->getContext());
 
+        $message = $this->processIncomingMessage($message, $channelName, $session, $incomingCallback);
+
         $pageState = $this->router->getCurrentPageState(
             $message,
             $session,
             $this->getDefaultEntryPoint($channelName),
         );
-
-        $message = $this->processIncomingMessage($message, $channelName, $session, $incomingCallback);
 
         $pendingDispatchPage = $this->makePendingPage($pageState, $session, $message->getContext(), $message);
 
@@ -155,6 +173,145 @@ class ThreadFlowBot implements BotInterface
         );
 
         $session->save();
+    }
+
+    /**
+     * @param class-string<PageInterface> $channelName
+     * @param IMessageInterface $message
+     * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
+     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     * @throws ChannelNotConfiguredException
+     */
+    public function dispatch(
+        string $channelName,
+        IMessageInterface $message,
+        ?Closure $incomingCallback = null,
+        ?Closure $outgoingCallback = null,
+    ): void {
+        $dispatcherName = $this->getChannelConfig($channelName)
+            ->get('dispatcher', 'sync');
+
+        $this->dispatcherFactory->make($dispatcherName, $this)
+            ->dispatch($channelName, $message, $incomingCallback, $outgoingCallback);
+    }
+
+    /**
+     * @param class-string<PageInterface> $channelName
+     * @param IMessageInterface $message
+     * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
+     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     */
+    public function dispatchSync(
+        string $channelName,
+        IMessageInterface $message,
+        ?Closure $incomingCallback = null,
+        ?Closure $outgoingCallback = null,
+    ): void {
+        $this->dispatcherFactory->make('sync', $this)
+            ->dispatch($channelName, $message, $incomingCallback, $outgoingCallback);
+    }
+
+    /**
+     * @param string $dispatcherMethod
+     * @param string $channelName
+     * @param DataFetcherInterface $dataFetcher
+     * @param ?Closure(IMessageInterface):IMessageInterface $beforeDispatchCallback
+     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     * @return void
+     * @throws ChannelNotConfiguredException
+     */
+    protected function listenUsingDispatcher(
+        string $dispatcherMethod,
+        string $channelName,
+        DataFetcherInterface $dataFetcher,
+        ?Closure $beforeDispatchCallback = null,
+        ?Closure $outgoingCallback = null
+    ): void {
+
+        $config = $this->getChannelConfig($channelName);
+        $outgoingChannel = $this->outgoingChannelRegistry->get($channelName, $config);
+        $incomingChannel = $this->incomingChannelRegistry->get($channelName, $config);
+
+        $incomingChannel->listen(
+            $dataFetcher,
+            function (IMessageInterface $message) use (
+                $dispatcherMethod,
+                $outgoingCallback,
+                $beforeDispatchCallback,
+                $channelName,
+                $outgoingChannel,
+                $incomingChannel
+            ) {
+                if ($beforeDispatchCallback) {
+                    $beforeDispatchCallback($message);
+                }
+
+                $this->$dispatcherMethod(
+                    $channelName,
+                    $message,
+                    fn(IMessageInterface $message, SessionInterface $session) => $incomingChannel
+                        ->preprocess($message, $session),
+
+                    function (
+                        OMessageInterface $message,
+                        SessionInterface $session,
+                        ?PageInterface $contextPage
+                    ) use ($outgoingChannel, $outgoingCallback) {
+                        if ($outgoingCallback) {
+                            $outgoingCallback($message, $session, $contextPage);
+                        }
+
+                        $outgoingChannel->send($message, $session, $contextPage);
+                    },
+                );
+            }
+        );
+    }
+
+    /**
+     * @param string $channelName
+     * @param DataFetcherInterface $dataFetcher
+     * @param ?Closure(IMessageInterface):IMessageInterface $beforeDispatchCallback
+     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     * @return void
+     * @throws ChannelNotConfiguredException
+     */
+    public function listen(
+        string $channelName,
+        DataFetcherInterface $dataFetcher,
+        ?Closure $beforeDispatchCallback = null,
+        ?Closure $outgoingCallback = null
+    ): void {
+        $this->listenUsingDispatcher(
+            'dispatch',
+            $channelName,
+            $dataFetcher,
+            $beforeDispatchCallback,
+            $outgoingCallback
+        );
+    }
+
+    /**
+     * @param string $channelName
+     * @param DataFetcherInterface $dataFetcher
+     * @param ?Closure(IMessageInterface):IMessageInterface $beforeDispatchCallback
+     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     * @return void
+     * @throws ChannelNotConfiguredException
+     */
+    public function listenSync(
+        string $channelName,
+        DataFetcherInterface $dataFetcher,
+        ?Closure $beforeDispatchCallback = null,
+        ?Closure $outgoingCallback = null
+    ): void {
+        $this->listenUsingDispatcher(
+            'dispatchSync',
+            $channelName,
+            $dataFetcher,
+            $beforeDispatchCallback,
+            $outgoingCallback
+        );
     }
 
     /**

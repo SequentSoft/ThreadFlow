@@ -13,11 +13,17 @@ abstract class OutgoingRegularMessage extends OutgoingMessage implements Outgoin
     protected ?KeyboardInterface $keyboard = null;
 
     public function withKeyboard(
-        KeyboardInterface|array|null $keyboard
+        KeyboardInterface|array|null $keyboard,
+        ?string $placeholder = null,
     ): OutgoingRegularMessageInterface {
         $this->keyboard = is_array($keyboard)
             ? Keyboard::createFromArray($keyboard)
             : $keyboard;
+
+        if ($placeholder) {
+            $this->keyboard->placeholder($placeholder);
+        }
+
         return $this;
     }
 

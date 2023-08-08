@@ -19,12 +19,12 @@ class MessageContext implements MessageContextInterface
 
     public static function createFromIds(
         string $participantId,
-        string $roomId,
+        ?string $roomId = null,
         ?string $forwardFromId = null,
     ): static {
         return new static(
             new Participant($participantId),
-            new Room($roomId),
+            new Room($roomId ?: $participantId),
             $forwardFromId ? new Participant($forwardFromId) : null,
         );
     }

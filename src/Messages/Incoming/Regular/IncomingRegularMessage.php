@@ -28,6 +28,24 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
         return is_null($text) || $this->getText() === $text;
     }
 
+    public function isTextContains(string $text): bool
+    {
+        if (! $this->isText()) {
+            return false;
+        }
+
+        return str_contains($this->getText(), $text);
+    }
+
+    public function isTextRegex(string $pattern): bool
+    {
+        if (! $this->isText()) {
+            return false;
+        }
+
+        return preg_match($pattern, $this->getText()) > 0;
+    }
+
     public function getText(): string
     {
         return $this->text;

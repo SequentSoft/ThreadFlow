@@ -5,4 +5,14 @@ namespace SequentSoft\ThreadFlow\Contracts\Keyboard;
 interface CommonKeyboardInterface extends KeyboardInterface
 {
     public function oneTimeKeyboard(bool $oneTime = true): self;
+
+    public function resizable(bool $resizable = true): self;
+
+    public function placeholder(string $placeholder): self;
+
+    public function isOneTime(): bool;
+
+    public function isResizable(): bool;
+
+    public function getPlaceholder(): string;
 }

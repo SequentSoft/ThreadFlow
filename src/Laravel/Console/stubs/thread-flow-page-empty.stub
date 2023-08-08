@@ -8,7 +8,7 @@ use SequentSoft\ThreadFlow\Page\AbstractPage;
 
 class {{ class }} extends AbstractPage
 {
-    protected function show()
+    protected function show(): void
     {
         //
     }

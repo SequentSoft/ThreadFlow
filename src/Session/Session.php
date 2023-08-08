@@ -144,5 +144,7 @@ class Session implements SessionInterface
         $this->pageState = $data['pageState'];
         $this->backgroundPageStates = $data['backgroundPageStates'];
         $this->breadcrumbs = $data['breadcrumbs'];
+        $this->closedCallback = null;
+        $this->saveCallback = null;
     }
 }

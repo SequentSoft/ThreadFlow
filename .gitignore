@@ -5,6 +5,9 @@
 /composer.lock
 /phpunit.xml
 /vendor/
+/node_modules
+/docs/.vitepress/dist
+/docs/.vitepress/cache
 /tools
 *.swp
 *.swo

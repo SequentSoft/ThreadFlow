@@ -36,7 +36,7 @@ class Button implements ButtonInterface
         return $this->requestLocation;
     }
 
-    public function setCallbackData(?string $callbackData): static
+    public function callbackData(?string $callbackData): static
     {
         $this->callbackData = $callbackData;
         return $this;

@@ -20,17 +20,6 @@ return [
     */
     'channels' => [
 
-        'cli' => [
-            'driver' => 'cli',
-            'session' => 'array',
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        ],
-
-        'test' => [
-            'driver' => 'test',
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        ],
-
         'telegram' => [
             'driver' => 'telegram',
             'session' => 'cache', // cache or array
@@ -40,6 +29,17 @@ return [
             'webhook_url' => env('THREAD_FLOW_TELEGRAM_WEBHOOK_URL', null),
             'timeout' => 30,
             'limit' => 100,
+        ],
+
+        'cli' => [
+            'driver' => 'cli',
+            'session' => 'array',
+            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
+        ],
+
+        'test' => [
+            'driver' => 'test',
+            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
         ],
     ],
 ];

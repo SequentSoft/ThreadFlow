@@ -6,6 +6,7 @@ use Closure;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
 
 class SyncIncomingDispatcher implements DispatcherInterface
 {
@@ -14,6 +15,9 @@ class SyncIncomingDispatcher implements DispatcherInterface
     ) {
     }
 
+    /**
+     * @throws ChannelNotConfiguredException
+     */
     public function dispatch(
         string $channelName,
         IncomingMessageInterface $message,

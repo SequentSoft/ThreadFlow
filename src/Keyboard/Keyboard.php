@@ -2,30 +2,49 @@
 
 namespace SequentSoft\ThreadFlow\Keyboard;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\CommonKeyboardInterface;
 
-class Keyboard implements KeyboardInterface
+class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
 {
-    final public function __construct(
-        protected array $rows,
-    ) {
+    protected bool $oneTime = false;
+
+    protected bool $resizable = false;
+
+    protected string $placeholder = '';
+
+    public function oneTimeKeyboard(bool $oneTime = true): CommonKeyboardInterface
+    {
+        $this->oneTime = $oneTime;
+
+        return $this;
     }
 
-    public function getRows(): array
+    public function isOneTime(): bool
     {
-        return $this->rows;
+        return $this->oneTime;
     }
 
-    /**
-     * @param string[][] $keyboard
-     * @return KeyboardInterface
-     */
-    public static function createFromArray(array $keyboard): KeyboardInterface
+    public function resizable(bool $resizable = true): self
     {
-        $rows = [];
-        foreach ($keyboard as $row) {
-            $rows[] = Row::createFromArray($row);
-        }
-        return new static($rows);
+        $this->resizable = $resizable;
+
+        return $this;
+    }
+
+    public function isResizable(): bool
+    {
+        return $this->resizable;
+    }
+
+    public function placeholder(string $placeholder): self
+    {
+        $this->placeholder = $placeholder;
+
+        return $this;
+    }
+
+    public function getPlaceholder(): string
+    {
+        return $this->placeholder;
     }
 }
