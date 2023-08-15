@@ -24,14 +24,22 @@ abstract class OutgoingMessage extends Message implements OutgoingMessageInterfa
 
     public function reply(): static
     {
-        return (function ($message) {
+        return (function (OutgoingMessageInterface $message) {
+            if (! method_exists($this, 'reply')) {
+                throw new RuntimeException('Method reply() not implemented');
+            }
+
             return $this->reply($message);
         })->call($this->getContextPage(), $this);
     }
 
     public function update(): static
     {
-        return (function ($message) {
+        return (function (OutgoingMessageInterface $message) {
+            if (! method_exists($this, 'updateMessage')) {
+                throw new RuntimeException('Method updateMessage() not implemented');
+            }
+
             return $this->updateMessage($message);
         })->call($this->getContextPage(), $this);
     }

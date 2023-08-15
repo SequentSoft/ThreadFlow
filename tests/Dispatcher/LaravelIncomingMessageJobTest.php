@@ -4,6 +4,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\BotManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
@@ -30,29 +31,14 @@ it('can be dispatched', function () {
         'text'
     ));
 
+    $botManagerMock = Mockery::mock(BotManagerInterface::class);
+
     $botMock = Mockery::mock(BotInterface::class);
-    $incomingChannelRegistryMock = Mockery::mock(IncomingChannelRegistryInterface::class);
-    $outgoingChannelRegistryMock = Mockery::mock(OutgoingChannelRegistryInterface::class);
 
-    $botMock->shouldReceive('getChannelConfig')->andReturn(new Config([
-        'test' => [
-            'driver' => 'test',
-        ],
-    ]));
+    $botMock->shouldReceive('setDispatcher')->once();
+    $botMock->shouldReceive('dispatch')->once();
 
-    $incomingChannelRegistryMock->shouldReceive('get')->andReturn(Mockery::mock(IncomingChannelInterface::class));
-    $outgoingChannelRegistryMock->shouldReceive('get')->andReturn(Mockery::mock(OutgoingChannelInterface::class));
+    $botManagerMock->shouldReceive('channel')->andReturn($botMock);
 
-    $botMock->shouldReceive('process')->with(
-        'test',
-        Mockery::type(TextIncomingRegularMessage::class),
-        Mockery::type(Closure::class),
-        Mockery::type(Closure::class)
-    )->once();
-
-    $job->handle(
-        $botMock,
-        $incomingChannelRegistryMock,
-        $outgoingChannelRegistryMock
-    );
+    $job->handle($botManagerMock);
 });

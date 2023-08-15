@@ -3,10 +3,9 @@
 namespace SequentSoft\ThreadFlow\Events;
 
 use SequentSoft\ThreadFlow\Contracts\Events\ChannelEventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
 
-class EventBus implements EventBusInterface
+class ChannelEventBus implements ChannelEventBusInterface
 {
     protected array $listeners = [];
 
@@ -20,25 +19,16 @@ class EventBus implements EventBusInterface
         $this->listeners[$event][] = $callback;
     }
 
-    public function fire(string $channelName, EventInterface $event): void
+    public function fire(EventInterface $event): void
     {
         $className = get_class($event);
 
         foreach ($this->listeners[$className] ?? [] as $listener) {
-            $listener($channelName, $event);
+            $listener($event);
         }
 
         foreach ($this->listeners['*'] ?? [] as $listener) {
-            $listener($channelName, $event);
+            $listener($event);
         }
-    }
-
-    public function makeChannelEventBus(string $channelName): ChannelEventBusInterface
-    {
-        $eventBus = new ChannelEventBus();
-
-        $eventBus->listen('*', fn (EventInterface $event) => $this->fire($channelName, $event));
-
-        return $eventBus;
     }
 }

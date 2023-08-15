@@ -9,8 +9,6 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 interface OutgoingChannelInterface
 {
-    public function getConfig(): SimpleConfigInterface;
-
     public function send(
         OutgoingMessageInterface $message,
         SessionInterface $session,

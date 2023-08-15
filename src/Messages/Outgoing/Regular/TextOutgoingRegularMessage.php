@@ -7,5 +7,4 @@ namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
  */
 class TextOutgoingRegularMessage extends TextOutgoingMessage
 {
-
 }

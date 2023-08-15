@@ -7,12 +7,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use SequentSoft\ThreadFlow\Contracts\BotInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
-use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelRegistryInterface;
+use SequentSoft\ThreadFlow\Contracts\BotManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
+use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
+use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
 
 class IncomingMessageJob implements ShouldQueue
 {
@@ -27,26 +25,15 @@ class IncomingMessageJob implements ShouldQueue
     ) {
     }
 
-    public function handle(
-        BotInterface $bot,
-        IncomingChannelRegistryInterface $incomingChannelRegistry,
-        OutgoingChannelRegistryInterface $outgoingChannelRegistry,
-    ): void {
-        $channelConfig = $bot->getChannelConfig($this->channelName);
-        $incomingChannel = $incomingChannelRegistry->get($this->channelName, $channelConfig);
-        $outgoingChannel = $outgoingChannelRegistry->get($this->channelName, $channelConfig);
+    /**
+     * @throws InvalidNestedConfigException
+     */
+    public function handle(BotManagerInterface $botManager): void
+    {
+        $bot = $botManager->channel($this->channelName);
 
-        $bot->process(
-            $this->channelName,
-            $this->message,
-            fn(
-                IncomingMessageInterface $message,
-                SessionInterface $session
-            ) => $incomingChannel->preprocess($message, $session),
-            fn(
-                OutgoingMessageInterface $message,
-                SessionInterface $session
-            ) => $outgoingChannel->send($message, $session),
-        );
+        $bot->setDispatcher(new SyncIncomingDispatcher());
+
+        $bot->dispatch($this->message);
     }
 }

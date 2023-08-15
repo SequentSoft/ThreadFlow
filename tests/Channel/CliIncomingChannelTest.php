@@ -21,20 +21,6 @@ it('can be created', function () {
     expect($channel)->toBeInstanceOf(CliIncomingChannel::class);
 });
 
-it('can return config', function () {
-
-    $messageContext = MessageContext::createFromIds('1', '1');
-
-    $config = new Config([]);
-
-    $channel = new CliIncomingChannel(
-        $messageContext,
-        $config
-    );
-
-    expect($channel->getConfig())->toBeInstanceOf(Config::class);
-});
-
 it('can listen', function () {
 
     $messageContext = MessageContext::createFromIds('1', '1');
@@ -76,6 +62,10 @@ it('can preprocess', function () {
         $config
     );
 
+    $pageState = \SequentSoft\ThreadFlow\Session\PageState::create(
+        \Tests\Stubs\EmptyPage::class,
+    );
+
     $message = new TextIncomingRegularMessage(
         '1',
         $messageContext,
@@ -85,7 +75,8 @@ it('can preprocess', function () {
 
     $preprocessedMessage = $channel->preprocess(
         $message,
-        new Session()
+        new Session(),
+        $pageState
     );
 
     expect($preprocessedMessage)->toBeInstanceOf(TextIncomingRegularMessage::class);

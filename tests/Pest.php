@@ -5,7 +5,7 @@ use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
 use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
-use SequentSoft\ThreadFlow\ThreadFlowBot;
+use SequentSoft\ThreadFlow\ChannelBot;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 
 /*

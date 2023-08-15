@@ -2,10 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
-use InvalidArgumentException;
-use Closure;
+use Exception;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 
@@ -17,6 +15,9 @@ class ArraySessionStore implements SessionStoreInterface
     ) {
     }
 
+    /**
+     * @throws Exception
+     */
     public function load(
         MessageContextInterface $context
     ): SessionInterface {

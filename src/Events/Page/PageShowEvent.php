@@ -1,0 +1,20 @@
+<?php
+
+namespace SequentSoft\ThreadFlow\Events\Page;
+
+use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
+
+class PageShowEvent implements EventInterface
+{
+    public function __construct(
+        protected PageInterface $page
+    ) {
+    }
+
+    public function getPage(): PageInterface
+    {
+        return $this->page;
+    }
+}

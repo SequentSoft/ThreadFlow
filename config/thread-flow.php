@@ -31,15 +31,5 @@ return [
             'limit' => 100,
         ],
 
-        'cli' => [
-            'driver' => 'cli',
-            'session' => 'array',
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        ],
-
-        'test' => [
-            'driver' => 'test',
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        ],
     ],
 ];

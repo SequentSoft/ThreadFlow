@@ -7,9 +7,7 @@ use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 
 it('can be created', function () {
-    $botMock = Mockery::mock(BotInterface::class);
-
-    $dispatcher = new SyncIncomingDispatcher($botMock);
+    $dispatcher = new SyncIncomingDispatcher();
 
     expect($dispatcher)->toBeInstanceOf(DispatcherInterface::class);
 });
@@ -18,16 +16,14 @@ it('can be created', function () {
 it('can dispatch a message', function () {
     $botMock = Mockery::mock(BotInterface::class);
 
-    $dispatcher = new SyncIncomingDispatcher($botMock);
+    $dispatcher = new SyncIncomingDispatcher();
 
     $botMock->shouldReceive('process')->with(
-        'test',
         Mockery::type(TextIncomingRegularMessage::class),
-        null,
-        null,
+        null
     )->once();
 
-    $dispatcher->dispatch('test', new TextIncomingRegularMessage(
+    $dispatcher->dispatch($botMock, new TextIncomingRegularMessage(
         'id',
         MessageContext::createFromIds('id', 'id'),
         new DateTimeImmutable(),

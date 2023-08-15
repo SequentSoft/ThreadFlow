@@ -2,7 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Events;
 
-interface EventBusInterface
+interface ChannelEventBusInterface
 {
     /**
      * @param class-string<EventInterface> $event
@@ -11,7 +11,5 @@ interface EventBusInterface
      */
     public function listen(string $event, callable $callback): void;
 
-    public function fire(string $channelName, EventInterface $event): void;
-
-    public function makeChannelEventBus(string $channelName): ChannelEventBusInterface;
+    public function fire(EventInterface $event): void;
 }

@@ -7,6 +7,7 @@ use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInt
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotFoundException;
@@ -31,13 +32,14 @@ it('can register channel', function () {
                 return $this->config;
             }
 
-            public function listen(DataFetcherInterface $dataFetcher, Closure $callback): void
+            public function listen(DataFetcherInterface $fetcher, Closure $callback): void
             {
             }
 
             public function preprocess(
                 IncomingMessageInterface $message,
-                SessionInterface $session
+                SessionInterface $session,
+                PageStateInterface $pageState
             ): IncomingMessageInterface {
                 return $message;
             }

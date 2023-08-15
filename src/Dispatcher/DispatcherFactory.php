@@ -17,12 +17,12 @@ class DispatcherFactory implements DispatcherFactoryInterface
         $this->registeredDispatchers[$name] = $callback;
     }
 
-    public function make(string $name, BotInterface $bot): DispatcherInterface
+    public function make(string $name): DispatcherInterface
     {
         if (!isset($this->registeredDispatchers[$name])) {
             throw new InvalidArgumentException("Dispatcher {$name} is not registered.");
         }
 
-        return call_user_func($this->registeredDispatchers[$name], $bot);
+        return call_user_func($this->registeredDispatchers[$name]);
     }
 }

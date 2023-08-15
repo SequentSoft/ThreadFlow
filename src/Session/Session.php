@@ -3,6 +3,7 @@
 namespace SequentSoft\ThreadFlow\Session;
 
 use Closure;
+use Exception;
 use RuntimeException;
 use SequentSoft\ThreadFlow\Contracts\Session\BackgroundPageStatesCollectionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\BreadcrumbsCollectionInterface;
@@ -22,6 +23,9 @@ class Session implements SessionInterface
 
     protected BreadcrumbsCollectionInterface $breadcrumbs;
 
+    /**
+     * @throws Exception
+     */
     final public function __construct(
         SessionDataInterface|array $data = [],
         PageStateInterface|string|null $pageState = null,

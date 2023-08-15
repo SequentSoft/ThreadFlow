@@ -5,7 +5,7 @@ namespace SequentSoft\ThreadFlow;
 use Illuminate\Support\ServiceProvider;
 use SequentSoft\ThreadFlow\Channel\Incoming\IncomingChannelRegistry;
 use SequentSoft\ThreadFlow\Channel\Outgoing\OutgoingChannelRegistry;
-use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\BotManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
@@ -35,8 +35,8 @@ class LaravelServiceProvider extends ServiceProvider
 
         $this->app->bind(EventBusInterface::class, EventBus::class);
 
-        $this->app->bind(BotInterface::class, function () {
-            return new ThreadFlowBot(
+        $this->app->bind(BotManagerInterface::class, function () {
+            return new ThreadFlowBotManager(
                 new Config($this->app->make('config')->get('thread-flow', [])),
                 $this->app->make(SessionStoreFactoryInterface::class),
                 $this->app->make(RouterInterface::class),
@@ -52,24 +52,17 @@ class LaravelServiceProvider extends ServiceProvider
         $this->app->singleton(SessionStoreFactoryInterface::class, function () {
             $factory = new SessionStoreFactory();
 
-            $factory->register(
-                'array',
-                function (string $channelName) {
-                    return $this->app->make(ArraySessionStore::class, [
-                        'channelName' => $channelName,
-                        'storage' => $this->app->make(ArraySessionStoreStorage::class),
-                    ]);
-                }
-            );
+            $factory->register('array', fn(string $channelName) => new ArraySessionStore(
+                $channelName,
+                $this->app->make(ArraySessionStoreStorage::class),
+            ));
 
             $factory->register(
                 'cache',
-                function (string $channelName, ConfigInterface $config) {
-                    return $this->app->make(
-                        LaravelCacheSessionStore::class,
-                        ['channelName' => $channelName, 'config' => $config]
-                    );
-                }
+                fn(string $channelName, ConfigInterface $config) => new LaravelCacheSessionStore(
+                    $channelName,
+                    $config,
+                )
             );
 
             return $factory;
@@ -77,20 +70,12 @@ class LaravelServiceProvider extends ServiceProvider
 
         $this->app->singleton(DispatcherFactoryInterface::class, function () {
             $factory = new DispatcherFactory();
-
-            $factory->register('sync', function (BotInterface $bot) {
-                return new SyncIncomingDispatcher($bot);
-            });
-
-            $factory->register('queue', function () {
-                return new LaravelQueueIncomingDispatcher();
-            });
-
+            $factory->register('sync', fn () => new SyncIncomingDispatcher());
+            $factory->register('queue', fn () => new LaravelQueueIncomingDispatcher());
             return $factory;
         });
 
         $this->app->singleton(IncomingChannelRegistryInterface::class, IncomingChannelRegistry::class);
-
         $this->app->singleton(OutgoingChannelRegistryInterface::class, OutgoingChannelRegistry::class);
     }
 

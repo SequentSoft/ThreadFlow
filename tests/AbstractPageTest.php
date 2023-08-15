@@ -3,6 +3,7 @@
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
+use SequentSoft\ThreadFlow\Events\ChannelEventBus;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Messages\Incoming\Service\NewParticipantIncomingServiceMessage;
 use SequentSoft\ThreadFlow\Session\PageState;
@@ -12,7 +13,10 @@ beforeEach(function () {
     $this->makePageWithTextMessage = function (string $class, array $attributes = []) {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
+        $eventBus = new ChannelEventBus();
         return new $class(
+            'test',
+            $eventBus,
             $state,
             $session,
             MessageContext::createFromIds('id', 'id'),
@@ -28,7 +32,10 @@ beforeEach(function () {
     $this->makePageWithServiceMessage = function (string $class, array $attributes = []) {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
+        $eventBus = new ChannelEventBus();
         return new $class(
+            'test',
+            $eventBus,
             $state,
             $session,
             MessageContext::createFromIds('id', 'id'),
@@ -43,7 +50,10 @@ beforeEach(function () {
     $this->makePageWithoutMessage = function (string $class, array $attributes = []) {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
+        $eventBus = new ChannelEventBus();
         return new $class(
+            'test',
+            $eventBus,
             $state,
             $session,
             MessageContext::createFromIds('id', 'id'),
@@ -67,10 +77,10 @@ it('can be executed with text message', function () {
 
     $spy = Mockery::spy();
 
-    $result = $page1->execute(fn () => $spy->pageExecuteMessageCallback());
+    $result = $page1->execute(fn() => $spy->pageExecuteMessageCallback());
     expect($result)->toBeNull();
 
-    $page2->execute(fn () => $spy->pageExecuteMessageCallback());
+    $page2->execute(fn() => $spy->pageExecuteMessageCallback());
     $spy->shouldNotHaveReceived('pageExecuteMessageCallback');
 });
 
@@ -80,10 +90,10 @@ it('can be executed with service message', function () {
 
     $spy = Mockery::spy();
 
-    $result = $page1->execute(fn () => $spy->pageExecuteMessageCallback());
+    $result = $page1->execute(fn() => $spy->pageExecuteMessageCallback());
     expect($result)->toBeNull();
 
-    $page2->execute(fn () => $spy->pageExecuteMessageCallback());
+    $page2->execute(fn() => $spy->pageExecuteMessageCallback());
     $spy->shouldNotHaveReceived('pageExecuteMessageCallback');
 });
 
@@ -93,10 +103,10 @@ it('can be executed without message', function () {
 
     $spy = Mockery::spy();
 
-    $result = $page1->execute(fn () => $spy->pageExecuteMessageCallback());
+    $result = $page1->execute(fn() => $spy->pageExecuteMessageCallback());
     expect($result)->toBeNull();
 
-    $page2->execute(fn () => $spy->pageExecuteMessageCallback());
+    $page2->execute(fn() => $spy->pageExecuteMessageCallback());
     $spy->shouldNotHaveReceived('pageExecuteMessageCallback');
 });
 

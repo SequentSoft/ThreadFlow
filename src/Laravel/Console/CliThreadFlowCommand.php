@@ -5,18 +5,22 @@ namespace SequentSoft\ThreadFlow\Laravel\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use SequentSoft\ThreadFlow\Channel\Incoming\CliIncomingChannel;
+use SequentSoft\ThreadFlow\Channel\Outgoing\CallbackOutgoingChannel;
+use SequentSoft\ThreadFlow\ChannelBot;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
-use SequentSoft\ThreadFlow\Contracts\BotInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\DataFetchers\InvokableDataFetcher;
 use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
+use SequentSoft\ThreadFlow\Events\ChannelEventBus;
+use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
+use SequentSoft\ThreadFlow\Session\ArraySessionStore;
+use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
 
 class CliThreadFlowCommand extends Command
 {
-    protected $signature = 'thread-flow:cli {--channel=cli} {--participant-id=1} {--room-id=1}';
+    protected $signature = 'thread-flow:cli';
 
     protected $description = 'Starts ThreadFlow CLI';
 
@@ -27,27 +31,29 @@ class CliThreadFlowCommand extends Command
     ): OutgoingMessageInterface {
         $this->lastKeyboardOptions = [];
 
-        if ($message instanceof OutgoingRegularMessageInterface) {
-            $this->comment('[BOT ANSWER]:');
+        $this->comment('[BOT ANSWER]:');
+
+        if ($message instanceof TextOutgoingRegularMessageInterface) {
             $this->line($message->getText());
+        } else {
+            $this->line('Message type: ' . get_class($message));
+        }
 
-            if ($message->getKeyboard()) {
-                $data = [];
-                $rows = $message->getKeyboard()->getRows();
-                foreach ($rows as $rowIndex => $row) {
-                    $buttons = $row->getButtons();
-                    foreach ($buttons as $button) {
-                        $this->lastKeyboardOptions[] = $button->getCallbackData();
-                        $data[$rowIndex][] = '<comment>' . $button->getCallbackData(
-                        ) . '</comment>: ' . $button->getText();
-                    }
+        if ($message->getKeyboard()) {
+            $data = [];
+            $rows = $message->getKeyboard()->getRows();
+            foreach ($rows as $rowIndex => $row) {
+                $buttons = $row->getButtons();
+                foreach ($buttons as $button) {
+                    $this->lastKeyboardOptions[] = $button->getCallbackData();
+                    $data[$rowIndex][] = '<comment>' . $button->getCallbackData() . '</comment>: ' . $button->getText();
                 }
-
-                $this->table(['Keyboard'], $data);
             }
 
-            $this->newLine();
+            $this->table(['Keyboard'], $data);
         }
+
+        $this->newLine();
 
         return $message;
     }
@@ -71,42 +77,37 @@ class CliThreadFlowCommand extends Command
         return $this->anticipate('Enter message text', $this->lastKeyboardOptions);
     }
 
-    /**
-     * Handles the console command.
-     */
     public function handle(): void
     {
-        $channelName = $this->option('channel');
+        $this->output->title('ThreadFlow Cli');
 
-        $config = app(BotInterface::class)->getChannelConfig($channelName);
+        $messageContext = MessageContext::createFromIds('cli-user', 'cli-room');
 
-        $messageContext = MessageContext::createFromIds(
-            $this->option('participant-id'),
-            $this->option('room-id'),
+        $cliConfig = new Config([
+            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
+        ]);
+
+        $eventBus = new ChannelEventBus();
+
+        $outgoingChannel = new CallbackOutgoingChannel(
+            $cliConfig,
+            fn(OutgoingMessageInterface $message) => $this->processOutgoing($message)
         );
 
-        $incomingChannel = new CliIncomingChannel($messageContext, $config);
-
-        $dispatcher = new SyncIncomingDispatcher(
-            app(BotInterface::class),
+        $channelBot = new ChannelBot(
+            'cli',
+            $cliConfig,
+            new ArraySessionStore('cli', app(ArraySessionStoreStorage::class)),
+            new StatefulPageRouter(),
+            $outgoingChannel,
+            new CliIncomingChannel($messageContext, $cliConfig),
+            new SyncIncomingDispatcher(),
+            $eventBus
         );
 
         $dataFetcher = new InvokableDataFetcher();
 
-        $this->output->title('ThreadFlow Cli');
-
-        $incomingChannel->listen(
-            $dataFetcher,
-            function (IncomingMessageInterface $message) use ($channelName, $dispatcher) {
-                $outgoingCallback = fn(OutgoingMessageInterface $message) => $this->processOutgoing($message);
-
-                $dispatcher->dispatch(
-                    channelName: $channelName,
-                    message: $message,
-                    outgoingCallback: $outgoingCallback,
-                );
-            }
-        );
+        $channelBot->listen($dataFetcher);
 
         while (true) {
             $dataFetcher([

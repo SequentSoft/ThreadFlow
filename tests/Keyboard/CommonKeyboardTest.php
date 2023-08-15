@@ -1,10 +1,10 @@
 <?php
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\CommonKeyboardInterface;
-use SequentSoft\ThreadFlow\Keyboard\CommonKeyboard;
+use SequentSoft\ThreadFlow\Keyboard\Keyboard;
 
 it('can be created', function () {
-    $keyboard = CommonKeyboard::createFromArray([
+    $keyboard = Keyboard::createFromArray([
         ['text' => 'text'],
         ['callback_data' => 'payload'],
     ]);
@@ -14,7 +14,7 @@ it('can be created', function () {
 });
 
 it('can be created with one time', function () {
-    $keyboard = CommonKeyboard::createFromArray([
+    $keyboard = Keyboard::createFromArray([
         ['text' => 'text'],
         ['callback_data' => 'payload'],
     ]);

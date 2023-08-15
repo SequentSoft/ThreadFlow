@@ -3,9 +3,14 @@
 namespace SequentSoft\ThreadFlow\Contracts;
 
 use Closure;
+use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
+use SequentSoft\ThreadFlow\Contracts\Config\SimpleConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
+use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
+use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface as OMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -14,89 +19,45 @@ use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
 
 interface BotInterface
 {
+    /**
+     * @param MessageContextInterface|string $context
+     * @param class-string<PageInterface> $pageClass
+     * @param array $pageAttributes
+     * @return void
+     */
     public function showPage(
-        string $channelName,
         MessageContextInterface|string $context,
         string $pageClass,
         array $pageAttributes = []
     ): void;
 
-    /**
-     * @param class-string<PageInterface> $channelName
-     * @param IMessageInterface $message
-     * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
-     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
-     * @throws ChannelNotConfiguredException
-     */
-    public function process(
-        string $channelName,
-        IMessageInterface $message,
-        ?Closure $incomingCallback = null,
-        ?Closure $outgoingCallback = null,
-    ): void;
+    public function getChannelName(): string;
+
+    public function setDispatcher(DispatcherInterface $dispatcher): void;
+
+    public function setIncomingChannel(IncomingChannelInterface $incomingChannel): void;
+
+    public function setOutgoingChannel(OutgoingChannelInterface $outgoingChannel): void;
 
     /**
-     * @param class-string<PageInterface> $channelName
-     * @param IMessageInterface $message
-     * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
-     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
-     * @throws ChannelNotConfiguredException
-     */
-    public function dispatch(
-        string $channelName,
-        IMessageInterface $message,
-        ?Closure $incomingCallback = null,
-        ?Closure $outgoingCallback = null,
-    ): void;
-
-    /**
-     * @param class-string<PageInterface> $channelName
-     * @param IMessageInterface $message
-     * @param ?Closure(IMessageInterface, SessionInterface):IMessageInterface $incomingCallback
-     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
-     */
-    public function dispatchSync(
-        string $channelName,
-        IMessageInterface $message,
-        ?Closure $incomingCallback = null,
-        ?Closure $outgoingCallback = null,
-    ): void;
-
-    /**
-     * @param string $channelName
-     * @param DataFetcherInterface $dataFetcher
-     * @param ?Closure(IMessageInterface):IMessageInterface $beforeDispatchCallback
-     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
+     * @param class-string<EventInterface> $event
+     * @param callable $callback
      * @return void
-     * @throws ChannelNotConfiguredException
      */
-    public function listen(
-        string $channelName,
-        DataFetcherInterface $dataFetcher,
-        ?Closure $beforeDispatchCallback = null,
-        ?Closure $outgoingCallback = null
-    ): void;
+    public function on(string $event, callable $callback): void;
 
     /**
-     * @param string $channelName
-     * @param DataFetcherInterface $dataFetcher
-     * @param ?Closure(IMessageInterface):IMessageInterface $beforeDispatchCallback
+     * @param IMessageInterface $message
      * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
-     * @return void
-     * @throws ChannelNotConfiguredException
      */
-    public function listenSync(
-        string $channelName,
-        DataFetcherInterface $dataFetcher,
-        ?Closure $beforeDispatchCallback = null,
-        ?Closure $outgoingCallback = null
-    ): void;
+    public function process(IMessageInterface $message, ?Closure $outgoingCallback = null): void;
 
-    public function incoming(string $channelName, Closure $callback): void;
+    /**
+     * @param IMessageInterface $message
+     */
+    public function dispatch(IMessageInterface $message): void;
 
-    public function outgoing(string $channelName, Closure $callback): void;
+    public function listen(DataFetcherInterface $dataFetcher): void;
 
-    public function getChannelConfig(string $channelName): ConfigInterface;
-
-    public function getAvailableChannels(): array;
+    public function getConfig(): SimpleConfigInterface;
 }

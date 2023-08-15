@@ -9,6 +9,7 @@ use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\SimpleConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 
@@ -20,14 +21,9 @@ class CliIncomingChannel implements IncomingChannelInterface
     ) {
     }
 
-    public function getConfig(): SimpleConfigInterface
-    {
-        return $this->config;
-    }
-
     public function listen(DataFetcherInterface $fetcher, Closure $callback): void
     {
-        $fetcher->fetch(fn (array $update) => $callback(
+        $fetcher->fetch(fn(array $update) => $callback(
             new TextIncomingRegularMessage(
                 $update['id'],
                 $this->messageContext,
@@ -37,8 +33,11 @@ class CliIncomingChannel implements IncomingChannelInterface
         ));
     }
 
-    public function preprocess(IncomingMessageInterface $message, SessionInterface $session): IncomingMessageInterface
-    {
+    public function preprocess(
+        IncomingMessageInterface $message,
+        SessionInterface $session,
+        PageStateInterface $pageState,
+    ): IncomingMessageInterface {
         return $message;
     }
 }

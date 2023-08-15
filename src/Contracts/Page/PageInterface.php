@@ -9,5 +9,5 @@ interface PageInterface
 {
     public function isBackground(): bool;
     public function getState(): PageStateInterface;
-    public function execute(Closure $callback): ?PendingDispatchPageInterface;
+    public function execute(Closure $callback): ?PendingDispatchInterface;
 }

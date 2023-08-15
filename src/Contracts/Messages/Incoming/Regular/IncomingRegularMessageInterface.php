@@ -12,9 +12,9 @@ interface IncomingRegularMessageInterface extends IncomingMessageInterface
 
     public function isText(?string $text = null): bool;
 
-    public function isTextContains(string $text): bool;
+    public function isTextAndContains(string $text): bool;
 
-    public function isTextRegex(string $expression): bool;
+    public function isTextAndMatch(string $expression): bool;
 
     public function isLocation(): bool;
 

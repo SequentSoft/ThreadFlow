@@ -3,14 +3,14 @@
 namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 
 use Closure;
+use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 
 interface DispatcherInterface
 {
     public function dispatch(
-        string $channelName,
+        BotInterface $bot,
         IncomingMessageInterface $message,
-        ?Closure $incomingCallback = null,
-        ?Closure $outgoingCallback = null
+        ?Closure $incomingCallback = null
     ): void;
 }

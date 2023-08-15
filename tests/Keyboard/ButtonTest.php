@@ -5,7 +5,7 @@ use SequentSoft\ThreadFlow\Keyboard\Button;
 
 it('can be created', function () {
     $button = Button::text('text');
-    $button->setCallbackData('payload');
+    $button->callbackData('payload');
 
     expect($button)->toBeInstanceOf(ButtonInterface::class);
 });

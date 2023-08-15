@@ -1,5 +1,6 @@
 <?php
 
+use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
@@ -17,7 +18,7 @@ it('can register a dispatcher', function () {
     $factory->register('test', function () {
         return new class implements DispatcherInterface {
             public function dispatch(
-                string $channelName,
+                BotInterface $bot,
                 IncomingMessageInterface $message,
                 ?Closure $incomingCallback = null,
                 ?Closure $outgoingCallback = null

@@ -20,8 +20,7 @@ interface DispatcherFactoryInterface
      * Make a dispatcher instance.
      *
      * @param string $name The name of the dispatcher.
-     * @param BotInterface $bot The bot instance.
      * @return DispatcherInterface The dispatcher instance.
      */
-    public function make(string $name, BotInterface $bot): DispatcherInterface;
+    public function make(string $name): DispatcherInterface;
 }

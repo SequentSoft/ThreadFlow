@@ -28,7 +28,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
         return is_null($text) || $this->getText() === $text;
     }
 
-    public function isTextContains(string $text): bool
+    public function isTextAndContains(string $text): bool
     {
         if (! $this->isText()) {
             return false;
@@ -37,7 +37,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
         return str_contains($this->getText(), $text);
     }
 
-    public function isTextRegex(string $pattern): bool
+    public function isTextAndMatch(string $pattern): bool
     {
         if (! $this->isText()) {
             return false;
