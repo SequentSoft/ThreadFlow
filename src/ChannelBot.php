@@ -28,6 +28,7 @@ use SequentSoft\ThreadFlow\Events\Message\IncomingMessageProcessingEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageEmittedEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 use SequentSoft\ThreadFlow\Session\PageState;
 
@@ -106,6 +107,29 @@ class ChannelBot implements BotInterface
         $session->save();
     }
 
+    public function sendMessage(
+        MessageContextInterface|string $context,
+        OMessageInterface|string $message
+    ): OMessageInterface {
+        if (is_string($context)) {
+            $context = MessageContext::createFromIds($context, $context);
+        }
+
+        if (is_string($message)) {
+            $message = TextOutgoingMessage::make($message);
+        }
+
+        $message->setContext($context);
+
+        $session = $this->sessionStore->load($context);
+
+        $result = $this->handleOutgoingMessage($message, $session, null);
+
+        $session->save();
+
+        return $result;
+    }
+
     public function getConfig(): SimpleConfigInterface
     {
         return $this->config;
@@ -181,6 +205,14 @@ class ChannelBot implements BotInterface
         );
     }
 
+    protected function sendMessageViaOutgoingChannel(
+        OMessageInterface $message,
+        SessionInterface $session,
+        ?PageInterface $contextPage,
+    ): OMessageInterface {
+        return $this->outgoingChannel->send($message, $session, $contextPage);
+    }
+
     protected function handleOutgoingMessage(
         OMessageInterface $message,
         SessionInterface $session,
@@ -190,7 +222,7 @@ class ChannelBot implements BotInterface
             new OutgoingMessageSendingEvent($message, $session, $contextPage)
         );
 
-        $result = $this->outgoingChannel->send($message, $session, $contextPage);
+        $result = $this->sendMessageViaOutgoingChannel($message, $session, $contextPage);
 
         $this->eventBus->fire(
             new OutgoingMessageSentEvent($result, $session, $contextPage)

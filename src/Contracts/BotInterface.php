@@ -31,6 +31,11 @@ interface BotInterface
         array $pageAttributes = []
     ): void;
 
+    public function sendMessage(
+        MessageContextInterface|string $context,
+        OMessageInterface|string $message
+    ): OMessageInterface;
+
     public function getChannelName(): string;
 
     public function setDispatcher(DispatcherInterface $dispatcher): void;

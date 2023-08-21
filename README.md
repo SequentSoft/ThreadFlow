@@ -37,18 +37,6 @@ This command will create a `thread-flow.php` configuration file in your `config`
 ```php
 return [
     'channels' => [
-        'cli' => [
-            'driver' => 'cli',
-            'session' => 'array',
-            'dispatcher' => 'sync',
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        ],
-        'test' => [
-            'driver' => 'test',
-            'session' => 'array',
-            'dispatcher' => 'sync',
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        ],
         'telegram' => [
             'driver' => 'telegram',
             'session' => 'cache', // cache or array
