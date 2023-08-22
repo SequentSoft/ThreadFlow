@@ -35,7 +35,7 @@ class LaravelServiceProvider extends ServiceProvider
 
         $this->app->bind(EventBusInterface::class, EventBus::class);
 
-        $this->app->bind(BotManagerInterface::class, function () {
+        $this->app->singleton(BotManagerInterface::class, function () {
             return new ThreadFlowBotManager(
                 new Config($this->app->make('config')->get('thread-flow', [])),
                 $this->app->make(SessionStoreFactoryInterface::class),
