@@ -8,7 +8,7 @@ class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
 {
     protected bool $oneTime = false;
 
-    protected bool $resizable = false;
+    protected bool $resizable = true;
 
     protected string $placeholder = '';
 
@@ -29,6 +29,11 @@ class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
         $this->resizable = $resizable;
 
         return $this;
+    }
+
+    public function notResizable(): self
+    {
+        return $this->resizable(false);
     }
 
     public function isResizable(): bool

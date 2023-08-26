@@ -31,9 +31,12 @@ use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 use SequentSoft\ThreadFlow\Session\PageState;
+use Throwable;
 
 class ChannelBot implements BotInterface
 {
+    protected array $processingExceptionsHandlers = [];
+
     public function __construct(
         protected string $channelName,
         protected SimpleConfigInterface $config,
@@ -76,6 +79,26 @@ class ChannelBot implements BotInterface
         $this->eventBus->listen($event, $callback);
     }
 
+    public function handleProcessingExceptions(Closure $callback): void
+    {
+        $this->processingExceptionsHandlers[] = $callback;
+    }
+
+    protected function processingException(
+        Throwable $exception,
+        SessionInterface $session,
+        MessageContextInterface $messageContext,
+        ?IMessageInterface $message = null,
+    ): void {
+        if (count($this->processingExceptionsHandlers) === 0) {
+            throw $exception;
+        }
+
+        foreach ($this->processingExceptionsHandlers as $handler) {
+            $handler($exception, $session, $messageContext, $message);
+        }
+    }
+
     /**
      * @throws Exception
      */
@@ -94,14 +117,13 @@ class ChannelBot implements BotInterface
             PageState::create($pageClass, $pageAttributes)
         );
 
-        $pendingDispatch = $this->makePendingPage($session->getPageState(), $session, $context);
-
-        $pendingDispatch->dispatch(
-            callback: fn(OMessageInterface $message, ?PageInterface $contextPage) => $this->handleOutgoingMessage(
-                $message,
-                $session,
-                null
-            )
+        $this->processPage(
+            $session->getPageState(),
+            $session,
+            $context,
+            null,
+            fn(OMessageInterface $message, SessionInterface $session, ?PageInterface $contextPage) => $this
+                ->handleOutgoingMessage($message, $session, $contextPage)
         );
 
         $session->save();
@@ -152,12 +174,33 @@ class ChannelBot implements BotInterface
 
         $message = $this->incomingChannel->preprocess($message, $session, $pageState);
 
-        $this->eventBus->fire(
-            new IncomingMessageProcessingEvent($pageState, $message, $session)
-        );
+        try {
+            $this->processPage($pageState, $session, $message->getContext(), $message, $outgoingCallback);
+            $session->save();
+        } catch (Throwable $exception) {
+            $session->close();
+            $this->processingException($exception, $session, $message->getContext(), $message);
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    protected function processPage(
+        PageStateInterface $pageState,
+        SessionInterface $session,
+        MessageContextInterface $messageContext,
+        ?IMessageInterface $message = null,
+        ?Closure $outgoingCallback = null
+    ): void {
+        if ($message) {
+            $this->eventBus->fire(
+                new IncomingMessageProcessingEvent($pageState, $message, $session)
+            );
+        }
 
         $this
-            ->makePendingPage($pageState, $session, $message->getContext(), $message)
+            ->makePendingPage($pageState, $session, $messageContext, $message)
             ->dispatch(
                 callback: function (
                     OMessageInterface $message,
@@ -175,8 +218,6 @@ class ChannelBot implements BotInterface
                         : $message;
                 }
             );
-
-        $session->save();
     }
 
     public function dispatch(IMessageInterface $message): void

@@ -185,4 +185,9 @@ class FakeChannelBot implements BotInterface
             return false;
         });
     }
+
+    public function handleProcessingExceptions(Closure $callback): void
+    {
+        $this->bot->handleProcessingExceptions($callback);
+    }
 }

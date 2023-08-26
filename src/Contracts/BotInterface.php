@@ -36,6 +36,8 @@ interface BotInterface
         OMessageInterface|string $message
     ): OMessageInterface;
 
+    public function handleProcessingExceptions(Closure $callback): void;
+
     public function getChannelName(): string;
 
     public function setDispatcher(DispatcherInterface $dispatcher): void;

@@ -2,10 +2,13 @@
 
 namespace SequentSoft\ThreadFlow\Contracts;
 
+use Closure;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 
 interface BotManagerInterface
 {
+    public function handleProcessingExceptions(Closure $callback): void;
+
     public function getConfig(): ConfigInterface;
 
     public function getChannelConfig(string $channelName): ConfigInterface;

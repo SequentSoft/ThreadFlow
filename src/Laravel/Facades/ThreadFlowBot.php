@@ -22,6 +22,7 @@ use SequentSoft\ThreadFlow\Config;
  * @method static array getAvailableChannels()
  * @method static void on(string $event, callable $callback)
  * @method static BotInterface channel(string $channelName)
+ * @method static void handleProcessingExceptions(Closure $callback)
  * @method static void assertSentOutgoingMessageCount(int $count)
  * @method static void assertSentOutgoingMessage(Closure $callback)
  * @method static void assertDispatchedPageCount(int $count)
