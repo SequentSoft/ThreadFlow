@@ -15,9 +15,12 @@ use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
+use SequentSoft\ThreadFlow\Enums\Messages\TypingType;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
+use SequentSoft\ThreadFlow\Messages\Outgoing\OutgoingMessage;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Service\TypingOutgoingServiceMessage;
 use SequentSoft\ThreadFlow\Session\PageState;
 
 abstract class AbstractPage implements PageInterface
@@ -113,6 +116,13 @@ abstract class AbstractPage implements PageInterface
         return null;
     }
 
+    protected function showTyping(TypingType $type = TypingType::TYPING): void
+    {
+        $this->reply(
+            TypingOutgoingServiceMessage::make($type)
+        );
+    }
+
     private function storeAttributes(): void
     {
         $attributes = (function () {
@@ -164,11 +174,11 @@ abstract class AbstractPage implements PageInterface
     }
 
     /**
-     * @phpstan-template T of OutgoingRegularMessageInterface
+     * @phpstan-template T of OutgoingMessage
      * @phpstan-param T $message
      * @phpstan-return T
      */
-    protected function reply(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
+    protected function reply(OutgoingMessage $message): OutgoingMessage
     {
         $message->setId(null);
 
@@ -180,11 +190,11 @@ abstract class AbstractPage implements PageInterface
     }
 
     /**
-     * @phpstan-template T of OutgoingRegularMessageInterface
+     * @phpstan-template T of OutgoingMessage
      * @phpstan-param T $message
      * @phpstan-return T
      */
-    protected function updateMessage(OutgoingRegularMessageInterface $message): OutgoingRegularMessageInterface
+    protected function updateMessage(OutgoingMessage $message): OutgoingMessage
     {
         if (! $message->getId()) {
             throw new \InvalidArgumentException('Message id is required for update');

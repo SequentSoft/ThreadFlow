@@ -11,6 +11,7 @@ use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\WithKeyboardInterface;
 use SequentSoft\ThreadFlow\DataFetchers\InvokableDataFetcher;
 use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
 use SequentSoft\ThreadFlow\Events\ChannelEventBus;
@@ -39,7 +40,7 @@ class CliThreadFlowCommand extends Command
             $this->line('Message type: ' . get_class($message));
         }
 
-        if ($message->getKeyboard()) {
+        if ($message instanceof WithKeyboardInterface && $message->getKeyboard()) {
             $data = [];
             $rows = $message->getKeyboard()->getRows();
             foreach ($rows as $rowIndex => $row) {

@@ -4,8 +4,8 @@ namespace SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\WithKeyboardInterface;
 
-interface OutgoingRegularMessageInterface extends OutgoingMessageInterface
+interface OutgoingRegularMessageInterface extends OutgoingMessageInterface, WithKeyboardInterface
 {
-    public function getKeyboard(): ?KeyboardInterface;
 }
