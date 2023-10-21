@@ -4,7 +4,6 @@ namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Keyboard\Keyboard;
 use SequentSoft\ThreadFlow\Messages\Outgoing\OutgoingMessage;
 

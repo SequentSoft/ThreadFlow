@@ -27,6 +27,8 @@ use Throwable;
 
 class ThreadFlowBotManager implements BotManagerInterface
 {
+    protected array $channels = [];
+
     protected array $processingExceptionsHandlers = [];
 
     public function __construct(
@@ -151,7 +153,7 @@ class ThreadFlowBotManager implements BotManagerInterface
      */
     public function channel(string $channelName): BotInterface
     {
-        $bot = new ChannelBot(
+        $this->channels[$channelName] ??= new ChannelBot(
             $channelName,
             $this->getChannelConfig($channelName),
             $this->getSessionStore($channelName),
@@ -162,7 +164,7 @@ class ThreadFlowBotManager implements BotManagerInterface
             $this->eventBus->makeChannelEventBus($channelName),
         );
 
-        $bot->handleProcessingExceptions(fn (
+        $this->channels[$channelName]->handleProcessingExceptions(fn (
             Throwable $exception,
             SessionInterface $session,
             MessageContextInterface $messageContext,
@@ -175,6 +177,6 @@ class ThreadFlowBotManager implements BotManagerInterface
             $message,
         ));
 
-        return $bot;
+        return $this->channels[$channelName];
     }
 }
