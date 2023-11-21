@@ -46,9 +46,10 @@ class FakeChannelBot implements BotInterface
 
     public function sendMessage(
         MessageContextInterface|string $context,
-        OMessageInterface|string $message
+        OMessageInterface|string $message,
+        bool $useSession = false
     ): OMessageInterface {
-        return $this->bot->sendMessage($context, $message);
+        return $this->bot->sendMessage($context, $message, $useSession);
     }
 
     public function getChannelName(): string

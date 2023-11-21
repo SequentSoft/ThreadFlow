@@ -17,6 +17,7 @@ use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\ChannelEventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingServiceMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface as OMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
@@ -31,6 +32,7 @@ use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 use SequentSoft\ThreadFlow\Session\PageState;
+use SequentSoft\ThreadFlow\Session\Session;
 use Throwable;
 
 class ChannelBot implements BotInterface
@@ -131,7 +133,8 @@ class ChannelBot implements BotInterface
 
     public function sendMessage(
         MessageContextInterface|string $context,
-        OMessageInterface|string $message
+        OMessageInterface|string $message,
+        bool $useSession = false
     ): OMessageInterface {
         if (is_string($context)) {
             $context = MessageContext::createFromIds($context, $context);
@@ -143,11 +146,13 @@ class ChannelBot implements BotInterface
 
         $message->setContext($context);
 
-        $session = $this->sessionStore->load($context);
-
-        $result = $this->handleOutgoingMessage($message, $session, null);
-
-        $session->save();
+        if ($useSession) {
+            $session = $this->sessionStore->load($context);
+            $result = $this->handleOutgoingMessage($message, $session, null);
+            $session->save();
+        } else {
+            $result = $this->outgoingChannel->send($message, new Session(), null);
+        }
 
         return $result;
     }
@@ -164,7 +169,9 @@ class ChannelBot implements BotInterface
      */
     public function process(IMessageInterface $message, ?Closure $outgoingCallback = null): void
     {
-        $session = $this->sessionStore->load($message->getContext());
+        $session = $message instanceof BotStartedIncomingServiceMessageInterface
+            ? $this->sessionStore->new($message->getContext())
+            : $this->sessionStore->load($message->getContext());
 
         $pageState = $this->router->getCurrentPageState(
             $message,

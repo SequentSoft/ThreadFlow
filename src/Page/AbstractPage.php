@@ -3,6 +3,7 @@
 namespace SequentSoft\ThreadFlow\Page;
 
 use Closure;
+use ReflectionClass;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\ChannelEventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
@@ -19,9 +20,11 @@ use SequentSoft\ThreadFlow\Enums\Messages\TypingType;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
+use SequentSoft\ThreadFlow\Messages\Incoming\Service\BotStartedIncomingServiceMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\OutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Service\TypingOutgoingServiceMessage;
 use SequentSoft\ThreadFlow\Session\PageState;
+use Throwable;
 
 abstract class AbstractPage implements PageInterface
 {
@@ -66,9 +69,22 @@ abstract class AbstractPage implements PageInterface
 
         (function (array $attributes) {
             foreach ($attributes as $key => $value) {
-                $this->{$key} = $value;
+                try {
+                    $this->{$key} = $value;
+                } catch (Throwable $throwable) {
+                    $this->populateAttributeErrorHandler($throwable, $key, $value);
+                }
             }
         })->call($this, $attributes);
+    }
+
+    protected function populateAttributeErrorHandler(Throwable $throwable, string $key, mixed $value)
+    {
+        $classReflection = new ReflectionClass(static::class);
+        $propertyReflection = $classReflection->getProperty($key);
+        $defaultValue = $propertyReflection->getDefaultValue();
+
+        $this->{$key} = $defaultValue;
     }
 
     private function handleIncoming(): ?PendingDispatchInterface
@@ -109,6 +125,10 @@ abstract class AbstractPage implements PageInterface
     private function executeServiceMessageHandler(
         IncomingServiceMessageInterface $message
     ): ?PendingDispatchInterface {
+        if ($message instanceof BotStartedIncomingServiceMessage && method_exists($this, 'welcome')) {
+            return $this->welcome($message);
+        }
+
         if (method_exists($this, 'handleServiceMessage')) {
             return $this->handleServiceMessage($message);
         }

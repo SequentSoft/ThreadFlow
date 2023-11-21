@@ -33,7 +33,8 @@ interface BotInterface
 
     public function sendMessage(
         MessageContextInterface|string $context,
-        OMessageInterface|string $message
+        OMessageInterface|string $message,
+        bool $useSession = false
     ): OMessageInterface;
 
     public function handleProcessingExceptions(Closure $callback): void;

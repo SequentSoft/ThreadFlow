@@ -3,14 +3,14 @@
 namespace {{ namespace }};
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingRegularMessage;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\AbstractPage;
 
 class {{ class }} extends AbstractPage
 {
     protected function show(): void
     {
-        $this->reply(new TextOutgoingRegularMessage('This is {{class}}', [
+        $this->reply(new TextOutgoingMessage('This is {{class}}', [
             ['next' => 'Go to next page'],
         ]));
     }
@@ -18,10 +18,10 @@ class {{ class }} extends AbstractPage
     protected function handleMessage(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('next')) {
-            $this->reply(new TextOutgoingRegularMessage('Next page not defined'));
+            $this->reply(new TextOutgoingMessage('Next page not defined'));
         }
 
-        $this->reply(new TextOutgoingRegularMessage('Please enter message or press button', [
+        $this->reply(new TextOutgoingMessage('Please enter message or press button', [
             ['next' => 'Go to next page'],
         ]));
     }

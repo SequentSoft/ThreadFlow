@@ -15,6 +15,18 @@ class ArraySessionStore implements SessionStoreInterface
     ) {
     }
 
+    public function new(MessageContextInterface $context): SessionInterface
+    {
+        $session = new Session();
+
+        $session->setSaveCallback(fn(SessionInterface $session) => $this->save(
+            $context,
+            $session,
+        ));
+
+        return $session;
+    }
+
     /**
      * @throws Exception
      */

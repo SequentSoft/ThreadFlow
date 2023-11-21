@@ -56,13 +56,13 @@ return [
 You can generate a new page using the artisan command:
 
 ```bash
-php artisan thread-flow:page PageName
+php artisan thread-flow:page IndexPage
 ```
 
 After that, you can manually add logic to the created page classes. Below are examples of possible page classes:
 
 ```php
-class YourPage extends AbstractPage
+class IndexPage extends AbstractPage
 {
     /**
      * The show method is the first method that gets called when a page is opened. 

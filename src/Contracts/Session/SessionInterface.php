@@ -2,8 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Session;
 
-use Closure;
-
 interface SessionInterface
 {
     public function getData(): SessionDataInterface;
