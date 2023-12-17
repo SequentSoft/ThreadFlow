@@ -1,9 +1,11 @@
 <?php
 
 use SequentSoft\ThreadFlow\Channel\Incoming\IncomingChannelRegistry;
+use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
@@ -11,6 +13,7 @@ use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotFoundException;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 
 it('can be created', function () {
     $registry = new IncomingChannelRegistry();
@@ -34,6 +37,20 @@ it('can register channel', function () {
 
             public function listen(DataFetcherInterface $fetcher, Closure $callback): void
             {
+            }
+
+            public function makeMessageFromText(
+                string $id,
+                string $text,
+                DateTimeImmutable $date,
+                MessageContextInterface $context
+            ): ?IncomingMessageInterface {
+                return (new TextIncomingRegularMessage(
+                    $id,
+                    MessageContext::createFromIds(1, 1),
+                    $date,
+                    $text,
+                ))->setContext($context);
             }
 
             public function preprocess(

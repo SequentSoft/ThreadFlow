@@ -19,6 +19,7 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Enums\Messages\TypingType;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
+use SequentSoft\ThreadFlow\Events\Page\PageHandleWelcomeMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Service\BotStartedIncomingServiceMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\OutgoingMessage;
@@ -90,22 +91,20 @@ abstract class AbstractPage implements PageInterface
     private function handleIncoming(): ?PendingDispatchInterface
     {
         if ($this->message instanceof IncomingRegularMessageInterface) {
-            $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $this->message));
             return $this->executeRegularMessageHandler($this->message);
         }
 
         if ($this->message instanceof IncomingServiceMessageInterface) {
-            $this->eventBus->fire(new PageHandleServiceMessageEvent($this, $this->message));
             return $this->executeServiceMessageHandler($this->message);
         }
 
-        $this->eventBus->fire(new PageShowEvent($this));
         return $this->executeShowHandler();
     }
 
     private function executeShowHandler(): ?PendingDispatchInterface
     {
         if (method_exists($this, 'show')) {
+            $this->eventBus->fire(new PageShowEvent($this));
             return $this->show();
         }
 
@@ -116,6 +115,7 @@ abstract class AbstractPage implements PageInterface
         IncomingRegularMessageInterface $message
     ): ?PendingDispatchInterface {
         if (method_exists($this, 'handleMessage')) {
+            $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
             return $this->handleMessage($message);
         }
 
@@ -126,10 +126,12 @@ abstract class AbstractPage implements PageInterface
         IncomingServiceMessageInterface $message
     ): ?PendingDispatchInterface {
         if ($message instanceof BotStartedIncomingServiceMessage && method_exists($this, 'welcome')) {
+            $this->eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
             return $this->welcome($message);
         }
 
         if (method_exists($this, 'handleServiceMessage')) {
+            $this->eventBus->fire(new PageHandleServiceMessageEvent($this, $message));
             return $this->handleServiceMessage($message);
         }
 

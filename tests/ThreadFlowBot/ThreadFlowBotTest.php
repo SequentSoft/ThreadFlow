@@ -6,6 +6,7 @@ use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
@@ -50,6 +51,20 @@ beforeEach(function () {
             ): void {
             }
 
+            public function makeMessageFromText(
+                string $id,
+                string $text,
+                DateTimeImmutable $date,
+                MessageContextInterface $context
+            ): ?IncomingMessageInterface {
+                return (new TextIncomingRegularMessage(
+                    $id,
+                    MessageContext::createFromIds(1, 1),
+                    $date,
+                    $text,
+                ))->setContext($context);
+            }
+
             public function preprocess(
                 IncomingMessageInterface $message,
                 SessionInterface $session,
@@ -87,6 +102,7 @@ it('ThreadFlowBot instance can be created', function () {
 });
 
 it('can process incoming message', function () {
+    /** @var BotInterface $bot */
     $bot = call_user_func($this->makeBot, \Tests\Stubs\EmptyPage::class);
 
     $messageContext = MessageContext::createFromIds('participant-id', 'room-id');
@@ -103,8 +119,9 @@ it('can process incoming message', function () {
     $spy->shouldNotReceive('outgoingMessage')
         ->andReturnUsing(fn($argument) => $argument);
 
-    $bot->process(
-        $message,
-        fn(OutgoingMessageInterface $message): OutgoingMessageInterface => $spy->outgoingMessage($message)
-    );
+    $bot->dispatch($message);
+
+    $bot->on(\SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent::class, function ($event) use ($spy) {
+        $spy->outgoingMessage($event);
+    });
 });

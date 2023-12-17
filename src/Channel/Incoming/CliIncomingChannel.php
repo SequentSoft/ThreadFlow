@@ -24,12 +24,12 @@ class CliIncomingChannel implements IncomingChannelInterface
     public function listen(DataFetcherInterface $fetcher, Closure $callback): void
     {
         $fetcher->fetch(fn(array $update) => $callback(
-            new TextIncomingRegularMessage(
+            $this->makeMessageFromText(
                 $update['id'],
-                $this->messageContext,
-                new DateTimeImmutable(),
                 $update['text'] ?? '',
-            )
+                new DateTimeImmutable(),
+                $this->messageContext,
+            )->setContext($this->messageContext)
         ));
     }
 
@@ -39,5 +39,19 @@ class CliIncomingChannel implements IncomingChannelInterface
         PageStateInterface $pageState,
     ): IncomingMessageInterface {
         return $message;
+    }
+
+    public function makeMessageFromText(
+        string $id,
+        string $text,
+        DateTimeImmutable $date,
+        MessageContextInterface $context
+    ): ?IncomingMessageInterface {
+        return (new TextIncomingRegularMessage(
+            $id,
+            $this->messageContext,
+            $date,
+            $text,
+        ))->setContext($context);
     }
 }

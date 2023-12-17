@@ -10,10 +10,10 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 class SyncIncomingDispatcher implements DispatcherInterface
 {
     public function dispatch(
-        BotInterface $bot,
+        string $channelName,
         IncomingMessageInterface $message,
-        ?Closure $incomingCallback = null
+        Closure $process
     ): void {
-        $bot->process($message, $incomingCallback);
+        $process($message);
     }
 }

@@ -10,10 +10,10 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 class LaravelQueueIncomingDispatcher implements DispatcherInterface
 {
     public function dispatch(
-        BotInterface $bot,
+        string $channelName,
         IncomingMessageInterface $message,
-        ?Closure $incomingCallback = null
+        Closure $process
     ): void {
-        IncomingMessageJob::dispatch($bot->getChannelName(), $message);
+        IncomingMessageJob::dispatch($channelName, $message);
     }
 }

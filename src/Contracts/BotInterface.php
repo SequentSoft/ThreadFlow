@@ -16,6 +16,7 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface 
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Exceptions\Channel\ChannelNotConfiguredException;
+use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
 
 interface BotInterface
 {
@@ -37,7 +38,7 @@ interface BotInterface
         bool $useSession = false
     ): OMessageInterface;
 
-    public function handleProcessingExceptions(Closure $callback): void;
+    public function registerExceptionHandler(Closure $callback): void;
 
     public function getChannelName(): string;
 
@@ -54,18 +55,14 @@ interface BotInterface
      */
     public function on(string $event, callable $callback): void;
 
-    /**
-     * @param IMessageInterface $message
-     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
-     */
-    public function process(IMessageInterface $message, ?Closure $outgoingCallback = null): void;
-
-    /**
-     * @param IMessageInterface $message
-     */
     public function dispatch(IMessageInterface $message): void;
 
     public function listen(DataFetcherInterface $dataFetcher): void;
 
     public function getConfig(): SimpleConfigInterface;
+
+    public function testInput(
+        IMessageInterface|string $message,
+        ?MessageContextInterface $context = null
+    ): ResultsRecorder;
 }

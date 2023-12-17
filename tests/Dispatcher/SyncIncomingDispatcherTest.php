@@ -14,19 +14,21 @@ it('can be created', function () {
 
 
 it('can dispatch a message', function () {
-    $botMock = Mockery::mock(BotInterface::class);
-
     $dispatcher = new SyncIncomingDispatcher();
 
-    $botMock->shouldReceive('process')->with(
-        Mockery::type(TextIncomingRegularMessage::class),
-        null
-    )->once();
-
-    $dispatcher->dispatch($botMock, new TextIncomingRegularMessage(
+    $message = new TextIncomingRegularMessage(
         'id',
         MessageContext::createFromIds('id', 'id'),
         new DateTimeImmutable(),
         'text'
-    ));
+    );
+
+    $spy = Mockery::spy();
+
+    // check was called once
+    $dispatcher->dispatch('test-channel', $message, function () use ($spy) {
+        $spy->dispatched();
+    });
+
+    $spy->shouldHaveReceived('dispatched')->once();
 });

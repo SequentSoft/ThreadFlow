@@ -3,66 +3,46 @@
 namespace SequentSoft\ThreadFlow\Testing;
 
 use Closure;
+use SequentSoft\ThreadFlow\ChannelBot;
+use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\ThreadFlowBotManager;
 
 class FakeBotManager extends ThreadFlowBotManager
 {
-    protected FakeChannelBot $lastChannelBot;
+    protected ?ResultsRecorder $botResultsRecorder = null;
 
-    public function channel(string $channelName): FakeChannelBot
+    protected function getResultsRecorder(): ResultsRecorder
     {
-        return $this->lastChannelBot = new FakeChannelBot(
-            parent::channel($channelName)
+        if ($this->botResultsRecorder === null) {
+            $this->botResultsRecorder = new ResultsRecorder();
+        }
+
+        return $this->botResultsRecorder;
+    }
+
+    protected function makeNewChannelBot(string $channelName): BotInterface
+    {
+        return new FakeChannelBot(
+            $channelName,
+            $this->getChannelConfig($channelName),
+            $this->getSessionStore($channelName),
+            $this->router,
+            $this->getOutgoingChannel($channelName),
+            $this->getIncomingChannel($channelName),
+            $this->getDispatcher($channelName),
+            $this->eventBus->makeChannelEventBus($channelName),
+            $this->getResultsRecorder(),
         );
     }
 
-    public function assertSentOutgoingMessageCount(int $count): void
+    public function __call($name, $arguments)
     {
-        $this->lastChannelBot->assertSentOutgoingMessageCount($count);
-    }
+        if (str_starts_with($name, 'assert')) {
+            return $this->getResultsRecorder()->$name(...$arguments);
+        }
 
-    public function assertSentOutgoingMessage(Closure $callback): void
-    {
-        $this->lastChannelBot->assertSentOutgoingMessage($callback);
-    }
-
-    public function assertDispatchedPageCount(int $count): void
-    {
-        $this->lastChannelBot->assertDispatchedPageCount($count);
-    }
-
-    public function assertDispatchedPage(Closure $callback): void
-    {
-        $this->lastChannelBot->assertDispatchedPage($callback);
-    }
-
-    public function assertDispatchedPageClass(string $pageClass): void
-    {
-        $this->lastChannelBot->assertDispatchedPageClass($pageClass);
-    }
-
-    public function assertNotingDispatched(): void
-    {
-        $this->lastChannelBot->assertNotingDispatched();
-    }
-
-    public function assertNotingSent(): void
-    {
-        $this->lastChannelBot->assertNotingSent();
-    }
-
-    public function assertSentTextMessage(string $text): void
-    {
-        $this->lastChannelBot->assertSentTextMessage($text);
-    }
-
-    public function assertCurrentPageClass(string $pageClass): void
-    {
-        $this->lastChannelBot->assertCurrentPageClass($pageClass);
-    }
-
-    public function assertCurrentPage(callable $callback): void
-    {
-        $this->lastChannelBot->assertCurrentPage($callback);
+        throw new \BadMethodCallException("Method {$name} does not exist.");
     }
 }

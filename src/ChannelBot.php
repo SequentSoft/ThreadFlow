@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace SequentSoft\ThreadFlow;
 
-use Closure;
 use Exception;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
@@ -24,20 +23,23 @@ use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
+use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageProcessingEvent;
-use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageEmittedEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
-use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 use SequentSoft\ThreadFlow\Session\PageState;
 use SequentSoft\ThreadFlow\Session\Session;
+use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
+use SequentSoft\ThreadFlow\Traits\HandleExceptions;
+use SequentSoft\ThreadFlow\Traits\MakesPendingPages;
 use Throwable;
 
 class ChannelBot implements BotInterface
 {
-    protected array $processingExceptionsHandlers = [];
+    use HandleExceptions;
+    use MakesPendingPages;
 
     public function __construct(
         protected string $channelName,
@@ -81,26 +83,6 @@ class ChannelBot implements BotInterface
         $this->eventBus->listen($event, $callback);
     }
 
-    public function handleProcessingExceptions(Closure $callback): void
-    {
-        $this->processingExceptionsHandlers[] = $callback;
-    }
-
-    protected function processingException(
-        Throwable $exception,
-        SessionInterface $session,
-        MessageContextInterface $messageContext,
-        ?IMessageInterface $message = null,
-    ): void {
-        if (count($this->processingExceptionsHandlers) === 0) {
-            throw $exception;
-        }
-
-        foreach ($this->processingExceptionsHandlers as $handler) {
-            $handler($exception, $session, $messageContext, $message);
-        }
-    }
-
     /**
      * @throws Exception
      */
@@ -109,26 +91,18 @@ class ChannelBot implements BotInterface
         string $pageClass,
         array $pageAttributes = []
     ): void {
-        if (is_string($context)) {
-            $context = MessageContext::createFromIds($context, $context);
-        }
+        $context = $this->resolveContext($context);
+        $session = $this->createOrGetSession($context);
+        $pageState = PageState::create($pageClass, $pageAttributes);
 
-        $session = $this->sessionStore->load($context);
-
-        $session->setPageState(
-            PageState::create($pageClass, $pageAttributes)
-        );
-
-        $this->processPage(
-            $session->getPageState(),
-            $session,
-            $context,
-            null,
-            fn(OMessageInterface $message, SessionInterface $session, ?PageInterface $contextPage) => $this
-                ->handleOutgoingMessage($message, $session, $contextPage)
-        );
-
+        $session->setPageState($pageState);
+        $this->processPage($pageState, $session, $context);
         $session->save();
+    }
+
+    protected function resolveContext(MessageContextInterface|string $context): MessageContextInterface
+    {
+        return is_string($context) ? MessageContext::createFromIds($context, $context) : $context;
     }
 
     public function sendMessage(
@@ -136,9 +110,7 @@ class ChannelBot implements BotInterface
         OMessageInterface|string $message,
         bool $useSession = false
     ): OMessageInterface {
-        if (is_string($context)) {
-            $context = MessageContext::createFromIds($context, $context);
-        }
+        $context = $this->resolveContext($context);
 
         if (is_string($message)) {
             $message = TextOutgoingMessage::make($message);
@@ -147,11 +119,11 @@ class ChannelBot implements BotInterface
         $message->setContext($context);
 
         if ($useSession) {
-            $session = $this->sessionStore->load($context);
-            $result = $this->handleOutgoingMessage($message, $session, null);
+            $session = $this->createOrGetSession($context);
+            $result = $this->deliverMessage($message, $session);
             $session->save();
         } else {
-            $result = $this->outgoingChannel->send($message, new Session(), null);
+            $result = $this->deliverMessage($message, new Session());
         }
 
         return $result;
@@ -164,14 +136,14 @@ class ChannelBot implements BotInterface
 
     /**
      * @param IMessageInterface $message
-     * @param ?Closure(OMessageInterface, SessionInterface, PageInterface):OMessageInterface $outgoingCallback
-     * @throws Exception
+     * @throws Throwable
      */
-    public function process(IMessageInterface $message, ?Closure $outgoingCallback = null): void
+    protected function processDispatchedIncomingMessage(IMessageInterface $message): void
     {
-        $session = $message instanceof BotStartedIncomingServiceMessageInterface
-            ? $this->sessionStore->new($message->getContext())
-            : $this->sessionStore->load($message->getContext());
+        $session = $this->createOrGetSession(
+            context: $message->getContext(),
+            fresh: $message instanceof BotStartedIncomingServiceMessageInterface
+        );
 
         $pageState = $this->router->getCurrentPageState(
             $message,
@@ -182,11 +154,11 @@ class ChannelBot implements BotInterface
         $message = $this->incomingChannel->preprocess($message, $session, $pageState);
 
         try {
-            $this->processPage($pageState, $session, $message->getContext(), $message, $outgoingCallback);
+            $this->processPage($pageState, $session, $message->getContext(), $message);
             $session->save();
         } catch (Throwable $exception) {
             $session->close();
-            $this->processingException($exception, $session, $message->getContext(), $message);
+            $this->handleException($this->getChannelName(), $exception, $session, $message->getContext(), $message);
         }
     }
 
@@ -198,7 +170,6 @@ class ChannelBot implements BotInterface
         SessionInterface $session,
         MessageContextInterface $messageContext,
         ?IMessageInterface $message = null,
-        ?Closure $outgoingCallback = null
     ): void {
         if ($message) {
             $this->eventBus->fire(
@@ -207,23 +178,21 @@ class ChannelBot implements BotInterface
         }
 
         $this
-            ->makePendingPage($pageState, $session, $messageContext, $message)
+            ->makePendingPage(
+                channelName: $this->getChannelName(),
+                eventBus: $this->eventBus,
+                pageState: $pageState,
+                session: $session,
+                messageContext: $messageContext,
+                message: $message
+            )
+            ->withBreadcrumbs()
             ->dispatch(
-                callback: function (
-                    OMessageInterface $message,
-                    ?PageInterface $contextPage
-                ) use (
+                callback: fn(OMessageInterface $message, ?PageInterface $contextPage) => $this->deliverMessage(
+                    $message,
                     $session,
-                    $outgoingCallback
-                ) {
-                    $this->eventBus->fire(
-                        new OutgoingMessageEmittedEvent($message, $session, $contextPage)
-                    );
-
-                    return $outgoingCallback
-                        ? ($outgoingCallback($message, $session, $contextPage) ?? $message)
-                        : $message;
-                }
+                    $contextPage
+                ) ?? $message
             );
     }
 
@@ -234,10 +203,9 @@ class ChannelBot implements BotInterface
         );
 
         $this->dispatcher->dispatch(
-            $this,
+            $this->getChannelName(),
             $message,
-            fn(OMessageInterface $message, SessionInterface $session, ?PageInterface $contextPage) => $this
-                ->handleOutgoingMessage($message, $session, $contextPage)
+            fn($message) => $this->processDispatchedIncomingMessage($message)
         );
     }
 
@@ -247,30 +215,19 @@ class ChannelBot implements BotInterface
      */
     public function listen(DataFetcherInterface $dataFetcher): void
     {
-        $this->incomingChannel->listen(
-            $dataFetcher,
-            fn(IMessageInterface $message) => $this->dispatch($message)
-        );
+        $this->incomingChannel->listen($dataFetcher, $this->dispatch(...));
     }
 
-    protected function sendMessageViaOutgoingChannel(
+    protected function deliverMessage(
         OMessageInterface $message,
         SessionInterface $session,
-        ?PageInterface $contextPage,
-    ): OMessageInterface {
-        return $this->outgoingChannel->send($message, $session, $contextPage);
-    }
-
-    protected function handleOutgoingMessage(
-        OMessageInterface $message,
-        SessionInterface $session,
-        ?PageInterface $contextPage,
+        ?PageInterface $contextPage = null,
     ): OMessageInterface {
         $this->eventBus->fire(
             new OutgoingMessageSendingEvent($message, $session, $contextPage)
         );
 
-        $result = $this->sendMessageViaOutgoingChannel($message, $session, $contextPage);
+        $result = $this->outgoingChannel->send($message, $session, $contextPage);
 
         $this->eventBus->fire(
             new OutgoingMessageSentEvent($result, $session, $contextPage)
@@ -279,28 +236,26 @@ class ChannelBot implements BotInterface
         return $result;
     }
 
+    protected function createOrGetSession(MessageContextInterface $context, bool $fresh = false): SessionInterface
+    {
+        $session = $fresh
+            ? $this->sessionStore->new($context)
+            : $this->sessionStore->load($context);
+
+        $this->eventBus->fire(new SessionStartedEvent($session));
+
+        return $session;
+    }
+
     protected function getDefaultEntryPoint(): string
     {
         return $this->config->get('entry');
     }
 
-    protected function makePendingPage(
-        PageStateInterface $pageState,
-        SessionInterface $session,
-        MessageContextInterface $messageContext,
-        ?IMessageInterface $message = null,
-    ): PendingDispatchPage {
-        $pendingDispatchPage = new PendingDispatchPage(
-            $this->channelName,
-            $this->eventBus,
-            $pageState,
-            $session,
-            $messageContext,
-            $message,
-        );
-
-        $pendingDispatchPage->withBreadcrumbs();
-
-        return $pendingDispatchPage;
+    public function testInput(
+        IMessageInterface|string $message,
+        ?MessageContextInterface $context = null
+    ): ResultsRecorder {
+        throw new Exception('This method is only for testing, please use FakeChannelBot instead');
     }
 }

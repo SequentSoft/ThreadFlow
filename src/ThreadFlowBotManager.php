@@ -23,13 +23,15 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
+use SequentSoft\ThreadFlow\Testing\FakeChannelBot;
+use SequentSoft\ThreadFlow\Traits\HandleExceptions;
 use Throwable;
 
 class ThreadFlowBotManager implements BotManagerInterface
 {
-    protected array $channels = [];
+    use HandleExceptions;
 
-    protected array $processingExceptionsHandlers = [];
+    protected array $channels = [];
 
     public function __construct(
         protected Config $config,
@@ -42,25 +44,10 @@ class ThreadFlowBotManager implements BotManagerInterface
     ) {
     }
 
+    /** @deprecated Use "onException" method */
     public function handleProcessingExceptions(Closure $callback): void
     {
-        $this->processingExceptionsHandlers[] = $callback;
-    }
-
-    protected function processingException(
-        string $channelName,
-        Throwable $exception,
-        SessionInterface $session,
-        MessageContextInterface $messageContext,
-        ?IncomingMessageInterface $message = null,
-    ): void {
-        if (count($this->processingExceptionsHandlers) === 0) {
-            throw $exception;
-        }
-
-        foreach ($this->processingExceptionsHandlers as $handler) {
-            $handler($channelName, $exception, $session, $messageContext, $message);
-        }
+        $this->registerExceptionHandler($callback);
     }
 
     public function getConfig(): ConfigInterface
@@ -151,9 +138,9 @@ class ThreadFlowBotManager implements BotManagerInterface
     /**
      * @throws InvalidNestedConfigException
      */
-    public function channel(string $channelName): BotInterface
+    protected function makeNewChannelBot(string $channelName): BotInterface
     {
-        $this->channels[$channelName] ??= new ChannelBot(
+        return new ChannelBot(
             $channelName,
             $this->getChannelConfig($channelName),
             $this->getSessionStore($channelName),
@@ -163,19 +150,19 @@ class ThreadFlowBotManager implements BotManagerInterface
             $this->getDispatcher($channelName),
             $this->eventBus->makeChannelEventBus($channelName),
         );
+    }
 
-        $this->channels[$channelName]->handleProcessingExceptions(fn (
-            Throwable $exception,
-            SessionInterface $session,
-            MessageContextInterface $messageContext,
-            ?IncomingMessageInterface $message = null,
-        ) => $this->processingException(
-            $channelName,
-            $exception,
-            $session,
-            $messageContext,
-            $message,
-        ));
+    /**
+     * @throws InvalidNestedConfigException
+     */
+    public function channel(string $channelName): BotInterface
+    {
+        if (isset($this->channels[$channelName])) {
+            return $this->channels[$channelName];
+        }
+
+        $this->channels[$channelName] = $this->makeNewChannelBot($channelName);
+        $this->channels[$channelName]->registerExceptionHandler($this->handleException(...));
 
         return $this->channels[$channelName];
     }

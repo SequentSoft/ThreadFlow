@@ -15,6 +15,7 @@ use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Testing\FakeBotManager;
 use SequentSoft\ThreadFlow\Config;
+use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
 
 /**
  * @method static ConfigInterface getChannelConfig(string $channelName)
@@ -22,18 +23,15 @@ use SequentSoft\ThreadFlow\Config;
  * @method static array getAvailableChannels()
  * @method static void on(string $event, callable $callback)
  * @method static BotInterface channel(string $channelName)
- * @method static void handleProcessingExceptions(Closure $callback)
- * @method static void assertSentOutgoingMessageCount(int $count)
- * @method static void assertSentOutgoingMessage(Closure $callback)
- * @method static void assertDispatchedPageCount(int $count)
- * @method static void assertDispatchedPage(Closure $callback)
- * @method static void assertDispatchedPageClass(string $pageClass)
- * @method static void assertNotingDispatched()
- * @method static void assertNotingSent()
- * @method static void assertSentTextMessage(string $text)
- * @method static void assertCurrentPageClass(string $pageClass)
- * @method static void assertCurrentPage(callable $callback)
- * phpcs:enable
+ * @method static void registerExceptionHandler(Closure $callback)
+ *
+ * @method static ResultsRecorder assertState(string $pageClass, ?string $method = null, ?array $attributes = null)
+ * @method static ResultsRecorder assertOutgoingMessagesCount(int $count)
+ * @method static ResultsRecorder assertOutgoingMessage(Closure $callback, ?int $index = null)
+ * @method static ResultsRecorder assertDispatchedPagesCount(int $count)
+ * @method static ResultsRecorder assertDispatchedPage(Closure $callback, ?int $index = null)
+ * @method static ResultsRecorder assertOutgoingMessageText(string $text, ?int $index = null)
+ * @method static ResultsRecorder assertOutgoingMessageTextContains(string $text, ?int $index = null)
  */
 class ThreadFlowBot extends Facade
 {

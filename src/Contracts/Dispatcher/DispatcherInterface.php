@@ -9,8 +9,8 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 interface DispatcherInterface
 {
     public function dispatch(
-        BotInterface $bot,
+        string $channelName,
         IncomingMessageInterface $message,
-        ?Closure $incomingCallback = null
+        Closure $process
     ): void;
 }

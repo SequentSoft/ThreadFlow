@@ -18,10 +18,9 @@ it('can register a dispatcher', function () {
     $factory->register('test', function () {
         return new class implements DispatcherInterface {
             public function dispatch(
-                BotInterface $bot,
+                string $channelName,
                 IncomingMessageInterface $message,
-                ?Closure $incomingCallback = null,
-                ?Closure $outgoingCallback = null
+                Closure $process
             ): void {
                 //
             }

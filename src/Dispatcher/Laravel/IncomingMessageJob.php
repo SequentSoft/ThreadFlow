@@ -25,9 +25,6 @@ class IncomingMessageJob implements ShouldQueue
     ) {
     }
 
-    /**
-     * @throws InvalidNestedConfigException
-     */
     public function handle(BotManagerInterface $botManager): void
     {
         $bot = $botManager->channel($this->channelName);
