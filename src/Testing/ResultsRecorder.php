@@ -110,6 +110,10 @@ class ResultsRecorder
         $latestPage = $this->getDispatchedPage($index);
 
         if ($latestPage === null) {
+            if ($index !== null) {
+                PHPUnit::fail("Page with index {$index} not found");
+            }
+
             PHPUnit::fail('No pages dispatched');
         }
 
@@ -142,6 +146,7 @@ class ResultsRecorder
 
     public function assertOutgoingMessagesCount(int $count): static
     {
+
         PHPUnit::assertCount($count, $this->sentOutgoingMessages, 'Outgoing messages count mismatch');
 
         return $this;

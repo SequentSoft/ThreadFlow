@@ -51,6 +51,11 @@ abstract class AbstractPage implements PageInterface
         return $this->state;
     }
 
+    public function getMessageContext(): MessageContextInterface
+    {
+        return $this->messageContext;
+    }
+
     public function execute(Closure $callback): ?PendingDispatchInterface
     {
         $this->outgoingCallback = $callback;
@@ -125,9 +130,14 @@ abstract class AbstractPage implements PageInterface
     private function executeServiceMessageHandler(
         IncomingServiceMessageInterface $message
     ): ?PendingDispatchInterface {
-        if ($message instanceof BotStartedIncomingServiceMessage && method_exists($this, 'welcome')) {
-            $this->eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
-            return $this->welcome($message);
+        if ($message instanceof BotStartedIncomingServiceMessage) {
+            if (method_exists($this, 'welcome')) {
+                $this->eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
+                return $this->welcome($message);
+            }
+
+            // fallback to show
+            return $this->executeShowHandler();
         }
 
         if (method_exists($this, 'handleServiceMessage')) {

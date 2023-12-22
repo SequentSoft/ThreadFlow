@@ -94,6 +94,11 @@ class FakeChannelBot extends ChannelBot
         $this->outgoingChannel = $this->getFakeOutgoingChannel();
     }
 
+    public function fakeMessageContext(): MessageContextInterface
+    {
+        return MessageContext::createFromIds('test-participant', 'test-chat');
+    }
+
     public function testInput(
         IMessageInterface|string $message,
         ?MessageContextInterface $context = null
@@ -107,7 +112,7 @@ class FakeChannelBot extends ChannelBot
                 $id,
                 $message,
                 new \DateTimeImmutable(),
-                MessageContext::createFromIds('test-participant', 'test-chat')
+                $this->fakeMessageContext()
             );
         }
 
@@ -124,7 +129,7 @@ class FakeChannelBot extends ChannelBot
         return $localResultsRecorder;
     }
 
-    public function withState(string $pageClass, array $attributes): static
+    public function withState(string $pageClass, array $attributes = []): static
     {
         $this->withState = PageState::create($pageClass, $attributes);
 

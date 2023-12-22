@@ -22,7 +22,7 @@ return [
 
         'telegram' => [
             'driver' => 'telegram',
-            'session' => 'cache', // cache or array
+            'session' => env('THREAD_FLOW_SESSION', 'cache'), // cache or array
             'dispatcher' => env('THREAD_FLOW_DISPATCHER', 'sync'), // sync or queue
             'entry' => \App\ThreadFlow\Pages\IndexPage::class,
             'api_token' => env('THREAD_FLOW_TELEGRAM_API_TOKEN', null),
