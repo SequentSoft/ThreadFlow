@@ -258,4 +258,9 @@ class ChannelBot implements BotInterface
     ): ResultsRecorder {
         throw new Exception('This method is only for testing, please use FakeChannelBot instead');
     }
+
+    public function withState(string $pageClass, array $attributes = []): static
+    {
+        throw new Exception('This method is only for testing, please use FakeChannelBot instead');
+    }
 }

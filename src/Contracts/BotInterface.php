@@ -65,4 +65,6 @@ interface BotInterface
         IMessageInterface|string $message,
         ?MessageContextInterface $context = null
     ): ResultsRecorder;
+
+    public function withState(string $pageClass, array $attributes = []): static;
 }
