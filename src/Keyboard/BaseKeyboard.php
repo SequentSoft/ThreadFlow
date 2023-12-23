@@ -23,11 +23,21 @@ abstract class BaseKeyboard implements KeyboardInterface
     public static function createFromArray(array $keyboard): static
     {
         $rows = [];
-        foreach ($keyboard as $row) {
-            $rows[] = Row::createFromArray(
-                is_array($row) ? $row : [$row]
-            );
+
+        if (array_is_list($keyboard)) {
+            foreach ($keyboard as $row) {
+                $rows[] = Row::createFromArray(
+                    is_array($row) ? $row : [$row]
+                );
+            }
+        } else {
+            foreach ($keyboard as $key => $row) {
+                $rows[] = Row::createFromArray(
+                    is_array($row) ? $row : [$key => $row]
+                );
+            }
         }
+
         return new static($rows);
     }
 }

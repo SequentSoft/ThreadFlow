@@ -117,7 +117,7 @@ class ResultsRecorder
             PHPUnit::fail('No pages dispatched');
         }
 
-        PHPUnit::assertInstanceOf($pageClass, $latestPage);
+        PHPUnit::assertEquals($pageClass, $latestPage::class, 'Dispatched page mismatch');
 
         if ($method !== null) {
             PHPUnit::assertEquals($method, $this->getDispatchedPageMethod($index));
