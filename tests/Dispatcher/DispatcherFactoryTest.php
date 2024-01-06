@@ -17,7 +17,7 @@ it('can register a dispatcher', function () {
 
     $factory->register('test', function () {
         return new class implements DispatcherInterface {
-            public function dispatch(
+            public function incoming(
                 string $channelName,
                 IncomingMessageInterface $message,
                 Closure $process

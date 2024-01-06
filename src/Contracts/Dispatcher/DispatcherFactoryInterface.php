@@ -4,23 +4,18 @@ namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
+use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
+use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 
 interface DispatcherFactoryInterface
 {
-    /**
-     * Register a dispatcher with the factory.
-     *
-     * @param string $name The name of the dispatcher.
-     * @param Closure $callback A closure that returns a new instance of the dispatcher.
-     * @return void
-     */
-    public function register(string $name, Closure $callback): void;
+    public function register(string $dispatcherName, Closure $callback): void;
 
-    /**
-     * Make a dispatcher instance.
-     *
-     * @param string $name The name of the dispatcher.
-     * @return DispatcherInterface The dispatcher instance.
-     */
-    public function make(string $name): DispatcherInterface;
+    public function make(
+        string $dispatcherName,
+        string $channelName,
+        EventBusInterface $eventBus,
+        ConfigInterface $config,
+        Closure $outgoing,
+    ): DispatcherInterface;
 }

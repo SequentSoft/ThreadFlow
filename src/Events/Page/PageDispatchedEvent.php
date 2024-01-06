@@ -9,7 +9,6 @@ use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 class PageDispatchedEvent implements EventInterface
 {
     public function __construct(
-        protected PendingDispatchPageInterface $pendingDispatchPage,
         protected PageInterface $page,
         protected ?PageInterface $contextPage = null,
     ) {
@@ -23,10 +22,5 @@ class PageDispatchedEvent implements EventInterface
     public function getContextPage(): ?PageInterface
     {
         return $this->contextPage;
-    }
-
-    public function getPendingDispatchPage(): PendingDispatchPageInterface
-    {
-        return $this->pendingDispatchPage;
     }
 }

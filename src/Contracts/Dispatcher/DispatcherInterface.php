@@ -5,12 +5,12 @@ namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 interface DispatcherInterface
 {
-    public function dispatch(
-        string $channelName,
+    public function incoming(
         IncomingMessageInterface $message,
-        Closure $process
+        SessionInterface $session
     ): void;
 }

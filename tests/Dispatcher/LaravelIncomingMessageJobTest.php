@@ -4,7 +4,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
-use SequentSoft\ThreadFlow\Contracts\BotManagerInterface;
+use SequentSoft\ThreadFlow\Contracts\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelRegistryInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
@@ -31,7 +31,7 @@ it('can be dispatched', function () {
         'text'
     ));
 
-    $botManagerMock = Mockery::mock(BotManagerInterface::class);
+    $botManagerMock = Mockery::mock(ChannelManagerInterface::class);
 
     $botMock = Mockery::mock(BotInterface::class);
 

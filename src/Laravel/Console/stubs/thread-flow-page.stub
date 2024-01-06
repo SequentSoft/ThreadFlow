@@ -10,19 +10,19 @@ class {{ class }} extends AbstractPage
 {
     protected function show(): void
     {
-        $this->reply(new TextOutgoingMessage('This is {{class}}', [
+        TextOutgoingMessage::make('This is {{class}}', [
             ['next' => 'Go to next page'],
-        ]));
+        ])->reply();
     }
 
     protected function handleMessage(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('next')) {
-            $this->reply(new TextOutgoingMessage('Next page not defined'));
+            TextOutgoingMessage::make('Next page not defined')->reply();
         }
 
-        $this->reply(new TextOutgoingMessage('Please enter message or press button', [
+        TextOutgoingMessage::make('Please enter message or press button', [
             ['next' => 'Go to next page'],
-        ]));
+        ])->reply();
     }
 }

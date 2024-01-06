@@ -3,18 +3,18 @@
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
-use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
+use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 
 it('can be created', function () {
-    $dispatcher = new SyncIncomingDispatcher();
+    $dispatcher = new SyncDispatcher();
 
     expect($dispatcher)->toBeInstanceOf(DispatcherInterface::class);
 });
 
 
 it('can dispatch a message', function () {
-    $dispatcher = new SyncIncomingDispatcher();
+    $dispatcher = new SyncDispatcher();
 
     $message = new TextIncomingRegularMessage(
         'id',
@@ -26,7 +26,7 @@ it('can dispatch a message', function () {
     $spy = Mockery::spy();
 
     // check was called once
-    $dispatcher->dispatch('test-channel', $message, function () use ($spy) {
+    $dispatcher->incoming('test-channel', $message, function () use ($spy) {
         $spy->dispatched();
     });
 

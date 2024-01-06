@@ -14,8 +14,8 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
-use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
-use SequentSoft\ThreadFlow\Events\ChannelEventBus;
+use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
+use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
@@ -79,9 +79,9 @@ beforeEach(function () {
             new ArraySessionStoreStorage()
         );
 
-        $dispatcher = new SyncIncomingDispatcher();
+        $dispatcher = new SyncDispatcher();
 
-        $eventBus = new ChannelEventBus();
+        $eventBus = new EventBus();
 
         return new ChannelBot(
             'test-channel',

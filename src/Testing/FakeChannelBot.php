@@ -8,9 +8,9 @@ use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\Incoming\IncomingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\Outgoing\OutgoingChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Config\SimpleConfigInterface;
+use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
-use SequentSoft\ThreadFlow\Contracts\Events\ChannelEventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface as OMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Router\RouterInterface;
@@ -29,13 +29,13 @@ class FakeChannelBot extends ChannelBot
 
     public function __construct(
         protected string $channelName,
-        protected SimpleConfigInterface $config,
+        protected ConfigInterface $config,
         protected SessionStoreInterface $sessionStore,
         protected RouterInterface $router,
         protected OutgoingChannelInterface $outgoingChannel,
         protected IncomingChannelInterface $incomingChannel,
         protected DispatcherInterface $dispatcher,
-        protected ChannelEventBusInterface $eventBus,
+        protected EventBusInterface $eventBus,
         protected ResultsRecorder $resultsRecorder,
     ) {
         parent::__construct(

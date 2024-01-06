@@ -7,10 +7,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use SequentSoft\ThreadFlow\Contracts\BotManagerInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
-use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
 
 class IncomingMessageJob implements ShouldQueue
 {
@@ -25,12 +23,11 @@ class IncomingMessageJob implements ShouldQueue
     ) {
     }
 
-    public function handle(BotManagerInterface $botManager): void
+    public function handle(ChannelManagerInterface $channelManager): void
     {
-        $bot = $botManager->channel($this->channelName);
-
-        $bot->setDispatcher(new SyncIncomingDispatcher());
-
-        $bot->dispatch($this->message);
+        LaravelQueueIncomingDispatcher::sync(function () use ($channelManager) {
+            $channel = $channelManager->channel($this->channelName);
+            $channel->incoming($this->message);
+        });
     }
 }

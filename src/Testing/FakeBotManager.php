@@ -7,9 +7,9 @@ use SequentSoft\ThreadFlow\ChannelBot;
 use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\ThreadFlowBotManager;
+use SequentSoft\ThreadFlow\ChannelManager;
 
-class FakeBotManager extends ThreadFlowBotManager
+class FakeBotManager extends ChannelManager
 {
     protected ?ResultsRecorder $botResultsRecorder = null;
 

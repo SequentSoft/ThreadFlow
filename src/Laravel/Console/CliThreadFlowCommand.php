@@ -4,17 +4,20 @@ namespace SequentSoft\ThreadFlow\Laravel\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
+use SequentSoft\ThreadFlow\Channel\CliChannel;
 use SequentSoft\ThreadFlow\Channel\Incoming\CliIncomingChannel;
 use SequentSoft\ThreadFlow\Channel\Outgoing\CallbackOutgoingChannel;
 use SequentSoft\ThreadFlow\ChannelBot;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Config;
+use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\WithKeyboardInterface;
 use SequentSoft\ThreadFlow\DataFetchers\InvokableDataFetcher;
-use SequentSoft\ThreadFlow\Dispatcher\SyncIncomingDispatcher;
-use SequentSoft\ThreadFlow\Events\ChannelEventBus;
+use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
+use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
+use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
@@ -86,29 +89,24 @@ class CliThreadFlowCommand extends Command
 
         $cliConfig = new Config([
             'entry' => \App\ThreadFlow\Pages\IndexPage::class,
+            'dispatcher' => 'sync',
         ]);
 
-        $eventBus = new ChannelEventBus();
+        $eventBus = new EventBus();
 
-        $outgoingChannel = new CallbackOutgoingChannel(
-            $cliConfig,
-            fn(OutgoingMessageInterface $message) => $this->processOutgoing($message)
-        );
-
-        $channelBot = new ChannelBot(
+        $channel = new CliChannel(
             'cli',
             $cliConfig,
             new ArraySessionStore('cli', app(ArraySessionStoreStorage::class)),
-            new StatefulPageRouter(),
-            $outgoingChannel,
-            new CliIncomingChannel($messageContext, $cliConfig),
-            new SyncIncomingDispatcher(),
+            app(DispatcherFactoryInterface::class),
             $eventBus
         );
 
+        $channel->setCallback(fn(OutgoingMessageInterface $message) => $this->processOutgoing($message));
+
         $dataFetcher = new InvokableDataFetcher();
 
-        $channelBot->listen($dataFetcher);
+        $channel->listen($messageContext, $dataFetcher);
 
         while (true) {
             $dataFetcher([

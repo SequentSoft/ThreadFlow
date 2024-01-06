@@ -3,7 +3,7 @@
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
-use SequentSoft\ThreadFlow\Events\ChannelEventBus;
+use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Messages\Incoming\Service\NewParticipantIncomingServiceMessage;
 use SequentSoft\ThreadFlow\Session\PageState;
@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->makePageWithTextMessage = function (string $class, array $attributes = []) {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
-        $eventBus = new ChannelEventBus();
+        $eventBus = new EventBus();
         return new $class(
             'test',
             $eventBus,
@@ -32,7 +32,7 @@ beforeEach(function () {
     $this->makePageWithServiceMessage = function (string $class, array $attributes = []) {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
-        $eventBus = new ChannelEventBus();
+        $eventBus = new EventBus();
         return new $class(
             'test',
             $eventBus,
@@ -50,7 +50,7 @@ beforeEach(function () {
     $this->makePageWithoutMessage = function (string $class, array $attributes = []) {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
-        $eventBus = new ChannelEventBus();
+        $eventBus = new EventBus();
         return new $class(
             'test',
             $eventBus,

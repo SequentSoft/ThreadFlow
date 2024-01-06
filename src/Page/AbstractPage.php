@@ -5,13 +5,11 @@ namespace SequentSoft\ThreadFlow\Page;
 use Closure;
 use ReflectionClass;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Events\ChannelEventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
@@ -24,7 +22,6 @@ use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Service\BotStartedIncomingServiceMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\OutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Service\TypingOutgoingServiceMessage;
-use SequentSoft\ThreadFlow\Session\PageState;
 use Throwable;
 
 abstract class AbstractPage implements PageInterface
@@ -33,7 +30,7 @@ abstract class AbstractPage implements PageInterface
 
     public function __construct(
         private readonly string $channelName,
-        private readonly ChannelEventBusInterface $eventBus,
+        private readonly EventBusInterface $eventBus,
         private readonly PageStateInterface $state,
         private readonly SessionInterface $session,
         private readonly MessageContextInterface $messageContext,
@@ -56,7 +53,7 @@ abstract class AbstractPage implements PageInterface
         return $this->messageContext;
     }
 
-    public function execute(Closure $callback): ?PendingDispatchInterface
+    public function execute(Closure $callback): ?PendingDispatchPageInterface
     {
         $this->outgoingCallback = $callback;
 
@@ -93,7 +90,7 @@ abstract class AbstractPage implements PageInterface
         $this->{$key} = $defaultValue;
     }
 
-    private function handleIncoming(): ?PendingDispatchInterface
+    private function handleIncoming(): ?PendingDispatchPageInterface
     {
         if ($this->message instanceof IncomingRegularMessageInterface) {
             return $this->executeRegularMessageHandler($this->message);
@@ -106,7 +103,7 @@ abstract class AbstractPage implements PageInterface
         return $this->executeShowHandler();
     }
 
-    private function executeShowHandler(): ?PendingDispatchInterface
+    private function executeShowHandler(): ?PendingDispatchPageInterface
     {
         if (method_exists($this, 'show')) {
             $this->eventBus->fire(new PageShowEvent($this));
@@ -118,7 +115,7 @@ abstract class AbstractPage implements PageInterface
 
     private function executeRegularMessageHandler(
         IncomingRegularMessageInterface $message
-    ): ?PendingDispatchInterface {
+    ): ?PendingDispatchPageInterface {
         if (method_exists($this, 'handleMessage')) {
             $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
             return $this->handleMessage($message);
@@ -129,7 +126,7 @@ abstract class AbstractPage implements PageInterface
 
     private function executeServiceMessageHandler(
         IncomingServiceMessageInterface $message
-    ): ?PendingDispatchInterface {
+    ): ?PendingDispatchPageInterface {
         if ($message instanceof BotStartedIncomingServiceMessage) {
             if (method_exists($this, 'welcome')) {
                 $this->eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
@@ -177,13 +174,9 @@ abstract class AbstractPage implements PageInterface
 
         if ($prevState) {
             return (new PendingDispatchPage(
-                $this->channelName,
-                $this->eventBus,
-                $prevState,
-                $this->session,
-                $this->messageContext,
-                null
-            ))->withBreadcrumbsReplace();
+                $prevState->getPageClass(),
+                $prevState->getAttributes(),
+            ))->withStateId($prevState->getId())->withBreadcrumbsReplace();
         }
 
         if ($fallbackPageClass) {
@@ -196,12 +189,8 @@ abstract class AbstractPage implements PageInterface
     protected function next(string $pageClass, array $attributes = []): PendingDispatchPageInterface
     {
         return new PendingDispatchPage(
-            $this->channelName,
-            $this->eventBus,
-            PageState::create($pageClass, $attributes),
-            $this->session,
-            $this->messageContext,
-            null
+            $pageClass,
+            $attributes,
         );
     }
 
@@ -218,7 +207,7 @@ abstract class AbstractPage implements PageInterface
             $message->setContext($this->messageContext);
         }
 
-        return call_user_func($this->outgoingCallback, $message, $this);
+        return call_user_func($this->outgoingCallback, $message);
     }
 
     /**
@@ -236,6 +225,6 @@ abstract class AbstractPage implements PageInterface
             $message->setContext($this->messageContext);
         }
 
-        return call_user_func($this->outgoingCallback, $message, $this);
+        return call_user_func($this->outgoingCallback, $message);
     }
 }
