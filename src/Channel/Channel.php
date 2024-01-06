@@ -12,10 +12,13 @@ use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\TextIncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
@@ -23,9 +26,17 @@ use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
+use SequentSoft\ThreadFlow\Session\PageState;
+use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
+use SequentSoft\ThreadFlow\Traits\HandleExceptions;
+use SequentSoft\ThreadFlow\Traits\TestInputResults;
+use Throwable;
 
 abstract class Channel implements ChannelInterface
 {
+    use TestInputResults;
+    use HandleExceptions;
+
     public function __construct(
         protected string $channelName,
         protected ConfigInterface $config,
@@ -58,9 +69,7 @@ abstract class Channel implements ChannelInterface
     {
         $this->session(
             $message->getContext(),
-            function (SessionInterface $session) use ($message) {
-                $this->dispatch($message, $session);
-            }
+            fn(SessionInterface $session) => $this->dispatch($message, $session)
         );
     }
 
@@ -70,7 +79,17 @@ abstract class Channel implements ChannelInterface
             new IncomingMessageDispatchingEvent($message)
         );
 
-        $this->getDispatcher()->incoming($message, $session);
+        try {
+            $this->getDispatcher()->incoming($message, $session);
+        } catch (Throwable $exception) {
+            $this->handleException(
+                $this->channelName,
+                $exception,
+                $session,
+                $message->getContext(),
+                $message,
+            );
+        }
     }
 
     protected function getDispatcher(): DispatcherInterface
@@ -88,19 +107,6 @@ abstract class Channel implements ChannelInterface
     {
         $this->eventBus->listen($event, $callback);
     }
-    //
-    //    public function testInput(
-    //    IMessageInterface|string $message,
-    //    ?MessageContextInterface $context = null
-    //): ResultsRecorder {
-    //    throw new Exception('This method is only for testing, please use FakeChannelBot instead');
-    //}
-    //
-    //public function withState(string $pageClass, array $attributes = []): static
-    //{
-    //    throw new Exception('This method is only for testing, please use FakeChannelBot instead');
-    //}
-
 
     public function showPage(
         MessageContextInterface|string $context,
@@ -132,7 +138,7 @@ abstract class Channel implements ChannelInterface
             $message = $this->makeTextMessage($message, $context);
         }
 
-        return $this->outgoing($message, null, null);
+        return $this->getDispatcher()->outgoing($message, null, null);
     }
 
     protected function makeTextMessage(
@@ -141,6 +147,53 @@ abstract class Channel implements ChannelInterface
     ): TextOutgoingRegularMessageInterface {
         return TextOutgoingMessage::make($text)
             ->setContext($messageContext);
+    }
+
+    protected function testInputText(string $text): IncomingMessageInterface
+    {
+        return new TextIncomingRegularMessage(
+            'test',
+            $this->fakeMessageContext(),
+            new DateTimeImmutable(),
+            $text,
+        );
+    }
+
+    public function fakeMessageContext(): MessageContextInterface
+    {
+        return MessageContext::createFromIds('test-participant', 'test-chat');
+    }
+
+    public function testInput(
+        string|IncomingMessageInterface $message,
+        string|PageStateInterface|null $state = null,
+        array $sessionAttributes = [],
+    ): ResultsRecorder {
+        $message = is_string($message)
+            ? $this->testInputText($message)
+            : $message;
+
+        $state = is_string($state)
+            ? PageState::create($state)
+            : $state;
+
+        return $this->captureTestInputResults(
+            $this->eventBus,
+            fn() => $this->session(
+                $message->getContext(),
+                function (SessionInterface $session) use ($message, $state, $sessionAttributes) {
+                    if ($state) {
+                        $session->setPageState($state);
+                    }
+
+                    foreach ($sessionAttributes as $key => $value) {
+                        $session->set($key, $value);
+                    }
+
+                    $this->dispatch($message, $session);
+                }
+            )
+        );
     }
 
     abstract protected function outgoing(

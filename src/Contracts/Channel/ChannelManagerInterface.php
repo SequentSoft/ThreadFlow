@@ -10,9 +10,15 @@ interface ChannelManagerInterface
 
     public function registerExceptionHandler(Closure $callback): void;
 
+    public function getExceptionsHandlers(): array;
+
+    public function disableExceptionsHandlers(): void;
+
     public function handleProcessingExceptions(Closure $callback): void;
 
     public function on(string $event, callable $callback): void;
 
     public function channel(string $channelName): ChannelInterface;
+
+    public function getRegisteredChannelDrivers(): array;
 }

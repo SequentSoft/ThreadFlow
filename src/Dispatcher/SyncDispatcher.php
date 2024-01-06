@@ -54,6 +54,14 @@ class SyncDispatcher implements DispatcherInterface
         );
     }
 
+    public function outgoing(
+        OutgoingMessageInterface $message,
+        ?SessionInterface $session,
+        ?PageInterface $page
+    ): OutgoingMessageInterface {
+        return call_user_func($this->outgoingCallback, $message, $session, $page);
+    }
+
     protected function executePage(
         PageInterface $page,
         SessionInterface $session,
@@ -66,7 +74,7 @@ class SyncDispatcher implements DispatcherInterface
 
         $next = $page->execute(function (OutgoingMessageInterface $message) use ($session, $page) {
             $this->eventBus->fire(new OutgoingMessageSendingEvent($message, $session, $page));
-            $message = call_user_func($this->outgoingCallback, $message, $session, $page);
+            $message = $this->outgoing($message, $session, $page);
             $this->eventBus->fire(new OutgoingMessageSentEvent($message, $session, $page));
 
             return $message;

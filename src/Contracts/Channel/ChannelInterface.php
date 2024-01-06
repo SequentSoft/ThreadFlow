@@ -7,6 +7,9 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
+use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
+use Closure;
 
 interface ChannelInterface
 {
@@ -26,4 +29,16 @@ interface ChannelInterface
         MessageContextInterface|string $context,
         OutgoingMessageInterface|string $message,
     ): OutgoingMessageInterface;
+
+    public function registerExceptionHandler(Closure $callback): void;
+
+    public function disableExceptionsHandlers(): void;
+
+    public function fakeMessageContext(): MessageContextInterface;
+
+    public function testInput(
+        string|IncomingMessageInterface $message,
+        string|PageStateInterface|null $state = null,
+        array $sessionAttributes = [],
+    ): ResultsRecorder;
 }

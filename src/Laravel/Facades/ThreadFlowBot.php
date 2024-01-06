@@ -4,8 +4,13 @@ namespace SequentSoft\ThreadFlow\Laravel\Facades;
 
 use Closure;
 use Illuminate\Support\Facades\Facade;
+use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
+use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
+use SequentSoft\ThreadFlow\Testing\FakeChannelManager;
 use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
 
 /**
@@ -13,6 +18,7 @@ use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
  * @method static void on(string $event, callable $callback)
  * @method static ChannelInterface channel(string $channelName)
  * @method static void registerExceptionHandler(Closure $callback)
+ * @method static void disableExceptionsHandlers()
  *
  * @method static ResultsRecorder assertState(string $pageClass, ?string $method = null, ?array $attributes = null)
  * @method static ResultsRecorder assertOutgoingMessagesCount(int $count)
@@ -34,20 +40,27 @@ class ThreadFlowBot extends Facade
         return ChannelManagerInterface::class;
     }
 
-    //public static function fake()
-    //{
-    //    $fakeBotManager = new FakeBotManager(
-    //        new Config(static::$app->make('config')->get('thread-flow', [])),
-    //        static::$app->make(SessionStoreFactoryInterface::class),
-    //        static::$app->make(RouterInterface::class),
-    //        static::$app->make(OutgoingChannelRegistryInterface::class),
-    //        static::$app->make(IncomingChannelRegistryInterface::class),
-    //        static::$app->make(DispatcherFactoryInterface::class),
-    //        static::$app->make(EventBusInterface::class),
-    //    );
-    //
-    //    static::swap($fakeBotManager);
-    //
-    //    return $fakeBotManager;
-    //}
+    public static function fake()
+    {
+        $fakeChannelManager = new FakeChannelManager(
+            new Config(static::$app->make('config')->get('thread-flow', [])),
+            static::$app->make(SessionStoreFactoryInterface::class),
+            static::$app->make(DispatcherFactoryInterface::class),
+            static::$app->make(EventBusInterface::class),
+        );
+
+        $originalChannelManager = static::$app->make(ChannelManagerInterface::class);
+
+        foreach ($originalChannelManager->getRegisteredChannelDrivers() as $channelName => $channelDriver) {
+            $fakeChannelManager->registerChannelDriver($channelName, $channelDriver);
+        }
+
+        foreach ($originalChannelManager->getExceptionsHandlers() as $handler) {
+            $fakeChannelManager->registerExceptionHandler($handler);
+        }
+
+        static::swap($fakeChannelManager);
+
+        return $fakeChannelManager;
+    }
 }

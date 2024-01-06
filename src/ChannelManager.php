@@ -26,11 +26,16 @@ class ChannelManager implements ChannelManagerInterface
     protected array $channels = [];
 
     public function __construct(
-        protected Config $config,
+        protected ConfigInterface $config,
         protected SessionStoreFactoryInterface $sessionStoreFactory,
         protected DispatcherFactoryInterface $dispatcherFactory,
         protected EventBusInterface $eventBus,
     ) {
+    }
+
+    public function getRegisteredChannelDrivers(): array
+    {
+        return $this->channelDrivers;
     }
 
     public function registerChannelDriver(string $channelName, Closure $callback): void
@@ -52,9 +57,14 @@ class ChannelManager implements ChannelManagerInterface
             $channelName,
             $config,
             $this->getSessionStore($channelName),
-            $this->dispatcherFactory,
+            $this->getDispatcherFactory(),
             $this->eventBus->nested($channelName),
         );
+    }
+
+    protected function getDispatcherFactory(): DispatcherFactoryInterface
+    {
+        return $this->dispatcherFactory;
     }
 
     /** @deprecated Use "registerExceptionHandler" method */
@@ -99,6 +109,14 @@ class ChannelManager implements ChannelManagerInterface
 
     public function channel(string $channelName): ChannelInterface
     {
-        return $this->channels[$channelName] ??= $this->makeChannel($channelName);
+        if (isset($this->channels[$channelName])) {
+            return $this->channels[$channelName];
+        }
+
+        $channel = $this->makeChannel($channelName);
+
+        $channel->registerExceptionHandler($this->handleException(...));
+
+        return $channel;
     }
 }

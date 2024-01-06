@@ -4,7 +4,6 @@ namespace SequentSoft\ThreadFlow\Dispatcher;
 
 use InvalidArgumentException;
 use Closure;
-use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;

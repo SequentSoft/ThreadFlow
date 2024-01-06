@@ -14,6 +14,16 @@ class EventBus implements EventBusInterface
 
     protected array $listeners = [];
 
+    public function getListeners(): array
+    {
+        return $this->listeners;
+    }
+
+    public function setListeners(array $listeners): void
+    {
+        $this->listeners = $listeners;
+    }
+
     public function listen(string $event, callable $callback): EventBusInterface
     {
         $this->listeners[$event][] = $callback;
