@@ -184,7 +184,7 @@ abstract class Channel implements ChannelInterface
 
         return $this->captureTestInputResults(
             $this->eventBus,
-            fn() => $this->sessionStore->useSession(
+            fn () => $this->sessionStore->useSession(
                 $message->getContext(),
                 function (SessionInterface $session) use ($message, $state, $sessionAttributes) {
                     if ($state) {
