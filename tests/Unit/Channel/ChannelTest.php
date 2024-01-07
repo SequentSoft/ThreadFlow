@@ -13,6 +13,7 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
+use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
 
@@ -55,6 +56,7 @@ test('incoming message triggers correct sequence of actions', function () {
     $dispatcher->shouldReceive('incoming')->with($message, $session)->once();
 
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(IncomingMessageDispatchingEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
 
@@ -74,6 +76,7 @@ test('showPage handles context and page correctly', function () {
         $closure($session);
     });
     $this->dispatcherFactory->shouldReceive('make')->andReturn($dispatcher);
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
     $dispatcher->shouldReceive('transition')->once();
 
     $this->channel->showPage($messageContext, $page, $pageAttributes);

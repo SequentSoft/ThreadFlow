@@ -8,6 +8,8 @@ use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
+use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
+use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Session\Session;
 
 beforeEach(function () {
@@ -39,7 +41,8 @@ test('listen method processes incoming messages correctly', function () {
         return $closure(new Session());
     });
 
-    $this->eventBus->shouldReceive('fire')->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(IncomingMessageDispatchingEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
     $this->dispatcherFactory->shouldReceive('make')->once()->andReturn($this->syncDispatcher);
     $this->syncDispatcher->shouldReceive('incoming')->once();
