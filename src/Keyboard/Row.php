@@ -28,6 +28,7 @@ class Row implements RowInterface
                 $buttons[] = Button::text($buttonOrText, $isList ? $buttonOrText : $callbackData);
             }
         }
+
         return new static($buttons);
     }
 

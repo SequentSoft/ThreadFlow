@@ -2,8 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Incoming\Regular;
 
-use DateTimeImmutable;
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\AudioIncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ContactIncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\FileIncomingRegularMessageInterface;
@@ -21,7 +19,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
 
     public function isText(?string $text = null): bool
     {
-        if (! $this instanceof TextIncomingRegularMessageInterface) {
+        if (!$this instanceof TextIncomingRegularMessageInterface) {
             return false;
         }
 
@@ -30,7 +28,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
 
     public function isTextAndContains(string $text): bool
     {
-        if (! $this->isText()) {
+        if (!$this->isText()) {
             return false;
         }
 
@@ -39,7 +37,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
 
     public function isTextAndMatch(string $pattern): bool
     {
-        if (! $this->isText()) {
+        if (!$this->isText()) {
             return false;
         }
 

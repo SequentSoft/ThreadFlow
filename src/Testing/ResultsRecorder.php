@@ -4,7 +4,6 @@ namespace SequentSoft\ThreadFlow\Testing;
 
 use Closure;
 use PHPUnit\Framework\Assert as PHPUnit;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
@@ -18,7 +17,6 @@ class ResultsRecorder
     protected array $dispatchedPages = [];
 
     protected array $dispatchedPagesMethods = [];
-
 
     public function recordSentOutgoingMessage(OutgoingMessageInterface $message): static
     {
@@ -193,7 +191,7 @@ class ResultsRecorder
             PHPUnit::fail(is_null($index) ? 'Latest message not found' : "Message with index {$index} not found");
         }
 
-        if (! $latestMessage instanceof TextOutgoingRegularMessageInterface) {
+        if (!$latestMessage instanceof TextOutgoingRegularMessageInterface) {
             PHPUnit::fail(
                 is_null($index)
                     ? 'Latest message is not a text message'
@@ -214,7 +212,7 @@ class ResultsRecorder
             PHPUnit::fail(is_null($index) ? 'Latest message not found' : "Message with index {$index} not found");
         }
 
-        if (! $latestMessage instanceof TextOutgoingRegularMessageInterface) {
+        if (!$latestMessage instanceof TextOutgoingRegularMessageInterface) {
             PHPUnit::fail(
                 is_null($index)
                     ? 'Latest message is not a text message'

@@ -5,5 +5,6 @@ namespace SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular;
 interface ImageIncomingRegularMessageInterface extends IncomingRegularMessageInterface
 {
     public function getUrl(): ?string;
+
     public function getName(): ?string;
 }

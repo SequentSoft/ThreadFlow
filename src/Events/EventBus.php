@@ -2,42 +2,61 @@
 
 namespace SequentSoft\ThreadFlow\Events;
 
-use SequentSoft\ThreadFlow\Contracts\Events\ChannelEventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
 
 class EventBus implements EventBusInterface
 {
-    protected array $listeners = [];
-
-    /**
-     * @param string $event Event class name or '*' for all events
-     * @param callable $callback
-     * @return void
-     */
-    public function listen(string $event, callable $callback): void
-    {
-        $this->listeners[$event][] = $callback;
+    final public function __construct(
+        protected ?string $name = null,
+    ) {
     }
 
-    public function fire(string $channelName, EventInterface $event): void
+    protected array $listeners = [];
+
+    public function getListeners(): array
+    {
+        return $this->listeners;
+    }
+
+    public function setListeners(array $listeners): void
+    {
+        $this->listeners = $listeners;
+    }
+
+    public function listen(string $event, callable $callback): EventBusInterface
+    {
+        $this->listeners[$event][] = $callback;
+
+        return $this;
+    }
+
+    public function fire(EventInterface $event): void
+    {
+        $this->fireWithName($this->name, $event);
+    }
+
+    private function fireWithName(?string $name, EventInterface $event): void
     {
         $className = get_class($event);
 
         foreach ($this->listeners[$className] ?? [] as $listener) {
-            $listener($channelName, $event);
+            $listener($name, $event);
         }
 
         foreach ($this->listeners['*'] ?? [] as $listener) {
-            $listener($channelName, $event);
+            $listener($name, $event);
         }
     }
 
-    public function makeChannelEventBus(string $channelName): ChannelEventBusInterface
+    public function nested(string $name): EventBusInterface
     {
-        $eventBus = new ChannelEventBus();
+        $eventBus = new static($name);
 
-        $eventBus->listen('*', fn (EventInterface $event) => $this->fire($channelName, $event));
+        $eventBus->listen(
+            '*',
+            fn (?string $name, EventInterface $event) => $this->fireWithName($name ?? $this->name, $event)
+        );
 
         return $eventBus;
     }

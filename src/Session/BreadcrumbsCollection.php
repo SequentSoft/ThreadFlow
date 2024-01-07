@@ -2,9 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
-use ArrayIterator;
-use IteratorAggregate;
-use SequentSoft\ThreadFlow\Contracts\Session\BackgroundPageStatesCollectionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\BreadcrumbsCollectionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 

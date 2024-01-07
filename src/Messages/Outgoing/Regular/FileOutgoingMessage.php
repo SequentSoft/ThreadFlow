@@ -25,6 +25,7 @@ class FileOutgoingMessage extends OutgoingRegularMessage implements FileOutgoing
     public function setFromUrl(bool $isFromUrl = true): static
     {
         $this->isFromUrl = $isFromUrl;
+
         return $this;
     }
 

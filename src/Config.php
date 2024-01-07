@@ -14,13 +14,6 @@ class Config implements ConfigInterface
         $this->config = $config;
     }
 
-    /**
-     * Get a config value by its key.
-     *
-     * @param string $key The config key.
-     * @param mixed $default The default value if the config key does not exist.
-     * @return mixed The config value.
-     */
     public function get(string $key, mixed $default = null): mixed
     {
         return $this->config[$key] ?? $default;
@@ -35,8 +28,8 @@ class Config implements ConfigInterface
     {
         $value = $this->get($key);
 
-        if (! is_array($value)) {
-            throw new InvalidNestedConfigException('Invalid nested config: ' . $key);
+        if (!is_array($value)) {
+            throw new InvalidNestedConfigException('Invalid nested config: '.$key);
         }
 
         return new Config($value);

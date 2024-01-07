@@ -2,8 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
-use InvalidArgumentException;
 use Closure;
+use InvalidArgumentException;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
