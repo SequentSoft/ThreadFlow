@@ -11,6 +11,7 @@ use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingServiceMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -18,6 +19,7 @@ use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
+use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
@@ -65,7 +67,13 @@ abstract class Channel implements ChannelInterface
     {
         $this->sessionStore->useSession(
             $message->getContext(),
-            fn (SessionInterface $session) => $this->dispatch($message, $session)
+            function (SessionInterface $session) use ($message) {
+                if ($message instanceof BotStartedIncomingServiceMessageInterface) {
+                    $session->reset();
+                }
+                $this->eventBus->fire(new SessionStartedEvent($session));
+                $this->dispatch($message, $session);
+            }
         );
     }
 
@@ -118,6 +126,7 @@ abstract class Channel implements ChannelInterface
             : $page->appendAttributes($pageAttributes);
 
         $this->sessionStore->useSession($context, function (SessionInterface $session) use ($page, $context) {
+            $this->eventBus->fire(new SessionStartedEvent($session));
             $this->getDispatcher()->transition($context, $session, $page);
         });
     }
@@ -175,7 +184,7 @@ abstract class Channel implements ChannelInterface
 
         return $this->captureTestInputResults(
             $this->eventBus,
-            fn () => $this->sessionStore->useSession(
+            fn() => $this->sessionStore->useSession(
                 $message->getContext(),
                 function (SessionInterface $session) use ($message, $state, $sessionAttributes) {
                     if ($state) {
@@ -186,6 +195,7 @@ abstract class Channel implements ChannelInterface
                         $session->set($key, $value);
                     }
 
+                    $this->eventBus->fire(new SessionStartedEvent($session));
                     $this->dispatch($message, $session);
                 }
             )

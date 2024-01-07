@@ -11,14 +11,16 @@ abstract class OutgoingMessage extends Message implements OutgoingMessageInterfa
 {
     private function getContextPage(): ?PageInterface
     {
-        $debug = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2];
-        $page = $debug['object'] ?? null;
+        $debug = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 10);
 
-        if (!$page instanceof PageInterface) {
-            throw new RuntimeException('Context page needed for this action');
+        foreach ($debug as $value) {
+            $object = $value['object'] ?? null;
+            if ($object instanceof PageInterface) {
+                return $object;
+            }
         }
 
-        return $page;
+        throw new RuntimeException('Context page needed for this action');
     }
 
     public function reply(): static
