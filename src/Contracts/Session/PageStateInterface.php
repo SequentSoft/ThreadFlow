@@ -7,9 +7,7 @@ use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 interface PageStateInterface
 {
     /**
-     * @param class-string<PageInterface>|null $pageClass
-     * @param array $attributes
-     * @return PageStateInterface
+     * @param  class-string<PageInterface>|null  $pageClass
      */
     public static function create(
         ?string $pageClass = null,
@@ -24,8 +22,7 @@ interface PageStateInterface
     public function getPageClass(): ?string;
 
     /**
-     * @param class-string<PageInterface> $pageClass
-     * @return void
+     * @param  class-string<PageInterface>  $pageClass
      */
     public function setPageClass(string $pageClass): void;
 

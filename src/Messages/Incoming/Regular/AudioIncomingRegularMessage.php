@@ -5,8 +5,6 @@ namespace SequentSoft\ThreadFlow\Messages\Incoming\Regular;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\AudioIncomingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\FileIncomingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ImageIncomingRegularMessageInterface;
 
 class AudioIncomingRegularMessage extends IncomingRegularMessage implements AudioIncomingRegularMessageInterface
 {

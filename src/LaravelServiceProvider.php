@@ -12,12 +12,12 @@ use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
 use SequentSoft\ThreadFlow\Dispatcher\Laravel\LaravelQueueIncomingDispatcher;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
+use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
+use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
-use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
 use SequentSoft\ThreadFlow\Session\Laravel\LaravelCacheSessionStore;
 use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
-use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 
 class LaravelServiceProvider extends ServiceProvider
 {
@@ -41,14 +41,14 @@ class LaravelServiceProvider extends ServiceProvider
         $this->app->singleton(SessionStoreFactoryInterface::class, function () {
             $factory = new SessionStoreFactory();
 
-            $factory->register('array', fn(string $channelName) => new ArraySessionStore(
+            $factory->register('array', fn (string $channelName) => new ArraySessionStore(
                 $channelName,
                 $this->app->make(ArraySessionStoreStorage::class),
             ));
 
             $factory->register(
                 'cache',
-                fn(string $channelName, ConfigInterface $config) => new LaravelCacheSessionStore(
+                fn (string $channelName, ConfigInterface $config) => new LaravelCacheSessionStore(
                     $channelName,
                     $config,
                 )
@@ -61,7 +61,7 @@ class LaravelServiceProvider extends ServiceProvider
             $factory = new DispatcherFactory();
             $factory->register(
                 'sync',
-                fn($channelName, $eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
+                fn ($channelName, $eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
                     $channelName,
                     $eventBus,
                     $defaultPageClass,
@@ -70,17 +70,18 @@ class LaravelServiceProvider extends ServiceProvider
             );
             $factory->register(
                 'queue',
-                fn($channelName, $eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
+                fn ($channelName, $eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
                     $channelName, $eventBus, $defaultPageClass, $outgoing
                 )
             );
+
             return $factory;
         });
     }
 
     protected function getPackageConfigPath(): string
     {
-        return __DIR__ . '/../config/thread-flow.php';
+        return __DIR__.'/../config/thread-flow.php';
     }
 
     public function boot(): void

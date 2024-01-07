@@ -2,8 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 
-use Closure;
-use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;

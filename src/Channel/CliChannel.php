@@ -4,7 +4,6 @@ namespace SequentSoft\ThreadFlow\Channel;
 
 use Closure;
 use DateTimeImmutable;
-use SequentSoft\ThreadFlow\Channel\Channel;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
@@ -22,7 +21,7 @@ class CliChannel extends Channel
 
     public function listen(MessageContextInterface $messageContext, DataFetcherInterface $fetcher): void
     {
-        $fetcher->fetch(fn(array $update) => $this->incoming(
+        $fetcher->fetch(fn (array $update) => $this->incoming(
             $this->makeIncomingMessageFromText(
                 $update['id'],
                 $update['text'] ?? '',

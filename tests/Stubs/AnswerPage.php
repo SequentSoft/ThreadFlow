@@ -11,7 +11,7 @@ class AnswerPage extends AbstractPage
     {
         $this->reply(
             TextOutgoingRegularMessage::make('Hello', [
-                ['login' => 'Login']
+                ['login' => 'Login'],
             ])
         );
     }
@@ -20,7 +20,7 @@ class AnswerPage extends AbstractPage
     {
         $this->reply(
             TextOutgoingRegularMessage::make('Hello', [
-                ['login' => 'Login']
+                ['login' => 'Login'],
             ])
         );
     }

@@ -30,6 +30,7 @@ class LaravelQueueIncomingDispatcher extends SyncDispatcher
                 $this->channelName,
                 $message
             );
+
             return;
         }
 

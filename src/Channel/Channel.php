@@ -2,7 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Channel;
 
-use Closure;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
@@ -12,8 +11,6 @@ use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\TextIncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -21,7 +18,6 @@ use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
-use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
@@ -34,8 +30,8 @@ use Throwable;
 
 abstract class Channel implements ChannelInterface
 {
-    use TestInputResults;
     use HandleExceptions;
+    use TestInputResults;
 
     public function __construct(
         protected string $channelName,
@@ -57,19 +53,19 @@ abstract class Channel implements ChannelInterface
         DateTimeImmutable $date,
         MessageContextInterface $context
     ): ?IncomingMessageInterface {
-        return (new TextIncomingRegularMessage(
+        return new TextIncomingRegularMessage(
             $id,
             $context,
             $date,
             $text,
-        ));
+        );
     }
 
     public function incoming(IncomingMessageInterface $message): void
     {
-        $this->session(
+        $this->sessionStore->useSession(
             $message->getContext(),
-            fn(SessionInterface $session) => $this->dispatch($message, $session)
+            fn (SessionInterface $session) => $this->dispatch($message, $session)
         );
     }
 
@@ -121,7 +117,7 @@ abstract class Channel implements ChannelInterface
             ? new PendingDispatchPage($page, $pageAttributes)
             : $page->appendAttributes($pageAttributes);
 
-        $this->session($context, function (SessionInterface $session) use ($page, $pageAttributes, $context) {
+        $this->sessionStore->useSession($context, function (SessionInterface $session) use ($page, $context) {
             $this->getDispatcher()->transition($context, $session, $page);
         });
     }
@@ -179,7 +175,7 @@ abstract class Channel implements ChannelInterface
 
         return $this->captureTestInputResults(
             $this->eventBus,
-            fn() => $this->session(
+            fn () => $this->sessionStore->useSession(
                 $message->getContext(),
                 function (SessionInterface $session) use ($message, $state, $sessionAttributes) {
                     if ($state) {
@@ -201,15 +197,4 @@ abstract class Channel implements ChannelInterface
         ?SessionInterface $session,
         ?PageInterface $contextPage
     ): OutgoingMessageInterface;
-
-    protected function session(MessageContextInterface $context, Closure $callback): void
-    {
-        $session = $this->sessionStore->load($context);
-
-        $this->eventBus->fire(new SessionStartedEvent($session));
-
-        $callback($session);
-
-        $this->sessionStore->save($context, $session);
-    }
 }

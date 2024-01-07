@@ -4,8 +4,8 @@ namespace SequentSoft\ThreadFlow\Traits;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use Throwable;
 
 trait HandleExceptions
@@ -39,7 +39,7 @@ trait HandleExceptions
         MessageContextInterface $messageContext,
         ?IMessageInterface $message = null,
     ): void {
-        if (!$this->exceptionsHandlersEnabled) {
+        if (! $this->exceptionsHandlersEnabled) {
             throw $exception;
         }
 

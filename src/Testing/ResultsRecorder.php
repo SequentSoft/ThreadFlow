@@ -4,7 +4,6 @@ namespace SequentSoft\ThreadFlow\Testing;
 
 use Closure;
 use PHPUnit\Framework\Assert as PHPUnit;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
@@ -18,7 +17,6 @@ class ResultsRecorder
     protected array $dispatchedPages = [];
 
     protected array $dispatchedPagesMethods = [];
-
 
     public function recordSentOutgoingMessage(OutgoingMessageInterface $message): static
     {

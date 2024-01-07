@@ -5,9 +5,6 @@ namespace SequentSoft\ThreadFlow\Laravel\Console;
 use Illuminate\Console\Command;
 use Illuminate\Support\Str;
 use SequentSoft\ThreadFlow\Channel\CliChannel;
-use SequentSoft\ThreadFlow\Channel\Incoming\CliIncomingChannel;
-use SequentSoft\ThreadFlow\Channel\Outgoing\CallbackOutgoingChannel;
-use SequentSoft\ThreadFlow\ChannelBot;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
@@ -15,10 +12,7 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\WithKeyboardInterface;
 use SequentSoft\ThreadFlow\DataFetchers\InvokableDataFetcher;
-use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
-use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
-use SequentSoft\ThreadFlow\Router\StatefulPageRouter;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
 
@@ -40,7 +34,7 @@ class CliThreadFlowCommand extends Command
         if ($message instanceof TextOutgoingRegularMessageInterface) {
             $this->line($message->getText());
         } else {
-            $this->line('Message type: ' . get_class($message));
+            $this->line('Message type: '.get_class($message));
         }
 
         if ($message instanceof WithKeyboardInterface && $message->getKeyboard()) {
@@ -50,7 +44,7 @@ class CliThreadFlowCommand extends Command
                 $buttons = $row->getButtons();
                 foreach ($buttons as $button) {
                     $this->lastKeyboardOptions[] = $button->getCallbackData();
-                    $data[$rowIndex][] = '<comment>' . $button->getCallbackData() . '</comment>: ' . $button->getText();
+                    $data[$rowIndex][] = '<comment>'.$button->getCallbackData().'</comment>: '.$button->getText();
                 }
             }
 
@@ -102,7 +96,7 @@ class CliThreadFlowCommand extends Command
             $eventBus
         );
 
-        $channel->setCallback(fn(OutgoingMessageInterface $message) => $this->processOutgoing($message));
+        $channel->setCallback(fn (OutgoingMessageInterface $message) => $this->processOutgoing($message));
 
         $dataFetcher = new InvokableDataFetcher();
 

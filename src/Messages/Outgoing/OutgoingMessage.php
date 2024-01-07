@@ -2,7 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Outgoing;
 
-use Exception;
 use RuntimeException;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -15,7 +14,7 @@ abstract class OutgoingMessage extends Message implements OutgoingMessageInterfa
         $debug = debug_backtrace(DEBUG_BACKTRACE_PROVIDE_OBJECT | DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2];
         $page = $debug['object'] ?? null;
 
-        if (!$page instanceof PageInterface) {
+        if (! $page instanceof PageInterface) {
             throw new RuntimeException('Context page needed for this action');
         }
 

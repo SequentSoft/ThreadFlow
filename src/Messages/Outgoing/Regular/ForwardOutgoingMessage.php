@@ -2,11 +2,9 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\MessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\ForwardOutgoingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 
 class ForwardOutgoingMessage extends OutgoingRegularMessage implements ForwardOutgoingRegularMessageInterface
 {

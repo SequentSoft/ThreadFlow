@@ -4,7 +4,6 @@ test('Dont use dd or dump')
     ->expect(['dd', 'dump'])
     ->not->toBeUsed();
 
-
 test('Contracts dir could contain only interfaces')
     ->expect('SequentSoft\ThreadFlow\Contracts')
     ->toBeInterfaces();

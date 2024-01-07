@@ -6,8 +6,8 @@ namespace SequentSoft\ThreadFlow;
 
 use Closure;
 use RuntimeException;
-use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
+use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
@@ -84,9 +84,7 @@ class ChannelManager implements ChannelManagerInterface
     }
 
     /**
-     * @param class-string<EventInterface> $event
-     * @param callable $callback
-     * @return void
+     * @param  class-string<EventInterface>  $event
      */
     public function on(string $event, callable $callback): void
     {

@@ -2,8 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
-use InvalidArgumentException;
 use Closure;
+use InvalidArgumentException;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
@@ -19,7 +19,7 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
 
     public function make(string $name, string $channelName, ConfigInterface $config): SessionStoreInterface
     {
-        if (!isset($this->registeredSessionStores[$name])) {
+        if (! isset($this->registeredSessionStores[$name])) {
             throw new InvalidArgumentException("Session store {$name} is not registered.");
         }
 

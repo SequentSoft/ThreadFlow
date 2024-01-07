@@ -2,9 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
-use Closure;
 use Exception;
-use RuntimeException;
 use SequentSoft\ThreadFlow\Contracts\Session\BackgroundPageStatesCollectionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\BreadcrumbsCollectionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
@@ -31,8 +29,6 @@ class Session implements SessionInterface
         PageStateInterface|string|null $pageState = null,
         BackgroundPageStatesCollectionInterface|array $backgroundPageStates = [],
         BreadcrumbsCollectionInterface|array $breadcrumbs = [],
-        protected ?Closure $saveCallback = null,
-        protected ?Closure $closedCallback = null,
     ) {
         $this->data = $data instanceof SessionDataInterface
             ? $data
@@ -51,32 +47,15 @@ class Session implements SessionInterface
             : BreadcrumbsCollection::create($breadcrumbs);
     }
 
-    public function setSaveCallback(Closure $callback): void
+    /**
+     * @throws Exception
+     */
+    public function reset(): void
     {
-        $this->saveCallback = $callback;
-    }
-
-    public function setClosedCallback(Closure $callback): void
-    {
-        $this->closedCallback = $callback;
-    }
-
-    public function __destruct()
-    {
-        $this->close();
-    }
-
-    public function close(): void
-    {
-        if ($this->isClosed) {
-            return;
-        }
-
-        $this->isClosed = true;
-
-        if ($this->closedCallback) {
-            call_user_func($this->closedCallback, $this);
-        }
+        $this->data = SessionData::create();
+        $this->pageState = PageState::create();
+        $this->backgroundPageStates = BackgroundPageStatesCollection::create();
+        $this->breadcrumbs = BreadcrumbsCollection::create();
     }
 
     public function getData(): SessionDataInterface
@@ -119,19 +98,6 @@ class Session implements SessionInterface
         $this->data->set($key, $data);
     }
 
-    public function save(): void
-    {
-        if ($this->isClosed) {
-            throw new RuntimeException('Session is closed.');
-        }
-
-        if ($this->saveCallback) {
-            call_user_func($this->saveCallback, $this);
-        }
-
-        $this->close();
-    }
-
     public function __serialize(): array
     {
         return [
@@ -148,7 +114,5 @@ class Session implements SessionInterface
         $this->pageState = $data['pageState'];
         $this->backgroundPageStates = $data['backgroundPageStates'];
         $this->breadcrumbs = $data['breadcrumbs'];
-        $this->closedCallback = null;
-        $this->saveCallback = null;
     }
 }

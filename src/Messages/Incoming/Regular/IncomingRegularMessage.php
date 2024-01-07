@@ -2,8 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Incoming\Regular;
 
-use DateTimeImmutable;
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\AudioIncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ContactIncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\FileIncomingRegularMessageInterface;

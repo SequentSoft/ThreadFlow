@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Session\Laravel;
 
+use Closure;
 use Illuminate\Support\Facades\Cache;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
@@ -9,7 +10,6 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Session\SessionSizeLimitExceededException;
 use SequentSoft\ThreadFlow\Session\Session;
-use Illuminate\Contracts\Cache\Lock;
 
 class LaravelCacheSessionStore implements SessionStoreInterface
 {
@@ -19,34 +19,8 @@ class LaravelCacheSessionStore implements SessionStoreInterface
     ) {
     }
 
-    public function new(
-        MessageContextInterface $context
-    ): SessionInterface {
-        $key = $this->makeKeyString($this->channelName, $context);
-
-        $lock = Cache::lock("{$key}-lock", $this->getSessionMaxLockSeconds());
-
-        $lock->block($this->getSessionMaxLockWaitSeconds());
-
-        // clean up the session
-        Cache::store($this->getCacheStoreName())->put($key, null);
-
-        $session = new Session();
-
-        $session->setSaveCallback(fn(SessionInterface $session) => $this->save(
-            $context,
-            $session,
-            $lock
-        ));
-
-        $session->setClosedCallback(fn() => $lock?->release());
-
-        return $session;
-    }
-
-    public function load(
-        MessageContextInterface $context
-    ): SessionInterface {
+    public function useSession(MessageContextInterface $context, Closure $callback): mixed
+    {
         $key = $this->makeKeyString($this->channelName, $context);
 
         $lock = Cache::lock("{$key}-lock", $this->getSessionMaxLockSeconds());
@@ -56,19 +30,30 @@ class LaravelCacheSessionStore implements SessionStoreInterface
         $session = Cache::store($this->getCacheStoreName())->get($key)
             ?? new Session();
 
-        if (!$session instanceof SessionInterface) {
+        if (! $session instanceof SessionInterface) {
             $session = $this->fixBrokenSession($session);
         }
 
-        $session->setSaveCallback(fn(SessionInterface $session) => $this->save(
-            $context,
-            $session,
-            $lock
-        ));
+        $result = $callback($session);
 
-        $session->setClosedCallback(fn() => $lock?->release());
+        $session->getBackgroundPageStates()
+            ->truncate($this->getMaxBackgroundPageStates());
 
-        return $session;
+        $sessionSize = $this->calculateSize($session);
+
+        if ($sessionSize > $this->getMaxSize()) {
+            throw new SessionSizeLimitExceededException(
+                session: $session,
+                size: $sessionSize,
+                limit: $this->getMaxSize()
+            );
+        }
+
+        Cache::store($this->getCacheStoreName())->put($key, $session);
+
+        $lock?->release();
+
+        return $result;
     }
 
     protected function fixBrokenSession(mixed $brokenSession): SessionInterface
@@ -78,7 +63,7 @@ class LaravelCacheSessionStore implements SessionStoreInterface
 
     protected function makeKeyString(string $channelName, MessageContextInterface $context): string
     {
-        return $channelName . ':' . $context->getRoom()->getId();
+        return $channelName.':'.$context->getRoom()->getId();
     }
 
     protected function getSessionMaxLockSeconds(): int
@@ -109,27 +94,5 @@ class LaravelCacheSessionStore implements SessionStoreInterface
     protected function calculateSize(SessionInterface $session): int
     {
         return strlen(serialize($session));
-    }
-
-    public function save(MessageContextInterface $context, SessionInterface $session, ?Lock $lock = null): void
-    {
-        $key = $this->makeKeyString($this->channelName, $context);
-
-        $session->getBackgroundPageStates()
-            ->truncate($this->getMaxBackgroundPageStates());
-
-        $sessionSize = $this->calculateSize($session);
-
-        if ($sessionSize > $this->getMaxSize()) {
-            throw new SessionSizeLimitExceededException(
-                session: $session,
-                size: $sessionSize,
-                limit: $this->getMaxSize()
-            );
-        }
-
-        Cache::store($this->getCacheStoreName())->put($key, $session);
-
-        $lock?->release();
     }
 }

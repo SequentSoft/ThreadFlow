@@ -17,7 +17,7 @@ class LocationIncomingRegularMessage extends IncomingRegularMessage implements L
     ) {
         parent::__construct($id, $context, $timestamp);
 
-        $this->setText($latitude . ',' . $longitude);
+        $this->setText($latitude.','.$longitude);
     }
 
     public function getLatitude(): float

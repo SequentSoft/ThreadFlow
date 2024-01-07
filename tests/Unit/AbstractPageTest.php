@@ -14,6 +14,7 @@ beforeEach(function () {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
         $eventBus = new EventBus();
+
         return new $class(
             'test',
             $eventBus,
@@ -33,6 +34,7 @@ beforeEach(function () {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
         $eventBus = new EventBus();
+
         return new $class(
             'test',
             $eventBus,
@@ -51,6 +53,7 @@ beforeEach(function () {
         $state = PageState::create($class, $attributes);
         $session = new Session([], $state);
         $eventBus = new EventBus();
+
         return new $class(
             'test',
             $eventBus,
@@ -77,10 +80,10 @@ it('can be executed with text message', function () {
 
     $spy = Mockery::spy();
 
-    $result = $page1->execute(fn() => $spy->pageExecuteMessageCallback());
+    $result = $page1->execute(fn () => $spy->pageExecuteMessageCallback());
     expect($result)->toBeNull();
 
-    $page2->execute(fn() => $spy->pageExecuteMessageCallback());
+    $page2->execute(fn () => $spy->pageExecuteMessageCallback());
     $spy->shouldNotHaveReceived('pageExecuteMessageCallback');
 });
 
@@ -90,10 +93,10 @@ it('can be executed with service message', function () {
 
     $spy = Mockery::spy();
 
-    $result = $page1->execute(fn() => $spy->pageExecuteMessageCallback());
+    $result = $page1->execute(fn () => $spy->pageExecuteMessageCallback());
     expect($result)->toBeNull();
 
-    $page2->execute(fn() => $spy->pageExecuteMessageCallback());
+    $page2->execute(fn () => $spy->pageExecuteMessageCallback());
     $spy->shouldNotHaveReceived('pageExecuteMessageCallback');
 });
 
@@ -103,10 +106,10 @@ it('can be executed without message', function () {
 
     $spy = Mockery::spy();
 
-    $result = $page1->execute(fn() => $spy->pageExecuteMessageCallback());
+    $result = $page1->execute(fn () => $spy->pageExecuteMessageCallback());
     expect($result)->toBeNull();
 
-    $page2->execute(fn() => $spy->pageExecuteMessageCallback());
+    $page2->execute(fn () => $spy->pageExecuteMessageCallback());
     $spy->shouldNotHaveReceived('pageExecuteMessageCallback');
 });
 

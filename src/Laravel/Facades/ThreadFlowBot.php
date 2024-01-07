@@ -19,7 +19,6 @@ use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
  * @method static ChannelInterface channel(string $channelName)
  * @method static void registerExceptionHandler(Closure $callback)
  * @method static void disableExceptionsHandlers()
- *
  * @method static ResultsRecorder assertState(string $pageClass, ?string $method = null, ?array $attributes = null)
  * @method static ResultsRecorder assertOutgoingMessagesCount(int $count)
  * @method static ResultsRecorder assertOutgoingMessage(Closure $callback, ?int $index = null)
@@ -32,8 +31,6 @@ class ThreadFlowBot extends Facade
 {
     /**
      * Get the registered name of the component.
-     *
-     * @return string
      */
     protected static function getFacadeAccessor(): string
     {

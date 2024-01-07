@@ -7,9 +7,13 @@ use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 class Room implements RoomInterface
 {
     protected ?string $name = null;
+
     protected ?string $type = null;
+
     protected ?string $description = null;
+
     protected ?int $participantCount = null;
+
     protected ?string $photoUrl = null;
 
     public function __construct(
@@ -50,30 +54,35 @@ class Room implements RoomInterface
     public function setName(?string $name): self
     {
         $this->name = $name;
+
         return $this;
     }
 
     public function setType(?string $type): self
     {
         $this->type = $type;
+
         return $this;
     }
 
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
         return $this;
     }
 
     public function setParticipantCount(?int $participantCount): self
     {
         $this->participantCount = $participantCount;
+
         return $this;
     }
 
     public function setPhotoUrl(?string $photoUrl): self
     {
         $this->photoUrl = $photoUrl;
+
         return $this;
     }
 }

@@ -20,7 +20,5 @@ interface SessionInterface
 
     public function set(string $key, mixed $data): void;
 
-    public function save(): void;
-
-    public function close(): void;
+    public function reset(): void;
 }

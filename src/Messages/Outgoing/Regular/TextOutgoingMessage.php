@@ -2,7 +2,6 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 
@@ -32,12 +31,14 @@ class TextOutgoingMessage extends OutgoingRegularMessage implements TextOutgoing
     public function setTemplate(string $template): static
     {
         $this->template = $template;
+
         return $this;
     }
 
     public function setTemplateAttribute(string $name, string $value): static
     {
         $this->templateAttributes[$name] = $value;
+
         return $this;
     }
 
@@ -50,8 +51,9 @@ class TextOutgoingMessage extends OutgoingRegularMessage implements TextOutgoing
     {
         $template = $this->template;
         foreach ($this->templateAttributes as $name => $value) {
-            $template = str_replace('{' . $name . '}', $value, $template);
+            $template = str_replace('{'.$name.'}', $value, $template);
         }
+
         return $template;
     }
 
@@ -65,6 +67,7 @@ class TextOutgoingMessage extends OutgoingRegularMessage implements TextOutgoing
         foreach ($templateAttributes as $name => $value) {
             $message->setTemplateAttribute($name, $value);
         }
+
         return $message;
     }
 

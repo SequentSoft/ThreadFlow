@@ -3,7 +3,6 @@
 namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 
 use Closure;
-use SequentSoft\ThreadFlow\Contracts\BotInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 

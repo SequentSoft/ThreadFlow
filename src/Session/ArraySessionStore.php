@@ -2,9 +2,9 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
+use Closure;
 use Exception;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 
 class ArraySessionStore implements SessionStoreInterface
@@ -15,27 +15,13 @@ class ArraySessionStore implements SessionStoreInterface
     ) {
     }
 
-    public function new(MessageContextInterface $context): SessionInterface
-    {
-        $session = new Session();
-
-        $session->setSaveCallback(fn(SessionInterface $session) => $this->save(
-            $context,
-            $session,
-        ));
-
-        return $session;
-    }
-
     /**
      * @throws Exception
      */
-    public function load(
-        MessageContextInterface $context
-    ): SessionInterface {
+    public function useSession(MessageContextInterface $context, Closure $callback): mixed
+    {
         $key = $this->makeKeyString($this->channelName, $context);
 
-        /** @var SessionInterface|null $session */
         $session = $this->storage->load($key);
 
         if (! is_null($session)) {
@@ -48,23 +34,16 @@ class ArraySessionStore implements SessionStoreInterface
         } else {
             $session = new Session();
         }
-        $session->setSaveCallback(fn(SessionInterface $session) => $this->save(
-            $context,
-            $session,
-        ));
 
-        return $session;
+        $result = $callback($session);
+
+        $this->storage->store($key, $session);
+
+        return $result;
     }
 
     protected function makeKeyString(string $channelName, MessageContextInterface $context): string
     {
-        return $channelName . ':' . $context->getRoom()->getId();
-    }
-
-    public function save(MessageContextInterface $context, SessionInterface $session): void
-    {
-        $key = $this->makeKeyString($this->channelName, $context);
-
-        $this->storage->store($key, $session);
+        return $channelName.':'.$context->getRoom()->getId();
     }
 }

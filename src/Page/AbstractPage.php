@@ -107,6 +107,7 @@ abstract class AbstractPage implements PageInterface
     {
         if (method_exists($this, 'show')) {
             $this->eventBus->fire(new PageShowEvent($this));
+
             return $this->show();
         }
 
@@ -118,6 +119,7 @@ abstract class AbstractPage implements PageInterface
     ): ?PendingDispatchPageInterface {
         if (method_exists($this, 'handleMessage')) {
             $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
+
             return $this->handleMessage($message);
         }
 
@@ -130,6 +132,7 @@ abstract class AbstractPage implements PageInterface
         if ($message instanceof BotStartedIncomingServiceMessage) {
             if (method_exists($this, 'welcome')) {
                 $this->eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
+
                 return $this->welcome($message);
             }
 
@@ -139,6 +142,7 @@ abstract class AbstractPage implements PageInterface
 
         if (method_exists($this, 'handleServiceMessage')) {
             $this->eventBus->fire(new PageHandleServiceMessageEvent($this, $message));
+
             return $this->handleServiceMessage($message);
         }
 
@@ -196,7 +200,9 @@ abstract class AbstractPage implements PageInterface
 
     /**
      * @phpstan-template T of OutgoingMessage
+     *
      * @phpstan-param T $message
+     *
      * @phpstan-return T
      */
     protected function reply(OutgoingMessage $message): OutgoingMessage
@@ -212,7 +218,9 @@ abstract class AbstractPage implements PageInterface
 
     /**
      * @phpstan-template T of OutgoingMessage
+     *
      * @phpstan-param T $message
+     *
      * @phpstan-return T
      */
     protected function updateMessage(OutgoingMessage $message): OutgoingMessage

@@ -17,7 +17,6 @@ abstract class BaseKeyboard implements KeyboardInterface
     }
 
     /**
-     * @param array $keyboard
      * @return Keyboard
      */
     public static function createFromArray(array $keyboard): static

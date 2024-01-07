@@ -2,8 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Dispatcher;
 
-use InvalidArgumentException;
 use Closure;
+use InvalidArgumentException;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;

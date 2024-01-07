@@ -4,7 +4,6 @@ namespace SequentSoft\ThreadFlow\Events\Page;
 
 use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 
 class PageDispatchedEvent implements EventInterface
 {

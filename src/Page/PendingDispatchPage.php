@@ -12,7 +12,7 @@ class PendingDispatchPage implements PendingDispatchPageInterface
 
     protected BreadcrumbsType $breadcrumbsType = BreadcrumbsType::None;
 
-    public function __construct(
+    final public function __construct(
         protected string $page,
         protected array $attributes,
         protected ?string $stateId = null,
@@ -31,12 +31,14 @@ class PendingDispatchPage implements PendingDispatchPageInterface
     public function appendAttributes(array $attributes): static
     {
         $this->attributes = array_merge($this->attributes, $attributes);
+
         return $this;
     }
 
     public function withStateId(string $stateId): static
     {
         $this->stateId = $stateId;
+
         return $this;
     }
 
@@ -48,18 +50,21 @@ class PendingDispatchPage implements PendingDispatchPageInterface
     public function keepAliveCurrentPage(): static
     {
         $this->keepAliveContextPage = true;
+
         return $this;
     }
 
     public function withBreadcrumbs(): static
     {
         $this->breadcrumbsType = BreadcrumbsType::Append;
+
         return $this;
     }
 
     public function withBreadcrumbsReplace(): static
     {
         $this->breadcrumbsType = BreadcrumbsType::Replace;
+
         return $this;
     }
 

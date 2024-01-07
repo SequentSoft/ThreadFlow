@@ -7,7 +7,7 @@ use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
 
 class EventBus implements EventBusInterface
 {
-    public function __construct(
+    final public function __construct(
         protected ?string $name = null,
     ) {
     }
@@ -55,7 +55,7 @@ class EventBus implements EventBusInterface
 
         $eventBus->listen(
             '*',
-            fn(?string $name, EventInterface $event) => $this->fireWithName($name ?? $this->name, $event)
+            fn (?string $name, EventInterface $event) => $this->fireWithName($name ?? $this->name, $event)
         );
 
         return $eventBus;

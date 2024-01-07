@@ -39,18 +39,21 @@ class Button implements ButtonInterface
     public function callbackData(?string $callbackData): static
     {
         $this->callbackData = $callbackData;
+
         return $this;
     }
 
     public function setRequestContact(bool $requestContact): static
     {
         $this->requestContact = $requestContact;
+
         return $this;
     }
 
     public function setRequestLocation(bool $requestLocation): static
     {
         $this->requestLocation = $requestLocation;
+
         return $this;
     }
 
@@ -68,6 +71,7 @@ class Button implements ButtonInterface
     {
         $button = static::make($text, $callbackData);
         $button->setRequestContact(true);
+
         return $button;
     }
 
@@ -75,6 +79,7 @@ class Button implements ButtonInterface
     {
         $button = static::make($text, $callbackData);
         $button->setRequestLocation(true);
+
         return $button;
     }
 }

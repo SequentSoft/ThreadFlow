@@ -7,9 +7,13 @@ use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 class Participant implements ParticipantInterface
 {
     protected ?string $firstName = null;
+
     protected ?string $lastName = null;
+
     protected ?string $language = null;
+
     protected ?string $username = null;
+
     protected ?string $photoUrl = null;
 
     public function __construct(
@@ -50,30 +54,35 @@ class Participant implements ParticipantInterface
     public function setFirstName(?string $firstName): self
     {
         $this->firstName = $firstName;
+
         return $this;
     }
 
     public function setLastName(?string $lastName): self
     {
         $this->lastName = $lastName;
+
         return $this;
     }
 
     public function setLanguage(?string $language): self
     {
         $this->language = $language;
+
         return $this;
     }
 
     public function setUsername(?string $username): self
     {
         $this->username = $username;
+
         return $this;
     }
 
     public function setPhotoUrl(?string $photoUrl): self
     {
         $this->photoUrl = $photoUrl;
+
         return $this;
     }
 }
