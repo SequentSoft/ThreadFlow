@@ -81,7 +81,7 @@ abstract class AbstractPage implements PageInterface
         })->call($this, $attributes);
     }
 
-    protected function populateAttributeErrorHandler(Throwable $throwable, string $key, mixed $value)
+    protected function populateAttributeErrorHandler(Throwable $throwable, string $key, mixed $value): void
     {
         $classReflection = new ReflectionClass(static::class);
         $propertyReflection = $classReflection->getProperty($key);
@@ -209,7 +209,7 @@ abstract class AbstractPage implements PageInterface
     {
         $message->setId(null);
 
-        if (! $message->getContext()) {
+        if (!$message->getContext()) {
             $message->setContext($this->messageContext);
         }
 
@@ -225,11 +225,11 @@ abstract class AbstractPage implements PageInterface
      */
     protected function updateMessage(OutgoingMessage $message): OutgoingMessage
     {
-        if (! $message->getId()) {
+        if (!$message->getId()) {
             throw new \InvalidArgumentException('Message id is required for update');
         }
 
-        if (! $message->getContext()) {
+        if (!$message->getContext()) {
             $message->setContext($this->messageContext);
         }
 

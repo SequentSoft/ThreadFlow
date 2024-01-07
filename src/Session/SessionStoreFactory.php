@@ -19,7 +19,7 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
 
     public function make(string $name, string $channelName, ConfigInterface $config): SessionStoreInterface
     {
-        if (! isset($this->registeredSessionStores[$name])) {
+        if (!isset($this->registeredSessionStores[$name])) {
             throw new InvalidArgumentException("Session store {$name} is not registered.");
         }
 

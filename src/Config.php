@@ -28,7 +28,7 @@ class Config implements ConfigInterface
     {
         $value = $this->get($key);
 
-        if (! is_array($value)) {
+        if (!is_array($value)) {
             throw new InvalidNestedConfigException('Invalid nested config: '.$key);
         }
 

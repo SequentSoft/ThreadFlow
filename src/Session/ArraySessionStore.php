@@ -24,7 +24,7 @@ class ArraySessionStore implements SessionStoreInterface
 
         $session = $this->storage->load($key);
 
-        if (! is_null($session)) {
+        if (!is_null($session)) {
             $session = new Session(
                 $session->getData(),
                 $session->getPageState(),

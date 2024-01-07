@@ -22,8 +22,7 @@ beforeEach(function () {
     $this->dispatcherFactory = Mockery::mock(DispatcherFactoryInterface::class);
     $this->eventBus = Mockery::mock(EventBusInterface::class);
 
-    $this->channel = new class('testChannel', $this->config, $this->sessionStore, $this->dispatcherFactory, $this->eventBus) extends Channel
-    {
+    $this->channel = new class ('testChannel', $this->config, $this->sessionStore, $this->dispatcherFactory, $this->eventBus) extends Channel {
         protected function outgoing(OutgoingMessageInterface $message, ?SessionInterface $session, ?PageInterface $contextPage): OutgoingMessageInterface
         {
             // Mocked implementation

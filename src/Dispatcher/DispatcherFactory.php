@@ -25,7 +25,7 @@ class DispatcherFactory implements DispatcherFactoryInterface
         ConfigInterface $config,
         Closure $outgoing,
     ): DispatcherInterface {
-        if (! isset($this->registeredDispatchers[$dispatcherName])) {
+        if (!isset($this->registeredDispatchers[$dispatcherName])) {
             throw new InvalidArgumentException("Dispatcher {$dispatcherName} is not registered.");
         }
 

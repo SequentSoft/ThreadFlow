@@ -71,7 +71,10 @@ class LaravelServiceProvider extends ServiceProvider
             $factory->register(
                 'queue',
                 fn ($channelName, $eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
-                    $channelName, $eventBus, $defaultPageClass, $outgoing
+                    $channelName,
+                    $eventBus,
+                    $defaultPageClass,
+                    $outgoing
                 )
             );
 

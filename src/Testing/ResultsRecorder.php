@@ -191,7 +191,7 @@ class ResultsRecorder
             PHPUnit::fail(is_null($index) ? 'Latest message not found' : "Message with index {$index} not found");
         }
 
-        if (! $latestMessage instanceof TextOutgoingRegularMessageInterface) {
+        if (!$latestMessage instanceof TextOutgoingRegularMessageInterface) {
             PHPUnit::fail(
                 is_null($index)
                     ? 'Latest message is not a text message'
@@ -212,7 +212,7 @@ class ResultsRecorder
             PHPUnit::fail(is_null($index) ? 'Latest message not found' : "Message with index {$index} not found");
         }
 
-        if (! $latestMessage instanceof TextOutgoingRegularMessageInterface) {
+        if (!$latestMessage instanceof TextOutgoingRegularMessageInterface) {
             PHPUnit::fail(
                 is_null($index)
                     ? 'Latest message is not a text message'

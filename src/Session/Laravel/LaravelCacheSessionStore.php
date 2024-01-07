@@ -30,7 +30,7 @@ class LaravelCacheSessionStore implements SessionStoreInterface
         $session = Cache::store($this->getCacheStoreName())->get($key)
             ?? new Session();
 
-        if (! $session instanceof SessionInterface) {
+        if (!$session instanceof SessionInterface) {
             $session = $this->fixBrokenSession($session);
         }
 

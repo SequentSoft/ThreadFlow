@@ -39,7 +39,7 @@ trait HandleExceptions
         MessageContextInterface $messageContext,
         ?IMessageInterface $message = null,
     ): void {
-        if (! $this->exceptionsHandlersEnabled) {
+        if (!$this->exceptionsHandlersEnabled) {
             throw $exception;
         }
 

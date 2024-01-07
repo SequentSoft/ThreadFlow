@@ -19,7 +19,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
 
     public function isText(?string $text = null): bool
     {
-        if (! $this instanceof TextIncomingRegularMessageInterface) {
+        if (!$this instanceof TextIncomingRegularMessageInterface) {
             return false;
         }
 
@@ -28,7 +28,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
 
     public function isTextAndContains(string $text): bool
     {
-        if (! $this->isText()) {
+        if (!$this->isText()) {
             return false;
         }
 
@@ -37,7 +37,7 @@ class IncomingRegularMessage extends IncomingMessage implements IncomingRegularM
 
     public function isTextAndMatch(string $pattern): bool
     {
-        if (! $this->isText()) {
+        if (!$this->isText()) {
             return false;
         }
 

@@ -39,7 +39,7 @@ class FakeChannelManager extends ChannelManager
         return new FakeDispatcherFactory();
     }
 
-    public function __call($name, $arguments)
+    public function __call(string $name, array $arguments)
     {
         if (str_starts_with($name, 'assert')) {
             return $this->resultsRecorder->$name(...$arguments);
