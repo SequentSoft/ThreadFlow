@@ -19,7 +19,6 @@ use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchedEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchingEvent;
-use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 use SequentSoft\ThreadFlow\Session\PageState;
 
 class SyncDispatcher implements DispatcherInterface
