@@ -87,6 +87,7 @@ test('incoming processes message and executes page', function () {
 
     $pageState->shouldReceive('getPageClass')->andReturn('Tests\Stubs\EmptyPage');
     $pageState->shouldReceive('getAttributes')->andReturn([]);
+    $pageState->shouldReceive('setAttributes');
     $pageState->shouldReceive('getId')->andReturn('id-1');
 
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchingEvent::class))->once();

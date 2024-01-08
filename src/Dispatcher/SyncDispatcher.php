@@ -80,8 +80,6 @@ class SyncDispatcher implements DispatcherInterface
             return $message;
         });
 
-        $session->setPageState($page->getState());
-
         $this->eventBus->fire(
             new PageDispatchedEvent($page, $contextPage)
         );
@@ -148,14 +146,10 @@ class SyncDispatcher implements DispatcherInterface
         IncomingMessageInterface $message,
         SessionInterface $session
     ): void {
-        $pendingDispatchPage = PendingDispatchPage::fromState(
-            $this->getCurrentPageState($message, $session)
-        );
-
-        $nextState = $this->getNextState($session, $pendingDispatchPage);
+        $pageState = $this->getCurrentPageState($message, $session);
 
         $page = $this->makePage(
-            $nextState,
+            $pageState,
             $session,
             $message->getContext(),
             $message,
