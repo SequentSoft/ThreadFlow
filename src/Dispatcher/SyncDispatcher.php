@@ -67,7 +67,7 @@ class SyncDispatcher implements DispatcherInterface
         SessionInterface $session,
         MessageContextInterface $messageContext,
         ?PageInterface $contextPage = null,
-    ): ?PendingDispatchPageInterface {
+    ): void {
         $this->eventBus->fire(
             new PageDispatchingEvent($page, $contextPage)
         );
@@ -79,6 +79,8 @@ class SyncDispatcher implements DispatcherInterface
 
             return $message;
         });
+
+        $session->setPageState($page->getState());
 
         $this->eventBus->fire(
             new PageDispatchedEvent($page, $contextPage)
@@ -92,8 +94,6 @@ class SyncDispatcher implements DispatcherInterface
                 $page,
             );
         }
-
-        return null;
     }
 
     protected function getNextState(
