@@ -43,6 +43,11 @@ abstract class AbstractPage implements PageInterface
         return $this->state !== $this->session->getPageState();
     }
 
+    public function getChannelName(): string
+    {
+        return $this->channelName;
+    }
+
     public function getState(): PageStateInterface
     {
         return $this->state;
