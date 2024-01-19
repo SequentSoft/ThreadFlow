@@ -4,7 +4,7 @@ namespace {{ namespace }};
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
-use SequentSoft\ThreadFlow\Page\AbstractPage;
+use SequentSoft\ThreadFlow\Laravel\Page\AbstractPage;
 
 class {{ class }} extends AbstractPage
 {

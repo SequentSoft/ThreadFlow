@@ -10,8 +10,8 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Testing\FakeChannelManager;
-use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
 
 /**
  * @method static array getAvailableChannels()
@@ -19,13 +19,13 @@ use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
  * @method static ChannelInterface channel(string $channelName)
  * @method static void registerExceptionHandler(Closure $callback)
  * @method static void disableExceptionsHandlers()
- * @method static ResultsRecorder assertState(string $pageClass, ?string $method = null, ?array $attributes = null)
- * @method static ResultsRecorder assertOutgoingMessagesCount(int $count)
- * @method static ResultsRecorder assertOutgoingMessage(Closure $callback, ?int $index = null)
- * @method static ResultsRecorder assertDispatchedPagesCount(int $count)
- * @method static ResultsRecorder assertDispatchedPage(Closure $callback, ?int $index = null)
- * @method static ResultsRecorder assertOutgoingMessageText(string $text, ?int $index = null)
- * @method static ResultsRecorder assertOutgoingMessageTextContains(string $text, ?int $index = null)
+ * @method static ResultsRecorderInterface assertState(string $pageClass, ?string $method = null, ?array $attributes = null)
+ * @method static ResultsRecorderInterface assertOutgoingMessagesCount(int $count)
+ * @method static ResultsRecorderInterface assertOutgoingMessage(Closure $callback, ?int $index = null)
+ * @method static ResultsRecorderInterface assertDispatchedPagesCount(int $count)
+ * @method static ResultsRecorderInterface assertDispatchedPage(Closure $callback, ?int $index = null)
+ * @method static ResultsRecorderInterface assertOutgoingMessageText(string $text, ?int $index = null)
+ * @method static ResultsRecorderInterface assertOutgoingMessageTextContains(string $text, ?int $index = null)
  */
 class ThreadFlowBot extends Facade
 {

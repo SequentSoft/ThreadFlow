@@ -1,6 +1,6 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Dispatcher\Laravel;
+namespace SequentSoft\ThreadFlow\Laravel\Dispatcher;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;

@@ -3,7 +3,6 @@
 use SequentSoft\ThreadFlow\Channel\Channel;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
@@ -13,9 +12,9 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
+use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
-use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
 
 beforeEach(function () {
     $this->config = Mockery::mock(ConfigInterface::class);
@@ -106,13 +105,5 @@ test('testInput captures correct ResultsRecorder instance', function () {
 
     $results = $this->channel->testInput($input);
 
-    expect($results)->toBeInstanceOf(ResultsRecorder::class);
-});
-
-test('fakeMessageContext creates correct MessageContextInterface instance', function () {
-    $context = $this->channel->fakeMessageContext();
-
-    expect($context)->toBeInstanceOf(MessageContextInterface::class);
-    expect($context->getParticipant()->getId())->toEqual('test-participant');
-    expect($context->getRoom()->getId())->toEqual('test-chat');
+    expect($results)->toBeInstanceOf(ResultsRecorderInterface::class);
 });

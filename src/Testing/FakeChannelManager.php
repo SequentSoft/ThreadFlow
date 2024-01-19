@@ -7,14 +7,16 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Dispatcher\FakeDispatcherFactory;
 use SequentSoft\ThreadFlow\Traits\TestInputResults;
+use SequentSoft\ThreadFlow\Testing\Illuminate\Testing\ResultsRecorder;
 
 class FakeChannelManager extends ChannelManager
 {
     use TestInputResults;
 
-    protected ResultsRecorder $resultsRecorder;
+    protected ResultsRecorderInterface $resultsRecorder;
 
     public function __construct(
         protected ConfigInterface $config,

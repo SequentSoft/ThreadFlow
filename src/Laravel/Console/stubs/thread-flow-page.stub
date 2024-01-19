@@ -4,18 +4,18 @@ namespace {{ namespace }};
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
-use SequentSoft\ThreadFlow\Page\AbstractPage;
+use SequentSoft\ThreadFlow\Laravel\Page\AbstractPage;
 
 class {{ class }} extends AbstractPage
 {
-    protected function show(): void
+    public function show(): void
     {
         TextOutgoingMessage::make('This is {{class}}', [
             ['next' => 'Go to next page'],
         ])->reply();
     }
 
-    protected function handleMessage(IncomingRegularMessageInterface $message)
+    public function handleMessage(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('next')) {
             TextOutgoingMessage::make('Next page not defined')->reply();

@@ -52,7 +52,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "SequentSoft\\ThreadFlow\\LaravelServiceProvider"
+                "SequentSoft\\ThreadFlow\\Laravel\\ServiceProvider"
             ],
             "aliases": {
                 "ThreadFlowBot": "SequentSoft\\ThreadFlow\\Laravel\\Facades\\ThreadFlowBot"

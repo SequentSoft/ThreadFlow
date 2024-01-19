@@ -113,7 +113,7 @@ abstract class AbstractPage implements PageInterface
         if (method_exists($this, 'show')) {
             $this->eventBus->fire(new PageShowEvent($this));
 
-            return $this->show();
+            return $this->callHandlerMethod('show', null);
         }
 
         return null;
@@ -125,7 +125,7 @@ abstract class AbstractPage implements PageInterface
         if (method_exists($this, 'handleMessage')) {
             $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
 
-            return $this->handleMessage($message);
+            return $this->callHandlerMethod('handleMessage', $message);
         }
 
         return null;
@@ -138,7 +138,7 @@ abstract class AbstractPage implements PageInterface
             if (method_exists($this, 'welcome')) {
                 $this->eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
 
-                return $this->welcome($message);
+                return $this->callHandlerMethod('welcome', $message);
             }
 
             // fallback to show
@@ -148,10 +148,15 @@ abstract class AbstractPage implements PageInterface
         if (method_exists($this, 'handleServiceMessage')) {
             $this->eventBus->fire(new PageHandleServiceMessageEvent($this, $message));
 
-            return $this->handleServiceMessage($message);
+            return $this->callHandlerMethod('handleServiceMessage', $message);
         }
 
         return null;
+    }
+
+    protected function callHandlerMethod(string $method, ?IncomingMessageInterface $message): mixed
+    {
+        return $this->{$method}($message);
     }
 
     protected function showTyping(TypingType $type = TypingType::TYPING): void

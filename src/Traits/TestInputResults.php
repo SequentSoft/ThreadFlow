@@ -4,18 +4,19 @@ namespace SequentSoft\ThreadFlow\Traits;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleWelcomeMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
-use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
+use SequentSoft\ThreadFlow\Testing\Illuminate\Testing\ResultsRecorder;
 
 trait TestInputResults
 {
     private function registerTestInputResultListeners(
         EventBusInterface $eventBus,
-        ResultsRecorder $resultsRecorder
+        ResultsRecorderInterface $resultsRecorder
     ): void {
         $eventBus->listen(
             PageHandleRegularMessageEvent::class,

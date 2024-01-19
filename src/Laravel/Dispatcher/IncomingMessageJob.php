@@ -1,6 +1,6 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Dispatcher\Laravel;
+namespace SequentSoft\ThreadFlow\Laravel\Dispatcher;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

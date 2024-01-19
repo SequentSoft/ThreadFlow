@@ -1,6 +1,6 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Session\Laravel;
+namespace SequentSoft\ThreadFlow\Laravel\Session;
 
 use Closure;
 use Illuminate\Support\Facades\Cache;
@@ -11,7 +11,7 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Session\SessionSizeLimitExceededException;
 use SequentSoft\ThreadFlow\Session\Session;
 
-class LaravelCacheSessionStore implements SessionStoreInterface
+class CacheSessionStore implements SessionStoreInterface
 {
     public function __construct(
         protected string $channelName,

@@ -1,25 +1,27 @@
 <?php
 
-namespace SequentSoft\ThreadFlow;
+namespace SequentSoft\ThreadFlow\Laravel;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\ServiceProvider as BaseServiceProvider;
+use SequentSoft\ThreadFlow\ChannelManager;
+use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
-use SequentSoft\ThreadFlow\Dispatcher\Laravel\LaravelQueueIncomingDispatcher;
+use SequentSoft\ThreadFlow\Laravel\Dispatcher\LaravelQueueIncomingDispatcher;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
-use SequentSoft\ThreadFlow\Session\Laravel\LaravelCacheSessionStore;
+use SequentSoft\ThreadFlow\Laravel\Session\CacheSessionStore;
 use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
 
-class LaravelServiceProvider extends ServiceProvider
+class ServiceProvider extends BaseServiceProvider
 {
     public function register(): void
     {
@@ -48,7 +50,7 @@ class LaravelServiceProvider extends ServiceProvider
 
             $factory->register(
                 'cache',
-                fn (string $channelName, ConfigInterface $config) => new LaravelCacheSessionStore(
+                fn (string $channelName, ConfigInterface $config) => new CacheSessionStore(
                     $channelName,
                     $config,
                 )
@@ -84,13 +86,13 @@ class LaravelServiceProvider extends ServiceProvider
 
     protected function getPackageConfigPath(): string
     {
-        return __DIR__.'/../config/thread-flow.php';
+        return __DIR__ . '/config.php';
     }
 
     public function boot(): void
     {
         $this->publishes([
-            $this->getPackageConfigPath() => $this->app->configPath('thread-flow.php'),
+            $this->getPackageConfigPath() => $this->app->configPath('config.php'),
         ], 'config');
 
         if ($this->app->runningInConsole()) {

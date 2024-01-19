@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Channel;
 
+use Closure;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
@@ -19,13 +20,13 @@ use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
+use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
-use SequentSoft\ThreadFlow\Session\PageState;
-use SequentSoft\ThreadFlow\Testing\ResultsRecorder;
+use SequentSoft\ThreadFlow\Testing\PendingTestInput;
 use SequentSoft\ThreadFlow\Traits\HandleExceptions;
 use SequentSoft\ThreadFlow\Traits\TestInputResults;
 use Throwable;
@@ -154,52 +155,48 @@ abstract class Channel implements ChannelInterface
             ->setContext($messageContext);
     }
 
-    protected function testInputText(string $text): IncomingMessageInterface
+    protected function testInputText(string $text, MessageContextInterface $context): IncomingMessageInterface
     {
         return new TextIncomingRegularMessage(
             'test',
-            $this->fakeMessageContext(),
+            $context,
             new DateTimeImmutable(),
             $text,
         );
     }
 
-    public function fakeMessageContext(): MessageContextInterface
+    public function test(): PendingTestInput
     {
-        return MessageContext::createFromIds('test-participant', 'test-chat');
+        $pendingTestInput = new PendingTestInput(function (Closure $prepareSession, IncomingMessageInterface $message) {
+            return $this->captureTestInputResults(
+                $this->eventBus,
+                fn () => $this->sessionStore->useSession(
+                    $message->getContext(),
+                    function (SessionInterface $session) use ($prepareSession, $message) {
+                        $prepareSession($session);
+                        $this->eventBus->fire(new SessionStartedEvent($session));
+                        $this->dispatch($message, $session);
+                    }
+                )
+            );
+        });
+
+        $pendingTestInput->setTextMessageResolver(function (string $text, MessageContextInterface $context) {
+            return $this->testInputText($text, $context);
+        });
+
+        return $pendingTestInput;
     }
 
     public function testInput(
         string|IncomingMessageInterface $message,
         string|PageStateInterface|null $state = null,
         array $sessionAttributes = [],
-    ): ResultsRecorder {
-        $message = is_string($message)
-            ? $this->testInputText($message)
-            : $message;
-
-        $state = is_string($state)
-            ? PageState::create($state)
-            : $state;
-
-        return $this->captureTestInputResults(
-            $this->eventBus,
-            fn () => $this->sessionStore->useSession(
-                $message->getContext(),
-                function (SessionInterface $session) use ($message, $state, $sessionAttributes) {
-                    if ($state) {
-                        $session->setPageState($state);
-                    }
-
-                    foreach ($sessionAttributes as $key => $value) {
-                        $session->set($key, $value);
-                    }
-
-                    $this->eventBus->fire(new SessionStartedEvent($session));
-                    $this->dispatch($message, $session);
-                }
-            )
-        );
+    ): ResultsRecorderInterface {
+        return $this->test()
+            ->withState($state)
+            ->withSessionAttributes($sessionAttributes)
+            ->input($message);
     }
 
     abstract protected function outgoing(

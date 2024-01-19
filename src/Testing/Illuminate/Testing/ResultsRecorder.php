@@ -1,6 +1,8 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Testing;
+// namespace "Illuminate\Testing" added to force nunomaduro/collision to ignore this file
+
+namespace SequentSoft\ThreadFlow\Testing\Illuminate\Testing;
 
 use Closure;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -9,8 +11,9 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMe
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
+use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 
-class ResultsRecorder
+class ResultsRecorder implements ResultsRecorderInterface
 {
     protected array $sentOutgoingMessages = [];
 
