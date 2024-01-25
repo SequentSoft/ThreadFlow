@@ -44,7 +44,7 @@ class PendingTestInput
         return $this;
     }
 
-    public function withState(string|PageStateInterface|null $state = null): static
+    public function withState(string|PageStateInterface|null $state = null, array $attributes = []): static
     {
         if (! $state) {
             $this->state = null;
@@ -52,7 +52,7 @@ class PendingTestInput
         }
 
         $this->state = is_string($state)
-            ? PageState::create($state)
+            ? PageState::create($state, $attributes)
             : $state;
 
         return $this;
