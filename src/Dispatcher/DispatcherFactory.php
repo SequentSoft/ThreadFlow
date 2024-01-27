@@ -8,10 +8,16 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 
 class DispatcherFactory implements DispatcherFactoryInterface
 {
     protected array $registeredDispatchers = [];
+
+    public function __construct(
+        protected PageFactoryInterface $pageFactory,
+    ) {
+    }
 
     public function register(string $dispatcherName, Closure $callback): void
     {
@@ -20,7 +26,6 @@ class DispatcherFactory implements DispatcherFactoryInterface
 
     public function make(
         string $dispatcherName,
-        string $channelName,
         EventBusInterface $eventBus,
         ConfigInterface $config,
         Closure $outgoing,
@@ -31,7 +36,7 @@ class DispatcherFactory implements DispatcherFactoryInterface
 
         return call_user_func(
             $this->registeredDispatchers[$dispatcherName],
-            $channelName,
+            $this->pageFactory,
             $eventBus,
             $config,
             $outgoing

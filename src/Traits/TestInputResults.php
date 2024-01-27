@@ -9,6 +9,7 @@ use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleWelcomeMessageEvent;
+use SequentSoft\ThreadFlow\Events\Page\PageHasNoMessageHandlerEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
 use SequentSoft\ThreadFlow\Testing\Illuminate\Testing\ResultsRecorder;
 
@@ -40,6 +41,11 @@ trait TestInputResults
                 $event->getPage(),
                 $event->getMessage()
             )
+        );
+
+        $eventBus->listen(
+            PageHasNoMessageHandlerEvent::class,
+            fn (string $name, PageHasNoMessageHandlerEvent $event) => $resultsRecorder->recordPageDispatchedWithoutHandler($event->getPage())
         );
 
         $eventBus->listen(

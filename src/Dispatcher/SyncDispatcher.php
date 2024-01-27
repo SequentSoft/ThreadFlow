@@ -3,13 +3,13 @@
 namespace SequentSoft\ThreadFlow\Dispatcher;
 
 use Closure;
-use RuntimeException;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
@@ -19,12 +19,15 @@ use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchedEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchingEvent;
+use SequentSoft\ThreadFlow\Events\Page\PageHandleDelegatedEvent;
+use SequentSoft\ThreadFlow\Events\Page\PageHasNoMessageHandlerEvent;
+use SequentSoft\ThreadFlow\Exceptions\Page\MessageHandlerNotDeclaredException;
 use SequentSoft\ThreadFlow\Session\PageState;
 
 class SyncDispatcher implements DispatcherInterface
 {
     public function __construct(
-        protected string $channelName,
+        protected PageFactoryInterface $pageFactory,
         protected EventBusInterface $eventBus,
         protected ConfigInterface $config,
         protected Closure $outgoingCallback,
@@ -37,14 +40,8 @@ class SyncDispatcher implements DispatcherInterface
         MessageContextInterface $messageContext,
         ?IncomingMessageInterface $message = null,
     ): PageInterface {
-        $pageClass = $nextState->getPageClass();
-
-        if (is_null($pageClass)) {
-            throw new RuntimeException('Page class is not defined');
-        }
-
-        return new $pageClass(
-            $this->channelName,
+        return $this->pageFactory->createPage(
+            $nextState->getPageClass(),
             $this->eventBus,
             $nextState,
             $session,
@@ -61,6 +58,26 @@ class SyncDispatcher implements DispatcherInterface
         return call_user_func($this->outgoingCallback, $message, $session, $page);
     }
 
+    private function tryExecutePage(
+        PageInterface $page,
+        SessionInterface $session,
+    ): ?PendingDispatchPageInterface {
+        try {
+            return $page->execute(function (OutgoingMessageInterface $message) use ($session, $page) {
+                $this->eventBus->fire(new OutgoingMessageSendingEvent($message, $session, $page));
+                $message = $this->outgoing($message, $session, $page);
+                $this->eventBus->fire(new OutgoingMessageSentEvent($message, $session, $page));
+
+                return $message;
+            });
+        } catch (MessageHandlerNotDeclaredException $exception) {
+            return $this->handleNotHandledMessage(
+                $exception,
+                $session,
+            );
+        }
+    }
+
     protected function executePage(
         PageInterface $page,
         SessionInterface $session,
@@ -71,13 +88,7 @@ class SyncDispatcher implements DispatcherInterface
             new PageDispatchingEvent($page, $contextPage)
         );
 
-        $next = $page->execute(function (OutgoingMessageInterface $message) use ($session, $page) {
-            $this->eventBus->fire(new OutgoingMessageSendingEvent($message, $session, $page));
-            $message = $this->outgoing($message, $session, $page);
-            $this->eventBus->fire(new OutgoingMessageSentEvent($message, $session, $page));
-
-            return $message;
-        });
+        $next = $this->tryExecutePage($page, $session);
 
         $this->eventBus->fire(
             new PageDispatchedEvent($page, $contextPage)
@@ -91,6 +102,41 @@ class SyncDispatcher implements DispatcherInterface
                 $page,
             );
         }
+    }
+
+    protected function handleNotHandledMessage(
+        MessageHandlerNotDeclaredException $exception,
+        SessionInterface $session,
+    ): null {
+        $fromPage = $exception->getPage();
+
+        // pass the service message to the entry page
+        if ($exception->getHandlerType() === MessageHandlerNotDeclaredException::TYPE_SERVICE) {
+            $toPage = $this->makePage(
+                PageState::create($this->config->get('entry')),
+                $session,
+                $fromPage->getMessageContext(),
+            );
+
+            $this->executePage(
+                $toPage,
+                $session,
+                $fromPage->getMessageContext(),
+                $fromPage,
+            );
+
+            $this->eventBus->fire(
+                new PageHandleDelegatedEvent($fromPage, $toPage)
+            );
+
+            return null;
+        }
+
+        $this->eventBus->fire(
+            new PageHasNoMessageHandlerEvent($fromPage)
+        );
+
+        return null;
     }
 
     protected function getNextState(

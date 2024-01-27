@@ -22,6 +22,7 @@ class PendingTestInput
     protected array $sessionAttributes = [];
 
     public function __construct(
+        protected string $channelName,
         protected Closure $run,
     ) {
     }
@@ -32,13 +33,13 @@ class PendingTestInput
             return $this->context;
         }
 
-        return MessageContext::createFromIds('test-participant', 'test-chat');
+        return MessageContext::createFromIds($this->channelName, 'test-participant', 'test-chat');
     }
 
     public function withContext(MessageContextInterface|string $context): static
     {
         $this->context = is_string($context)
-            ? MessageContext::createFromIds($context)
+            ? MessageContext::createFromIds($this->channelName, $context)
             : $context;
 
         return $this;

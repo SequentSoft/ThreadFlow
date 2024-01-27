@@ -8,7 +8,6 @@ use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
-use SequentSoft\ThreadFlow\Dispatcher\FakeDispatcherFactory;
 use SequentSoft\ThreadFlow\Traits\TestInputResults;
 use SequentSoft\ThreadFlow\Testing\Illuminate\Testing\ResultsRecorder;
 
@@ -17,6 +16,8 @@ class FakeChannelManager extends ChannelManager
     use TestInputResults;
 
     protected ResultsRecorderInterface $resultsRecorder;
+
+    protected DispatcherFactoryInterface $fakeDispatcherFactory;
 
     public function __construct(
         protected ConfigInterface $config,
@@ -36,9 +37,14 @@ class FakeChannelManager extends ChannelManager
         );
     }
 
+    public function setFakeDispatcherFactory(DispatcherFactoryInterface $fakeDispatcherFactory): void
+    {
+        $this->fakeDispatcherFactory = $fakeDispatcherFactory;
+    }
+
     protected function getDispatcherFactory(): DispatcherFactoryInterface
     {
-        return new FakeDispatcherFactory();
+        return $this->fakeDispatcherFactory;
     }
 
     public function __call(string $name, array $arguments)

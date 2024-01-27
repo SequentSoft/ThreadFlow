@@ -21,4 +21,8 @@ interface SessionInterface
     public function set(string $key, mixed $data): void;
 
     public function reset(): void;
+
+    public function toArray(): array;
+
+    public static function fromArray(array $data): SessionInterface;
 }

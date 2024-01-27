@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Session;
 
+use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
 interface PageStateInterface
@@ -21,6 +22,10 @@ interface PageStateInterface
      */
     public function getPageClass(): ?string;
 
+    public function getDontDisturbMarkedAt(): ?DateTimeImmutable;
+
+    public function setDontDisturb(bool $dontDisturb = true): void;
+
     /**
      * @param  class-string<PageInterface>  $pageClass
      */
@@ -29,4 +34,8 @@ interface PageStateInterface
     public function getAttributes(): array;
 
     public function setAttributes(array $attributes): void;
+
+    public function toArray(): array;
+
+    public function fromArray(array $data): self;
 }

@@ -12,7 +12,6 @@ interface DispatcherFactoryInterface
 
     public function make(
         string $dispatcherName,
-        string $channelName,
         EventBusInterface $eventBus,
         ConfigInterface $config,
         Closure $outgoing,

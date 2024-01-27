@@ -9,19 +9,15 @@ class AnswerPage extends AbstractPage
 {
     public function show()
     {
-        $this->reply(
-            TextOutgoingRegularMessage::make('Hello', [
-                ['login' => 'Login'],
-            ])
-        );
+        TextOutgoingRegularMessage::make('Hello', [
+            ['login' => 'Login'],
+        ])->reply();
     }
 
-    public function handleMessage()
+    public function answer()
     {
-        $this->reply(
-            TextOutgoingRegularMessage::make('Hello', [
-                ['login' => 'Login'],
-            ])
-        );
+        TextOutgoingRegularMessage::make('Hello', [
+            ['login' => 'Login'],
+        ])->reply();
     }
 }

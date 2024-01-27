@@ -10,6 +10,10 @@ use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
 interface ResultsRecorderInterface
 {
+    public function recordPageDispatchedWithoutHandler(
+        PageInterface $page,
+    ): static;
+
     public function recordSentOutgoingMessage(OutgoingMessageInterface $message): static;
 
     public function recordPageHandleRegularMessage(

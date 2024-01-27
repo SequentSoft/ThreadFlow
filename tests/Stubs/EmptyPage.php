@@ -10,11 +10,11 @@ class EmptyPage extends AbstractPage
     {
     }
 
-    public function handleMessage()
+    public function answer()
     {
     }
 
-    public function handleServiceMessage()
+    public function service()
     {
     }
 }

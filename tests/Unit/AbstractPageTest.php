@@ -16,7 +16,6 @@ beforeEach(function () {
         $eventBus = new EventBus();
 
         return new $class(
-            'test',
             $eventBus,
             $state,
             $session,
@@ -36,7 +35,6 @@ beforeEach(function () {
         $eventBus = new EventBus();
 
         return new $class(
-            'test',
             $eventBus,
             $state,
             $session,
@@ -55,7 +53,6 @@ beforeEach(function () {
         $eventBus = new EventBus();
 
         return new $class(
-            'test',
             $eventBus,
             $state,
             $session,

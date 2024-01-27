@@ -3,7 +3,10 @@
 namespace SequentSoft\ThreadFlow\Contracts\Channel;
 
 use Closure;
+use SequentSoft\ThreadFlow\Builders\ChannelPendingSend;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
@@ -14,11 +17,17 @@ use SequentSoft\ThreadFlow\Testing\PendingTestInput;
 
 interface ChannelInterface
 {
+    public function getName(): string;
+
     public function on(string $event, callable $callback): void;
 
     public function getConfig(): ConfigInterface;
 
     public function incoming(IncomingMessageInterface $message): void;
+
+    public function forParticipant(string|ParticipantInterface $participant): ChannelPendingSend;
+
+    public function forRoom(string|RoomInterface $room): ChannelPendingSend;
 
     public function showPage(
         MessageContextInterface|string $context,

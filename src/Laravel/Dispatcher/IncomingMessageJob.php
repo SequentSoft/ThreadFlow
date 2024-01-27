@@ -18,7 +18,6 @@ class IncomingMessageJob implements ShouldQueue
     use SerializesModels;
 
     public function __construct(
-        protected string $channelName,
         protected IncomingMessageInterface $message
     ) {
     }
@@ -26,7 +25,7 @@ class IncomingMessageJob implements ShouldQueue
     public function handle(ChannelManagerInterface $channelManager): void
     {
         LaravelQueueIncomingDispatcher::sync(function () use ($channelManager) {
-            $channel = $channelManager->channel($this->channelName);
+            $channel = $channelManager->channel($this->message->getContext()->getChannelName());
             $channel->incoming($this->message);
         });
     }

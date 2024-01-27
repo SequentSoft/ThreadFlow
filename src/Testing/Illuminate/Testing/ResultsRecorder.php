@@ -28,6 +28,15 @@ class ResultsRecorder implements ResultsRecorderInterface
         return $this;
     }
 
+    public function recordPageDispatchedWithoutHandler(
+        PageInterface $page,
+    ): static {
+        $this->dispatchedPages[] = $page;
+        $this->dispatchedPagesMethods[] = null;
+
+        return $this;
+    }
+
     public function recordPageHandleRegularMessage(
         PageInterface $page,
         IncomingRegularMessageInterface $message

@@ -27,11 +27,12 @@ class CacheSessionStore implements SessionStoreInterface
 
         $lock->block($this->getSessionMaxLockWaitSeconds());
 
-        $session = Cache::store($this->getCacheStoreName())->get($key)
-            ?? new Session();
+        $sessionData = Cache::store($this->getCacheStoreName())->get($key);
 
-        if (!$session instanceof SessionInterface) {
-            $session = $this->fixBrokenSession($session);
+        if (is_array($sessionData)) {
+            $session = Session::fromArray($sessionData);
+        } else {
+            $session =  new Session();
         }
 
         $result = $callback($session);
@@ -49,16 +50,11 @@ class CacheSessionStore implements SessionStoreInterface
             );
         }
 
-        Cache::store($this->getCacheStoreName())->put($key, $session);
+        Cache::store($this->getCacheStoreName())->put($key, $session->toArray());
 
         $lock?->release();
 
         return $result;
-    }
-
-    protected function fixBrokenSession(mixed $brokenSession): SessionInterface
-    {
-        return new Session();
     }
 
     protected function makeKeyString(string $channelName, MessageContextInterface $context): string

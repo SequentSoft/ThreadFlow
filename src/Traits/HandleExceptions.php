@@ -33,7 +33,6 @@ trait HandleExceptions
      * @throws Throwable
      */
     protected function handleException(
-        string $channelName,
         Throwable $exception,
         SessionInterface $session,
         MessageContextInterface $messageContext,
@@ -48,7 +47,7 @@ trait HandleExceptions
         }
 
         foreach ($this->exceptionsHandlers as $handler) {
-            $handler($channelName, $exception, $session, $messageContext, $message);
+            $handler($exception, $session, $messageContext, $message);
         }
     }
 }

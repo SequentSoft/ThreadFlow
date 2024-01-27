@@ -27,6 +27,11 @@ class BreadcrumbsCollection implements BreadcrumbsCollectionInterface
         return array_pop($this->collection);
     }
 
+    public function all(): array
+    {
+        return $this->collection;
+    }
+
     public function clear(): void
     {
         $this->collection = [];

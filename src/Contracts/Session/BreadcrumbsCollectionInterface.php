@@ -11,4 +11,6 @@ interface BreadcrumbsCollectionInterface
     public function pop(): ?PageStateInterface;
 
     public function clear(): void;
+
+    public function all(): array;
 }

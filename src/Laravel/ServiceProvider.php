@@ -9,6 +9,7 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
 use SequentSoft\ThreadFlow\Laravel\Dispatcher\LaravelQueueIncomingDispatcher;
@@ -16,6 +17,7 @@ use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
+use SequentSoft\ThreadFlow\Laravel\Page\PageFactory;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
 use SequentSoft\ThreadFlow\Laravel\Session\CacheSessionStore;
@@ -26,6 +28,8 @@ class ServiceProvider extends BaseServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom($this->getPackageConfigPath(), 'thread-flow');
+
+        $this->app->bind(PageFactoryInterface::class, PageFactory::class);
 
         $this->app->bind(EventBusInterface::class, EventBus::class);
 
@@ -60,11 +64,13 @@ class ServiceProvider extends BaseServiceProvider
         });
 
         $this->app->singleton(DispatcherFactoryInterface::class, function () {
-            $factory = new DispatcherFactory();
+            $factory = new DispatcherFactory(
+                $this->app->make(PageFactoryInterface::class)
+            );
             $factory->register(
                 'sync',
-                fn ($channelName, $eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
-                    $channelName,
+                fn ($pageFactory, $eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
+                    $pageFactory,
                     $eventBus,
                     $defaultPageClass,
                     $outgoing
@@ -72,8 +78,8 @@ class ServiceProvider extends BaseServiceProvider
             );
             $factory->register(
                 'queue',
-                fn ($channelName, $eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
-                    $channelName,
+                fn ($pageFactory, $eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
+                    $pageFactory,
                     $eventBus,
                     $defaultPageClass,
                     $outgoing

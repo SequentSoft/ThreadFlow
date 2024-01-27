@@ -11,8 +11,6 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 class Session implements SessionInterface
 {
-    protected bool $isClosed = false;
-
     protected SessionDataInterface $data;
 
     protected PageStateInterface $pageState;
@@ -98,21 +96,36 @@ class Session implements SessionInterface
         $this->data->set($key, $data);
     }
 
-    public function __serialize(): array
+    public function toArray(): array
     {
         return [
-            'data' => $this->data,
-            'pageState' => $this->pageState,
-            'backgroundPageStates' => $this->backgroundPageStates,
-            'breadcrumbs' => $this->breadcrumbs,
+            'data' => $this->data->all(),
+            'pageState' => $this->pageState->toArray(),
+            'backgroundPageStates' => $this->backgroundPageStates->all(),
+            'breadcrumbs' => $this->breadcrumbs->all(),
         ];
+    }
+
+    public static function fromArray(array $data): SessionInterface
+    {
+        return new static(
+            SessionData::create($data['data']),
+            PageState::create()->fromArray($data['pageState']),
+            BackgroundPageStatesCollection::create($data['backgroundPageStates']),
+            BreadcrumbsCollection::create($data['breadcrumbs']),
+        );
+    }
+
+    public function __serialize(): array
+    {
+        return $this->toArray();
     }
 
     public function __unserialize(array $data): void
     {
-        $this->data = $data['data'];
-        $this->pageState = $data['pageState'];
-        $this->backgroundPageStates = $data['backgroundPageStates'];
-        $this->breadcrumbs = $data['breadcrumbs'];
+        $this->data = SessionData::create($data['data']);
+        $this->pageState = PageState::create()->fromArray($data['pageState']);
+        $this->backgroundPageStates = BackgroundPageStatesCollection::create($data['backgroundPageStates']);
+        $this->breadcrumbs = BreadcrumbsCollection::create($data['breadcrumbs']);
     }
 }

@@ -5,6 +5,7 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\BackgroundPageStatesCollectionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\BreadcrumbsCollectionInterface;
@@ -12,21 +13,23 @@ use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Enums\State\BreadcrumbsType;
+use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent;
+use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchedEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchingEvent;
-use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
 use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 
 beforeEach(function () {
     $this->channelName = 'testChannel';
     $this->eventBus = Mockery::mock(EventBusInterface::class);
     $this->config = Mockery::mock(ConfigInterface::class);
+    $this->pageFactory = Mockery::mock(PageFactoryInterface::class);
     $this->outgoingCallback = function ($message, $session, $page) {
         return $message;
     };
 
     $this->dispatcher = new SyncDispatcher(
-        $this->channelName,
+        $this->pageFactory,
         $this->eventBus,
         $this->config,
         $this->outgoingCallback
@@ -63,9 +66,14 @@ test('transition handles page transition correctly', function () {
     $session->shouldReceive('getBackgroundPageStates')->andReturn($backgroundStates);
     $session->shouldReceive('getBreadcrumbs')->andReturn($breadcrumbsCollection);
     $backgroundStates->shouldReceive('remove')->once();
+
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchingEvent::class))->once();
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchedEvent::class))->once();
-    $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageShowEvent::class))->once();
+
+    $page = Mockery::mock(PageInterface::class);
+    $page->shouldReceive('execute')->once()->andReturn(null);
+
+    $this->pageFactory->shouldReceive('createPage')->andReturn($page);
 
     $this->dispatcher->transition($messageContext, $session, $pendingDispatchPage);
 });
@@ -77,22 +85,60 @@ test('incoming processes message and executes page', function () {
     $session = Mockery::mock(SessionInterface::class);
     $backgroundStates = Mockery::mock(BackgroundPageStatesCollectionInterface::class);
     $pageState = Mockery::mock(PageStateInterface::class);
+    $nextPendingPage = Mockery::mock(PendingDispatchPage::class);
+
+    $breadcrumbsCollection = Mockery::mock(BreadcrumbsCollectionInterface::class);
 
     $message->shouldReceive('getContext')->andReturn($messageContext);
 
     $backgroundStates->shouldReceive('get')->with('id-1')->andReturn(null);
+    $backgroundStates->shouldReceive('remove')->once();
 
     $session->shouldReceive('getPageState')->andReturn($pageState);
     $session->shouldReceive('getBackgroundPageStates')->andReturn($backgroundStates);
+    $session->shouldReceive('setPageState')->once();
+    $session->shouldReceive('getBreadcrumbs')->andReturn($breadcrumbsCollection);
 
-    $pageState->shouldReceive('getPageClass')->andReturn('Tests\Stubs\EmptyPage');
+    $breadcrumbsCollection->shouldReceive('clear')->once();
+
+    $pageState->shouldReceive('getPageClass')->andReturn('Tests\Stubs\AnswerPage');
     $pageState->shouldReceive('getAttributes')->andReturn([]);
     $pageState->shouldReceive('setAttributes');
     $pageState->shouldReceive('getId')->andReturn('id-1');
 
-    $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchingEvent::class))->once();
-    $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchedEvent::class))->once();
-    $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageShowEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchingEvent::class))->twice();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(PageDispatchedEvent::class))->twice();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(OutgoingMessageSendingEvent::class))->twice();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(OutgoingMessageSentEvent::class))->twice();
+
+    $page = Mockery::mock(PageInterface::class);
+
+    $nextPendingPage->shouldReceive('isKeepAliveContextPage')->andReturn(false);
+    $nextPendingPage->shouldReceive('getStateId')->andReturn('id-1');
+    $nextPendingPage->shouldReceive('getPage')->andReturn('Tests\Stubs\AnswerPage');
+    $nextPendingPage->shouldReceive('getAttributes')->andReturn([]);
+    $nextPendingPage->shouldReceive('getBreadcrumbsType')->andReturn(BreadcrumbsType::None);
+
+    $pageExecuteReturnSequence = [
+        $nextPendingPage,
+        null
+    ];
+
+    $page->shouldReceive('execute')->twice()->withArgs(function ($outgoingCallback) {
+        $message = Mockery::mock(OutgoingMessageInterface::class);
+        $session = Mockery::mock(SessionInterface::class);
+        $page = Mockery::mock(PageInterface::class);
+
+        $result = $outgoingCallback($message, $session, $page);
+
+        expect($result)->toBe($message);
+
+        return true;
+    })->andReturnUsing(function () use (&$pageExecuteReturnSequence) {
+        return array_shift($pageExecuteReturnSequence);
+    });
+
+    $this->pageFactory->shouldReceive('createPage')->andReturn($page);
 
     $message->shouldReceive('getStateId')->andReturn('id-1');
 

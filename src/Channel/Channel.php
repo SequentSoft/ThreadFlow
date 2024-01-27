@@ -4,9 +4,12 @@ namespace SequentSoft\ThreadFlow\Channel;
 
 use Closure;
 use DateTimeImmutable;
+use SequentSoft\ThreadFlow\Builders\ChannelPendingSend;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
+use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
@@ -43,6 +46,11 @@ abstract class Channel implements ChannelInterface
         protected DispatcherFactoryInterface $dispatcherFactory,
         protected EventBusInterface $eventBus,
     ) {
+    }
+
+    public function getName(): string
+    {
+        return $this->channelName;
     }
 
     public function getConfig(): ConfigInterface
@@ -88,7 +96,6 @@ abstract class Channel implements ChannelInterface
             $this->getDispatcher()->incoming($message, $session);
         } catch (Throwable $exception) {
             $this->handleException(
-                $this->channelName,
                 $exception,
                 $session,
                 $message->getContext(),
@@ -101,7 +108,6 @@ abstract class Channel implements ChannelInterface
     {
         return $this->dispatcherFactory->make(
             $this->config->get('dispatcher'),
-            $this->channelName,
             $this->eventBus,
             $this->config,
             $this->outgoing(...)
@@ -113,13 +119,26 @@ abstract class Channel implements ChannelInterface
         $this->eventBus->listen($event, $callback);
     }
 
+    public function forParticipant(string|ParticipantInterface $participant): ChannelPendingSend
+    {
+        return (new ChannelPendingSend($this))->withParticipant($participant);
+    }
+
+    public function forRoom(string|RoomInterface $room): ChannelPendingSend
+    {
+        return (new ChannelPendingSend($this))->withRoom($room);
+    }
+
     public function showPage(
         MessageContextInterface|string $context,
         PendingDispatchPageInterface|string $page,
         array $pageAttributes = []
     ): void {
         if (is_string($context)) {
-            $context = MessageContext::createFromIds($context);
+            $context = MessageContext::createFromIds(
+                channelName: $this->channelName,
+                participantId: $context
+            );
         }
 
         $page = is_string($page)
@@ -137,7 +156,10 @@ abstract class Channel implements ChannelInterface
         OutgoingMessageInterface|string $message,
     ): OutgoingMessageInterface {
         if (is_string($context)) {
-            $context = MessageContext::createFromIds($context);
+            $context = MessageContext::createFromIds(
+                channelName: $this->channelName,
+                participantId: $context
+            );
         }
 
         if (is_string($message)) {
@@ -165,21 +187,26 @@ abstract class Channel implements ChannelInterface
         );
     }
 
+    protected function pendingTestInputCallback(
+        Closure $prepareSession,
+        IncomingMessageInterface $message
+    ): ResultsRecorderInterface {
+        return $this->captureTestInputResults($this->eventBus, fn () => $this->sessionStore->useSession(
+            $message->getContext(),
+            function (SessionInterface $session) use ($prepareSession, $message) {
+                $prepareSession($session);
+                $this->eventBus->fire(new SessionStartedEvent($session));
+                $this->dispatch($message, $session);
+            }
+        ));
+    }
+
     public function test(): PendingTestInput
     {
-        $pendingTestInput = new PendingTestInput(function (Closure $prepareSession, IncomingMessageInterface $message) {
-            return $this->captureTestInputResults(
-                $this->eventBus,
-                fn () => $this->sessionStore->useSession(
-                    $message->getContext(),
-                    function (SessionInterface $session) use ($prepareSession, $message) {
-                        $prepareSession($session);
-                        $this->eventBus->fire(new SessionStartedEvent($session));
-                        $this->dispatch($message, $session);
-                    }
-                )
-            );
-        });
+        $pendingTestInput = new PendingTestInput(
+            $this->channelName,
+            $this->pendingTestInputCallback(...)
+        );
 
         $pendingTestInput->setTextMessageResolver(function (string $text, MessageContextInterface $context) {
             return $this->testInputText($text, $context);

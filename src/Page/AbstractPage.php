@@ -9,6 +9,7 @@ use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\DontDisturbPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
@@ -19,6 +20,7 @@ use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleWelcomeMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
+use SequentSoft\ThreadFlow\Exceptions\Page\MessageHandlerNotDeclaredException;
 use SequentSoft\ThreadFlow\Messages\Incoming\Service\BotStartedIncomingServiceMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\OutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Service\TypingOutgoingServiceMessage;
@@ -29,7 +31,6 @@ abstract class AbstractPage implements PageInterface
     private Closure $outgoingCallback;
 
     public function __construct(
-        private readonly string $channelName,
         private readonly EventBusInterface $eventBus,
         private readonly PageStateInterface $state,
         private readonly SessionInterface $session,
@@ -45,12 +46,17 @@ abstract class AbstractPage implements PageInterface
 
     public function getChannelName(): string
     {
-        return $this->channelName;
+        return $this->messageContext->getChannelName();
     }
 
     public function getState(): PageStateInterface
     {
         return $this->state;
+    }
+
+    public function isDontDisturb(): bool
+    {
+        return $this instanceof DontDisturbPageInterface;
     }
 
     public function getMessageContext(): MessageContextInterface
@@ -60,6 +66,8 @@ abstract class AbstractPage implements PageInterface
 
     public function execute(Closure $callback): ?PendingDispatchPageInterface
     {
+        $this->state->setDontDisturb($this->isDontDisturb());
+
         $this->outgoingCallback = $callback;
 
         $this->populateAttributes();
@@ -116,19 +124,21 @@ abstract class AbstractPage implements PageInterface
             return $this->callHandlerMethod('show', null);
         }
 
-        return null;
+        throw new MessageHandlerNotDeclaredException('show', $this);
     }
 
     private function executeRegularMessageHandler(
         IncomingRegularMessageInterface $message
     ): ?PendingDispatchPageInterface {
-        if (method_exists($this, 'handleMessage')) {
-            $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
+        foreach (['answer', 'handleMessage'] as $methodName) {
+            if (method_exists($this, $methodName)) {
+                $this->eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
 
-            return $this->callHandlerMethod('handleMessage', $message);
+                return $this->callHandlerMethod($methodName, $message);
+            }
         }
 
-        return null;
+        throw new MessageHandlerNotDeclaredException('answer', $this);
     }
 
     private function executeServiceMessageHandler(
@@ -145,13 +155,15 @@ abstract class AbstractPage implements PageInterface
             return $this->executeShowHandler();
         }
 
-        if (method_exists($this, 'handleServiceMessage')) {
-            $this->eventBus->fire(new PageHandleServiceMessageEvent($this, $message));
+        foreach (['service', 'handleServiceMessage'] as $methodName) {
+            if (method_exists($this, $methodName)) {
+                $this->eventBus->fire(new PageHandleServiceMessageEvent($this, $message));
 
-            return $this->callHandlerMethod('handleServiceMessage', $message);
+                return $this->callHandlerMethod($methodName, $message);
+            }
         }
 
-        return null;
+        throw new MessageHandlerNotDeclaredException('service', $this);
     }
 
     protected function callHandlerMethod(string $method, ?IncomingMessageInterface $message): mixed

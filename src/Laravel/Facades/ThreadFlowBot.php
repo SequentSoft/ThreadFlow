@@ -9,8 +9,10 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
+use SequentSoft\ThreadFlow\Dispatcher\FakeDispatcherFactory;
 use SequentSoft\ThreadFlow\Testing\FakeChannelManager;
 
 /**
@@ -44,6 +46,10 @@ class ThreadFlowBot extends Facade
             static::$app->make(SessionStoreFactoryInterface::class),
             static::$app->make(DispatcherFactoryInterface::class),
             static::$app->make(EventBusInterface::class),
+        );
+
+        $fakeChannelManager->setFakeDispatcherFactory(
+            new FakeDispatcherFactory(static::$app->make(PageFactoryInterface::class))
         );
 
         $originalChannelManager = static::$app->make(ChannelManagerInterface::class);

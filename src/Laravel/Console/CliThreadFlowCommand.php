@@ -79,7 +79,11 @@ class CliThreadFlowCommand extends Command
     {
         $this->output->title('ThreadFlow Cli');
 
-        $messageContext = MessageContext::createFromIds('cli-user', 'cli-room');
+        $messageContext = MessageContext::createFromIds(
+            'cli',
+            'cli-user',
+            'cli-room'
+        );
 
         $cliConfig = new Config([
             'entry' => \App\ThreadFlow\Pages\IndexPage::class,

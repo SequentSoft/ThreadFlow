@@ -27,7 +27,6 @@ class LaravelQueueIncomingDispatcher extends SyncDispatcher
     ): void {
         if (static::$async) {
             IncomingMessageJob::dispatch(
-                $this->channelName,
                 $message
             );
 

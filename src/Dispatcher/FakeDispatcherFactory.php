@@ -11,13 +11,12 @@ class FakeDispatcherFactory extends DispatcherFactory
 {
     public function make(
         string $dispatcherName,
-        string $channelName,
         EventBusInterface $eventBus,
         ConfigInterface $config,
         Closure $outgoing,
     ): DispatcherInterface {
         return new FakeDispatcher(
-            $channelName,
+            $this->pageFactory,
             $eventBus,
             $config,
             $outgoing

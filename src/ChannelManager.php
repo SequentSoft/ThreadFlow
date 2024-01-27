@@ -73,9 +73,6 @@ class ChannelManager implements ChannelManagerInterface
         $this->registerExceptionHandler($callback);
     }
 
-    /**
-     * @throws InvalidNestedConfigException
-     */
     protected function getChannelConfig(string $channelName): ConfigInterface
     {
         return $this->config
@@ -114,6 +111,8 @@ class ChannelManager implements ChannelManagerInterface
         $channel = $this->makeChannel($channelName);
 
         $channel->registerExceptionHandler($this->handleException(...));
+
+        $this->channels[$channelName] = $channel;
 
         return $channel;
     }
