@@ -71,10 +71,12 @@ class SyncDispatcher implements DispatcherInterface
                 return $message;
             });
         } catch (MessageHandlerNotDeclaredException $exception) {
-            return $this->handleNotHandledMessage(
+            $this->handleNotHandledMessage(
                 $exception,
                 $session,
             );
+
+            return null;
         }
     }
 
@@ -107,7 +109,7 @@ class SyncDispatcher implements DispatcherInterface
     protected function handleNotHandledMessage(
         MessageHandlerNotDeclaredException $exception,
         SessionInterface $session,
-    ): null {
+    ): void {
         $fromPage = $exception->getPage();
 
         // pass the service message to the entry page
@@ -129,14 +131,11 @@ class SyncDispatcher implements DispatcherInterface
                 new PageHandleDelegatedEvent($fromPage, $toPage)
             );
 
-            return null;
         }
 
         $this->eventBus->fire(
             new PageHasNoMessageHandlerEvent($fromPage)
         );
-
-        return null;
     }
 
     protected function getNextState(
