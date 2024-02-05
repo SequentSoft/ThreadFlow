@@ -16,9 +16,11 @@ abstract class BaseKeyboard implements KeyboardInterface
         return $this->rows;
     }
 
-    /**
-     * @return Keyboard
-     */
+    public static function makeFromKeyboard(KeyboardInterface $keyboard): KeyboardInterface
+    {
+        return new static($keyboard->getRows());
+    }
+
     public static function createFromArray(array $keyboard): static
     {
         $rows = [];
@@ -38,5 +40,21 @@ abstract class BaseKeyboard implements KeyboardInterface
         }
 
         return new static($rows);
+    }
+
+    public function row(array $buttons): static
+    {
+        $this->rows[] = Row::createFromArray($buttons);
+
+        return $this;
+    }
+
+    public function column(array $buttons): static
+    {
+        foreach ($buttons as $button) {
+            $this->rows[] = Row::createFromArray([$button]);
+        }
+
+        return $this;
     }
 }

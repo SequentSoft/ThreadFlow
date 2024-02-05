@@ -17,4 +17,6 @@ interface CommonKeyboardInterface extends KeyboardInterface
     public function isResizable(): bool;
 
     public function getPlaceholder(): string;
+
+    public function inline(): InlineKeyboardInterface;
 }

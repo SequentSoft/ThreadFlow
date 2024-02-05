@@ -3,6 +3,8 @@
 namespace SequentSoft\ThreadFlow\Keyboard;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\CommonKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\InlineKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 
 class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
 {
@@ -11,6 +13,16 @@ class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
     protected bool $resizable = true;
 
     protected string $placeholder = '';
+
+    public static function make(): static
+    {
+        return new static([]);
+    }
+
+    public static function makeFromKeyboard(KeyboardInterface $keyboard): CommonKeyboardInterface
+    {
+        return new static($keyboard->getRows());
+    }
 
     public function oneTimeKeyboard(bool $oneTime = true): CommonKeyboardInterface
     {
@@ -51,5 +63,10 @@ class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
     public function getPlaceholder(): string
     {
         return $this->placeholder;
+    }
+
+    public function inline(): InlineKeyboardInterface
+    {
+        return InlineKeyboard::createFromKeyboard($this);
     }
 }
