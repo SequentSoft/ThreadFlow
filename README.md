@@ -26,4 +26,3 @@ Thank you for considering contributing to ThreadFlow! The contribution guide can
 ## License
 <a name="license"></a>
 ThreadFlow is open-sourced software licensed under the [MIT license](LICENSE.md).
-```
