@@ -67,6 +67,6 @@ class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
 
     public function inline(): InlineKeyboardInterface
     {
-        return InlineKeyboard::createFromKeyboard($this);
+        return InlineKeyboard::makeFromKeyboard($this);
     }
 }

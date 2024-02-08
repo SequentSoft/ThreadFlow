@@ -108,8 +108,8 @@ abstract class Channel implements ChannelInterface
     {
         return $this->dispatcherFactory->make(
             $this->config->get('dispatcher'),
+            $this->config->get('entry'),
             $this->eventBus,
-            $this->config,
             $this->outgoing(...)
         );
     }

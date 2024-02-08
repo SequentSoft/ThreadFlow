@@ -98,7 +98,6 @@ class ChannelManager implements ChannelManagerInterface
         return $this->sessionStoreFactory->make(
             $channelConfig->get('session'),
             $channelName,
-            $channelConfig
         );
     }
 

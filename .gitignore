@@ -9,6 +9,7 @@
 /docs/.vitepress/dist
 /docs/.vitepress/cache
 /tools
+/.phpunit.cache
 *.swp
 *.swo
 .DS_Store

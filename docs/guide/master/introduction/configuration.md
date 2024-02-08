@@ -12,16 +12,41 @@ This command will create a `thread-flow.php` configuration file in the `config` 
 'channels' => [
     'my-telegram-channel' => [
         'driver' => 'telegram',
-        'session' => env('THREAD_FLOW_SESSION_DRIVER', 'cache'),
+        'session' => env('THREAD_FLOW_SESSION', 'database'),
         'dispatcher' => env('THREAD_FLOW_DISPATCHER', 'sync'),
         'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-        'settings' => [
-            'api_token' => env('TELEGRAM_API_TOKEN', null),
-            'webhook_url' => env('TELEGRAM_WEBHOOK_URL', null),
-            'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET', null),
-            'timeout' => 30,
-            'limit' => 100,
-        ],
+        'api_token' => env('TELEGRAM_API_TOKEN', null),
+        'webhook_url' => env('TELEGRAM_WEBHOOK_URL', null),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET', null),
+        'timeout' => 30,
+        'limit' => 100,
+    ],
+],
+
+'sessions' => [
+    'database' => [
+        'driver' => 'eloquent',
+        'model' => \SequentSoft\ThreadFlow\Laravel\Models\ThreadFlowSession::class,
+    ],
+
+    'cache' => [
+        'driver' => 'cache',
+        'store' => env('THREAD_FLOW_SESSION_CACHE_STORE', null),
+    ],
+
+    'array' => [
+        'driver' => 'array',
+    ],
+],
+
+
+'dispatchers' => [
+    'sync' => [
+        'driver' => 'sync',
+    ],
+    'queue' => [
+        'driver' => 'queue',
+        'queue' => env('THREAD_FLOW_QUEUE', 'default'),
     ],
 ],
 ```
@@ -46,8 +71,8 @@ More information about drivers you can find [Drivers Page](/guide/master/drivers
 
 ## Session
 
-The `session` option specifies the session driver that should be used for the channel.
-Available drivers: `array`, `cache` and `eloquent`.
+The `session` option specifies the session store that should be used for the channel.
+Available session stores: `database`, `cache`, `array` or any custom configured session store.
 
 ::: info INFO
 More information about sessions you can find [Sessions Page](/guide/master/advanced/sessions).
@@ -69,7 +94,7 @@ More information about dispatchers you can find [Dispatchers Page](/guide/master
 The `entry` option specifies the entry page that should be used for the channel.
 This is the first page that will be displayed to the user when he starts the conversation.
 
-## Settings
+## Other settings
 
-The `settings` option contains driver specific settings.
-For example, for the Telegram driver, you can specify the API token and webhook settings.
+Other settings are specific to the driver you are using.
+For example, for the Telegram driver, you can use the `api_token`, `webhook_url`, `webhook_secret`, `timeout` and `limit` options.

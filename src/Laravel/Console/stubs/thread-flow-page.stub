@@ -4,25 +4,28 @@ namespace {{ namespace }};
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
-use SequentSoft\ThreadFlow\Laravel\Page\AbstractPage;
+use SequentSoft\ThreadFlow\Laravel\Page\Page;
 
-class {{ class }} extends AbstractPage
+class {{ class }} extends Page
 {
     public function show(): void
     {
         TextOutgoingMessage::make('This is {{class}}', [
-            ['next' => 'Go to next page'],
+            'next' => 'Go to next page',
         ])->reply();
     }
 
-    public function handleMessage(IncomingRegularMessageInterface $message)
+    public function answer(IncomingRegularMessageInterface $message)
     {
         if ($message->isText('next')) {
             TextOutgoingMessage::make('Next page not defined')->reply();
+            return;
         }
 
-        TextOutgoingMessage::make('Please enter message or press button', [
-            ['next' => 'Go to next page'],
-        ])->reply();
+        TextOutgoingMessage::make('Please enter message or press button')
+            ->withKeyboard([
+                ['next' => 'Next page'],
+            ])
+            ->reply();
     }
 }

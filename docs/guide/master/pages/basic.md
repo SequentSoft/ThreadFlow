@@ -7,6 +7,10 @@ How to create a basic page and define its behavior.
 The `show` method describes the logic for sending the initial message to the user when the page is opened.
 
 ```php
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
+
+// ...
+
 public function show(): void
 {
     TextOutgoingMessage::make(
@@ -49,7 +53,7 @@ public function answer(IncomingRegularMessageInterface $message): void
     if ($message->isText('Donuts')) {
         TextOutgoingMessage::make('Right! Mmm, donuts.')->reply();
         
-        return $this->next(LoginPage::class);
+        return $this->next(LoginPage::class); // [!code highlight]
     }
     
     TextOutgoingMessage::make('You can\'t login, sorry.')->reply();

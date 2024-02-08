@@ -28,21 +28,26 @@ composer install
 
 Lint your code:
 ```bash
-composer lint
-```
-## Tests
-
-Run all tests:
-```bash
-composer test
+composer test:lint
 ```
 
-Check types:
+## Types
+
+Check your types:
 ```bash
 composer test:types
 ```
 
-Unit tests:
+## Unit
+
+Run the unit tests:
 ```bash
 composer test:unit
+```
+
+## Type Coverage
+
+Check the type coverage:
+```bash
+composer test:type-coverage
 ```

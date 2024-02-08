@@ -92,6 +92,7 @@ test('incoming message triggers correct sequence of actions', function () {
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
+    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
 
     $this->channel->incoming($message);
 });
@@ -116,6 +117,7 @@ test('incoming bot started message resets session', function () {
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
+    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
 
     $session->shouldReceive('reset')->once();
 
@@ -144,6 +146,7 @@ test('dispatcher exception to be handled by handleException method', function ()
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
+    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
 
     $this->channel->registerExceptionHandler(function ($exception, $session, $context) use ($messageContext) {
         expect($exception)->toBeInstanceOf(Exception::class)
@@ -159,6 +162,7 @@ test('showPage handles context and page as string correctly', function () {
     $dispatcher = Mockery::mock(DispatcherInterface::class);
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
+    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
 
     $this->sessionStore->shouldReceive('useSession')->andReturnUsing(function ($context, $closure) use ($session) {
         $closure($session);
@@ -175,6 +179,7 @@ test('showPage handles context and page correctly', function () {
     $dispatcher = Mockery::mock(DispatcherInterface::class);
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
+    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
 
     $this->sessionStore->shouldReceive('useSession')->andReturnUsing(function ($context, $closure) use ($session) {
         $closure($session);

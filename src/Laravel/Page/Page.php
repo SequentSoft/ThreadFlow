@@ -5,7 +5,7 @@ namespace SequentSoft\ThreadFlow\Laravel\Page;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
 use Illuminate\Support\Facades\App;
 
-class AbstractPage extends \SequentSoft\ThreadFlow\Page\AbstractPage
+class Page extends \SequentSoft\ThreadFlow\Page\AbstractPage
 {
     protected function callHandlerMethod(string $method, ?IncomingMessageInterface $message): mixed
     {

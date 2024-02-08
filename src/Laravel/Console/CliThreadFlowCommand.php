@@ -18,7 +18,7 @@ use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
 
 class CliThreadFlowCommand extends Command
 {
-    protected $signature = 'thread-flow:cli';
+    protected $signature = 'threadflow:cli';
 
     protected $description = 'Starts ThreadFlow CLI';
 

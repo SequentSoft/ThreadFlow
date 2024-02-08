@@ -32,3 +32,11 @@ TELEGRAM_WEBHOOK_URL="/my-app/webhook"
 TELEGRAM_WEBHOOK_SECRET="random string to verify webhook requests"
 ```
 More information about the parameters can be found in the [documentation for the driver](/guide/master/drivers/telegram).
+
+## Create index page
+
+Create a new page for the bot to handle. For example, create a new page called `IndexPage`:
+
+```sh [bash]
+$ php artisan threadflow:page IndexPage
+```

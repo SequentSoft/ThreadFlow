@@ -26,7 +26,7 @@ You can manage session data using the `session` method:
 
 ### `set(string $key, mixed $data): void`
 
-You can store data in the session using the `set` method:
+You can store data in the session using the `set` method and retrieve it later:
 
 ```php
 public function answer(IncomingRegularMessageInterface $message)

@@ -32,7 +32,7 @@ class CacheSessionStore implements SessionStoreInterface
         if (is_array($sessionData)) {
             $session = Session::fromArray($sessionData);
         } else {
-            $session =  new Session();
+            $session = new Session();
         }
 
         $result = $callback($session);
@@ -64,27 +64,27 @@ class CacheSessionStore implements SessionStoreInterface
 
     protected function getSessionMaxLockSeconds(): int
     {
-        return $this->config->get('session_max_lock_seconds', 10);
+        return $this->config->get('max_lock_seconds', 10);
     }
 
     protected function getSessionMaxLockWaitSeconds(): int
     {
-        return $this->config->get('session_max_lock_wait_seconds', 15);
+        return $this->config->get('max_lock_wait_seconds', 15);
     }
 
     protected function getCacheStoreName(): string
     {
-        return $this->config->get('session_store_name', 'file');
+        return $this->config->get('store', 'file');
     }
 
     protected function getMaxBackgroundPageStates(): int
     {
-        return $this->config->get('session_background_max', 5);
+        return $this->config->get('background_max', 5);
     }
 
     protected function getMaxSize(): int
     {
-        return $this->config->get('session_max_size', 1024 * 1024 * 0.5); // 512 KB by default
+        return $this->config->get('max_size', 1024 * 1024 * 0.5); // 512 KB by default
     }
 
     protected function calculateSize(SessionInterface $session): int

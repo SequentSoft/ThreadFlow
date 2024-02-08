@@ -24,7 +24,7 @@ public function answer(IncomingRegularMessageInterface $message)
     $this->counter++;
     $this->counterMessage->setText(
         "Hello, world! You have clicked {$this->counter} times"
-    )->update();
+    );
     $this->counterMessage->update();
 }
 
@@ -66,7 +66,7 @@ use SequentSoft\ThreadFlowTelegram\Enums\Messages\EmojiReaction;
 
 public function answer(IncomingRegularMessageInterface $message)
 {
-    $message->addReaction(EmojiReaction::THUMBS_UP);
+    $message->sendReaction(EmojiReaction::THUMBS_UP);
 }
 
 ```

@@ -7,7 +7,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 class GenerateThreadFlowPageCommand extends GeneratorCommand
 {
-    protected $name = 'thread-flow:page';
+    protected $name = 'threadflow:page';
 
     protected $description = 'Generate a new ThreadFlow page';
 

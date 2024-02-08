@@ -10,6 +10,10 @@ export default defineConfig({
             pattern: 'https://github.com/SequentSoft/ThreadFlow/edit/master/docs/:path'
         },
 
+        search: {
+          provider: 'local'
+        },
+
         nav: [
             {text: 'Home', link: '/'},
             {text: 'Documentation', link: '/guide/master/introduction/installation'},

@@ -44,6 +44,7 @@ test('listen method processes incoming messages correctly', function () {
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(IncomingMessageDispatchingEvent::class))->once();
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
+    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
     $this->dispatcherFactory->shouldReceive('make')->once()->andReturn($this->syncDispatcher);
     $this->syncDispatcher->shouldReceive('incoming')->once();
 

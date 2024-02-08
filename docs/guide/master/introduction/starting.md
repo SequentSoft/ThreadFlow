@@ -18,6 +18,13 @@ $ php artisan threadflow:telegram-polling --channel=my-telegram-channel
 You can use it without any additional configuration.
 It's the best way to start a bot for testing purposes and local development.
 
+**Now your bot will start and listen for incoming messages.**
+
+::: warning WARNING
+If you change the code of the bot, you need to restart the bot to apply the changes.
+`Ctrl+C` to stop the bot and run the command again.
+:::
+
 ::: tip TIP
 You can use the `--timeout` option to specify the timeout in seconds. The default value is 30 seconds.
 :::
