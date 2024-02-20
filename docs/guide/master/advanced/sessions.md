@@ -20,6 +20,8 @@ Laravel provides a variety of cache drivers, so make sure you have configured on
 
 With the `eloquent` driver, session data will be stored in the database.
 
+You need to run the `php artisan threadflow:session-table` command to create the necessary table.
+
 ## Managing Session Data
 
 You can manage session data using the `session` method:
@@ -29,7 +31,7 @@ You can manage session data using the `session` method:
 You can store data in the session using the `set` method and retrieve it later:
 
 ```php
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
     $this->session()
         ->set('lastMessageText', $message->getText());
@@ -65,7 +67,7 @@ public function show()
 You can remove data from the session using the `delete` method:
 
 ```php
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
     $this->session()
         ->delete('lastMessageText');

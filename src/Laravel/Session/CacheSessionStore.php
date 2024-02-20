@@ -37,9 +37,6 @@ class CacheSessionStore implements SessionStoreInterface
 
         $result = $callback($session);
 
-        $session->getBackgroundPageStates()
-            ->truncate($this->getMaxBackgroundPageStates());
-
         $sessionSize = $this->calculateSize($session);
 
         if ($sessionSize > $this->getMaxSize()) {

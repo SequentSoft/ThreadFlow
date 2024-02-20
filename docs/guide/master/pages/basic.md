@@ -11,11 +11,11 @@ use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 
 // ...
 
-public function show(): void
+public function show(): TextOutgoingMessage
 {
-    TextOutgoingMessage::make(
+    return TextOutgoingMessage::make(
         'Hello! What\'s Homer Simpson\'s favorite food?'
-    )->reply();
+    );
 }
 ```
 
@@ -26,37 +26,56 @@ The `answer` method describes the logic for processing the user's response to th
 ### Reply with a text message
 
 ```php
-public function answer(IncomingRegularMessageInterface $message): void
+public function answer(IncomingMessageInterface $message): TextOutgoingMessage
 {
     if ($message->isText('Donuts')) {
-        TextOutgoingMessage::make('Right! Mmm, donuts.')->reply();
-        return;
+        return TextOutgoingMessage::make('Right! Mmm, donuts.');
     }
     
     if ($message->isText('Duff')) {
-        TextOutgoingMessage::make(
-            'Close! Duff is his favorite beer, '
-                . 'but donuts take the cake... or the donut.'
-        )->reply();
-        return;
+        return TextOutgoingMessage::make([
+            'Close! Duff is his favorite beer,',
+            'but donuts take the cake... or the donut.'
+        ]);
     }
     
-    TextOutgoingMessage::make('Nope, it\'s donuts. D\'oh!')->reply();
+    return TextOutgoingMessage::make('Nope, it\'s donuts. D\'oh!');
 }
 ```
+
+::: info Note
+Also you can specify the message type as a type hint in the `answer` method. If the message type does not match, the show method will be called instead.
+
+```php
+public function show(): TextOutgoingMessage
+{
+    return TextOutgoingMessage::make(
+        'Please send me your contact information.'
+    );
+}
+
+public function answer(ContactIncomingMessageInterface $message): TextOutgoingMessage
+{
+    // answer method will be called only if the incoming message is a contact message
+    // otherwise, the show method will be called
+}
+```
+:::
 
 ### Go to another page
 
 ```php
-public function answer(IncomingRegularMessageInterface $message): void
+public function answer(IncomingMessageInterface $message): mixed
 {
     if ($message->isText('Donuts')) {
+        // Output the message before moving to another page
         TextOutgoingMessage::make('Right! Mmm, donuts.')->reply();
         
-        return $this->next(LoginPage::class); // [!code highlight]
+        // Go to another page
+        return new LoginPage(); // [!code highlight]
     }
     
-    TextOutgoingMessage::make('You can\'t login, sorry.')->reply();
+    return TextOutgoingMessage::make('You can\'t login, sorry.');
 }
 ```
 
@@ -68,11 +87,9 @@ If `welcome` method is defined, it will be called when the user opens the chat f
 Otherwise, the `show` method will be called.
 
 ```php
-public function welcome(): void
+public function welcome(): TextOutgoingMessage
 {
-    TextOutgoingMessage::make(
-        'Welcome! You can ask me anything.'
-    )->reply();
+    return TextOutgoingMessage::make('Welcome! You can ask me anything.');
 }
 ```
 
@@ -87,9 +104,9 @@ class IndexPage extends Page
 {
     public function show(ChuckNorrisJokesService $jokesService): void
     {
-        TextOutgoingMessage::make(
+        return TextOutgoingMessage::make(
             $jokesService->getRandomJoke()
-        )->reply();
+        );
     }
 }
 ```
@@ -104,7 +121,9 @@ You can show a page to any bot user using the `showPage` method.
 ```php
 ThreadFlowBot::channel('telegram')
     ->forParticipant('telegram-user-id-1')
-    ->showPage(ChatWithAdminPage::class, ['value-1' => 'Hello!']);
+    ->showPage(
+        new ChatWithAdminPage(myMessageText: 'Hello!')
+    );
 ```
 ::: tip Note
 You can use the `forParticipant` method to send a message to a specific user

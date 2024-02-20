@@ -6,10 +6,10 @@ namespace SequentSoft\ThreadFlow\Testing\Illuminate\Testing;
 
 use Closure;
 use PHPUnit\Framework\Assert as PHPUnit;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 
@@ -21,7 +21,7 @@ class ResultsRecorder implements ResultsRecorderInterface
 
     protected array $dispatchedPagesMethods = [];
 
-    public function recordSentOutgoingMessage(OutgoingMessageInterface $message): static
+    public function recordSentOutgoingMessage(CommonOutgoingMessageInterface $message): static
     {
         $this->sentOutgoingMessages[] = $message;
 
@@ -39,7 +39,7 @@ class ResultsRecorder implements ResultsRecorderInterface
 
     public function recordPageHandleRegularMessage(
         PageInterface $page,
-        IncomingRegularMessageInterface $message
+        IncomingMessageInterface $message
     ): static {
         $this->dispatchedPages[] = $page;
         $this->dispatchedPagesMethods[] = 'handleRegularMessage';
@@ -75,7 +75,7 @@ class ResultsRecorder implements ResultsRecorderInterface
         return $this;
     }
 
-    public function getOutgoingMessage(?int $index = null): ?OutgoingMessageInterface
+    public function getOutgoingMessage(?int $index = null): ?CommonOutgoingMessageInterface
     {
         return $index !== null
             ? $this->sentOutgoingMessages[$index] ?? null
@@ -203,7 +203,7 @@ class ResultsRecorder implements ResultsRecorderInterface
             PHPUnit::fail(is_null($index) ? 'Latest message not found' : "Message with index {$index} not found");
         }
 
-        if (!$latestMessage instanceof TextOutgoingRegularMessageInterface) {
+        if (!$latestMessage instanceof TextOutgoingMessageInterface) {
             PHPUnit::fail(
                 is_null($index)
                     ? 'Latest message is not a text message'
@@ -224,7 +224,7 @@ class ResultsRecorder implements ResultsRecorderInterface
             PHPUnit::fail(is_null($index) ? 'Latest message not found' : "Message with index {$index} not found");
         }
 
-        if (!$latestMessage instanceof TextOutgoingRegularMessageInterface) {
+        if (!$latestMessage instanceof TextOutgoingMessageInterface) {
             PHPUnit::fail(
                 is_null($index)
                     ? 'Latest message is not a text message'

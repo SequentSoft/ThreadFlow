@@ -10,16 +10,16 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
-use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 
 beforeEach(function () {
     $this->config = Mockery::mock(ConfigInterface::class);
@@ -28,9 +28,9 @@ beforeEach(function () {
     $this->eventBus = Mockery::mock(EventBusInterface::class);
 
     $this->channel = new class ('testChannel', $this->config, $this->sessionStore, $this->dispatcherFactory, $this->eventBus) extends Channel {
-        protected function outgoing(OutgoingMessageInterface $message, ?SessionInterface $session, ?PageInterface $contextPage): OutgoingMessageInterface
+        protected function outgoing(CommonOutgoingMessageInterface $message, ?SessionInterface $session, ?PageInterface $contextPage): CommonOutgoingMessageInterface
         {
-            // Mocked implementation
+            return $message;
         }
     };
 });
@@ -73,7 +73,7 @@ test('getConfig returns correct config instance', function () {
 });
 
 test('incoming message triggers correct sequence of actions', function () {
-    $message = Mockery::mock(IncomingMessageInterface::class);
+    $message = Mockery::mock(CommonIncomingMessageInterface::class);
     $session = Mockery::mock(SessionInterface::class);
     $dispatcher = Mockery::mock(DispatcherInterface::class);
     $messageContext = MessageContext::createFromIds('test', 'test');
@@ -98,7 +98,7 @@ test('incoming message triggers correct sequence of actions', function () {
 });
 
 test('incoming bot started message resets session', function () {
-    $message = Mockery::mock(BotStartedIncomingServiceMessageInterface::class);
+    $message = Mockery::mock(BotStartedIncomingMessageInterface::class);
     $session = Mockery::mock(SessionInterface::class);
     $dispatcher = Mockery::mock(DispatcherInterface::class);
     $messageContext = MessageContext::createFromIds('test', 'test');
@@ -125,7 +125,7 @@ test('incoming bot started message resets session', function () {
 });
 
 test('dispatcher exception to be handled by handleException method', function () {
-    $message = Mockery::mock(IncomingMessageInterface::class);
+    $message = Mockery::mock(CommonIncomingMessageInterface::class);
     $session = Mockery::mock(SessionInterface::class);
     $dispatcher = Mockery::mock(DispatcherInterface::class);
     $messageContext = MessageContext::createFromIds('test', 'test');
@@ -157,9 +157,16 @@ test('dispatcher exception to be handled by handleException method', function ()
     $this->channel->incoming($message);
 });
 
-test('showPage handles context and page as string correctly', function () {
+test('dispatchTo handles context and page correctly', function () {
     $session = Mockery::mock(SessionInterface::class);
     $dispatcher = Mockery::mock(DispatcherInterface::class);
+    $page = Mockery::mock(PageInterface::class);
+    $context = Mockery::mock(MessageContext::class);
+
+    $session->shouldReceive('getCurrentPage')->andReturn($page);
+
+    $page->shouldReceive('isDontDisturb')->andReturn(false);
+    $page->shouldReceive('setContext')->with($context)->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
     $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
@@ -171,39 +178,34 @@ test('showPage handles context and page as string correctly', function () {
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
     $dispatcher->shouldReceive('transition')->once();
 
-    $this->channel->showPage('test', 'test-page', ['key' => 'value']);
+    $this->channel->dispatchTo($context, $page);
 });
 
-test('showPage handles context and page correctly', function () {
+test('dispatchTo returns correct OutgoingMessageInterface instance', function () {
+    $textMessage = Mockery::mock(TextOutgoingMessageInterface::class);
+    $dispatcher = Mockery::mock(DispatcherInterface::class);
+    $context = Mockery::mock(MessageContext::class);
     $session = Mockery::mock(SessionInterface::class);
-    $dispatcher = Mockery::mock(DispatcherInterface::class);
-
-    $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
-    $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
-
-    $this->sessionStore->shouldReceive('useSession')->andReturnUsing(function ($context, $closure) use ($session) {
-        $closure($session);
-    });
-    $this->dispatcherFactory->shouldReceive('make')->andReturn($dispatcher);
-    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
-    $dispatcher->shouldReceive('transition')->once();
-
-    $this->channel->showPage('test', new PendingDispatchPage('test-page', ['key' => 'value']), [
-        'key2' => 'value2',
-    ]);
-});
-
-test('sendMessage returns correct OutgoingMessageInterface instance', function () {
-    $textMessage = 'Hello World';
-    $dispatcher = Mockery::mock(DispatcherInterface::class);
+    $page = Mockery::mock(PageInterface::class);
 
     $this->config->shouldReceive('get')->andReturn('sync');
     $this->dispatcherFactory->shouldReceive('make')->andReturn($dispatcher);
-    $dispatcher->shouldReceive('outgoing')->andReturn(Mockery::mock(OutgoingMessageInterface::class));
 
-    $sentMessage = $this->channel->sendMessage('test', $textMessage);
+    $dispatcher->shouldReceive('outgoing')->andReturn(Mockery::mock(CommonOutgoingMessageInterface::class));
 
-    expect($sentMessage)->toBeInstanceOf(OutgoingMessageInterface::class);
+    $this->sessionStore->shouldReceive('useSession')->andReturnUsing(function ($context, $closure) use ($session) {
+        return $closure($session);
+    });
+
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
+
+    $textMessage->shouldReceive('setContext')->with($context)->once();
+    $session->shouldReceive('getCurrentPage')->andReturn($page);
+    $page->shouldReceive('isDontDisturb')->andReturn(false);
+
+    $sentMessage = $this->channel->dispatchTo($context, $textMessage);
+
+    expect($sentMessage)->toBeInstanceOf(CommonOutgoingMessageInterface::class);
 });
 
 test('testInput captures correct ResultsRecorder instance', function () {
@@ -214,7 +216,7 @@ test('testInput captures correct ResultsRecorder instance', function () {
 
     $this->sessionStore->shouldReceive('useSession')->once();
 
-    $results = $this->channel->testInput($input);
+    $results = $this->channel->test()->input($input);
 
     expect($results)->toBeInstanceOf(ResultsRecorderInterface::class);
 });

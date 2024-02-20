@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Laravel\Page\Page;
 
@@ -15,7 +15,7 @@ class {{ class }} extends Page
         ])->reply();
     }
 
-    public function answer(IncomingRegularMessageInterface $message)
+    public function answer(IncomingMessageInterface $message)
     {
         if ($message->isText('next')) {
             TextOutgoingMessage::make('Next page not defined')->reply();

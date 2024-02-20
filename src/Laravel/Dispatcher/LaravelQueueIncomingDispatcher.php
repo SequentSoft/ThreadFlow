@@ -3,7 +3,7 @@
 namespace SequentSoft\ThreadFlow\Laravel\Dispatcher;
 
 use Closure;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 
@@ -22,8 +22,8 @@ class LaravelQueueIncomingDispatcher extends SyncDispatcher
     }
 
     public function incoming(
-        IncomingMessageInterface $message,
-        SessionInterface $session
+        CommonIncomingMessageInterface $message,
+        SessionInterface               $session
     ): void {
         if (static::$async) {
             IncomingMessageJob::dispatch(

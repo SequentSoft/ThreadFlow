@@ -16,10 +16,12 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
 use SequentSoft\ThreadFlow\Traits\HandleExceptions;
+use SequentSoft\ThreadFlow\Traits\HasUserResolver;
 
 class ChannelManager implements ChannelManagerInterface
 {
     use HandleExceptions;
+    use HasUserResolver;
 
     protected array $channelDrivers = [];
 
@@ -45,10 +47,14 @@ class ChannelManager implements ChannelManagerInterface
 
     protected function makeChannel(string $channelName): ChannelInterface
     {
-        $channelDriver = $this->channelDrivers[$channelName] ?? null;
+        $config = $this->getChannelConfig($channelName);
+
+        $driverName = $config->get('driver');
+
+        $channelDriver = $this->channelDrivers[$driverName] ?? null;
 
         if (is_null($channelDriver)) {
-            throw new RuntimeException("Channel driver for channel \"{$channelName}\" is not registered");
+            throw new RuntimeException("Channel driver for channel \"{$driverName}\" is not registered");
         }
 
         $config = $this->getChannelConfig($channelName);
@@ -65,12 +71,6 @@ class ChannelManager implements ChannelManagerInterface
     protected function getDispatcherFactory(): DispatcherFactoryInterface
     {
         return $this->dispatcherFactory;
-    }
-
-    /** @deprecated Use "registerExceptionHandler" method */
-    public function handleProcessingExceptions(Closure $callback): void
-    {
-        $this->registerExceptionHandler($callback);
     }
 
     protected function getChannelConfig(string $channelName): ConfigInterface
@@ -108,6 +108,8 @@ class ChannelManager implements ChannelManagerInterface
         }
 
         $channel = $this->makeChannel($channelName);
+
+        $channel->setUserResolver($this->userResolver);
 
         $channel->registerExceptionHandler($this->handleException(...));
 

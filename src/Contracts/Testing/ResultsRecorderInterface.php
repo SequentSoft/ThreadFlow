@@ -3,9 +3,9 @@
 namespace SequentSoft\ThreadFlow\Contracts\Testing;
 
 use Closure;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
 interface ResultsRecorderInterface
@@ -14,11 +14,11 @@ interface ResultsRecorderInterface
         PageInterface $page,
     ): static;
 
-    public function recordSentOutgoingMessage(OutgoingMessageInterface $message): static;
+    public function recordSentOutgoingMessage(CommonOutgoingMessageInterface $message): static;
 
     public function recordPageHandleRegularMessage(
         PageInterface $page,
-        IncomingRegularMessageInterface $message
+        IncomingMessageInterface $message
     ): static;
 
     public function recordPageHandleServiceMessage(
@@ -33,7 +33,7 @@ interface ResultsRecorderInterface
 
     public function recordPageShow(PageInterface $page): static;
 
-    public function getOutgoingMessage(?int $index = null): ?OutgoingMessageInterface;
+    public function getOutgoingMessage(?int $index = null): ?CommonOutgoingMessageInterface;
 
     public function getDispatchedPage(?int $index = null): ?PageInterface;
 

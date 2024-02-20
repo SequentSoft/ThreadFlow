@@ -14,7 +14,7 @@ When the bot receives a message, you can process it and send a response.
 Incoming regular messages are messages that are sent to the bot by users.
 All this messages implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface
 ```
 
 ## Common Methods
@@ -24,6 +24,10 @@ All incoming regular messages have the following common methods:
 ### `getText(): string`
 
 Returns the text of the message. If the message is not a text message, it returns an empty string.
+
+### `isClicked(string $key): bool`
+
+Checks if the message is a clicked button message and if the clicked button has the passed key.
 
 ### `isText(?string $text = null): bool`
 
@@ -72,9 +76,9 @@ But better way to detect the type of the message is to use `instanceof` operator
 It will help IDE to provide you with the correct methods for the message type.
 
 ```php
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
-    if ($message instanceof LocationIncomingRegularMessage) {
+    if ($message instanceof LocationIncomingMessage) {
         $position = [
             'latitude' => $message->getLatitude(),
             'longitude' => $message->getLongitude(),
@@ -88,16 +92,30 @@ public function answer(IncomingRegularMessageInterface $message)
 
 Text message is a message that contains only text. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\TextIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\TextIncomingMessageInterface
 ```
 
 No additional methods for this message type.
+
+## Clicked Button Message
+
+```php
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ClickIncomingMessageInterface
+```
+
+### `getKey(): string`
+
+Returns the key of the clicked button. For example, `yes`.
+
+### `getButton(): ButtonInterface`
+
+Returns the button object that was clicked.
 
 ## Contact Message
 
 Contact message is a message that contains contact information. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ContactIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ContactIncomingMessageInterface
 ```
 
 ### `getPhoneNumber(): string`
@@ -120,7 +138,7 @@ Returns the user ID of the contact. For example, `1234567890`.
 
 Location message is a message that contains location information. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\LocationIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\LocationIncomingMessageInterface
 ```
 
 ### `getLatitude(): float`
@@ -135,7 +153,7 @@ Returns the longitude of the location. For example, `37.6176`.
 
 Image message is a message that contains an image. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ImageIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ImageIncomingMessageInterface
 ```
 
 ### `getUrl(): string`
@@ -151,7 +169,7 @@ Returns the name of the image. For example, `image.jpg`.
 
 File message is a message that contains a file. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\FileIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\FileIncomingMessageInterface
 ```
 
 ### `getUrl(): string`
@@ -167,7 +185,7 @@ Returns the name of the file. For example, `file.pdf`.
 Audio message is a message that contains an audio file. It implements this interface:
 
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\AudioIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\AudioIncomingMessageInterface
 ```
 
 ### `getUrl(): string`
@@ -182,7 +200,7 @@ Returns the name of the audio file. For example, `audio.mp3`.
 
 Video message is a message that contains a video file. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\VideoIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\VideoIncomingMessageInterface
 ```
 
 ### `getUrl(): string`
@@ -197,7 +215,7 @@ Returns the name of the video file. For example, `video.mp4`.
 
 Sticker message is a message that contains a sticker. It implements this interface:
 ```php
-SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\StickerIncomingRegularMessageInterface
+SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\StickerIncomingMessageInterface
 ```
 
 ### `getStickerId(): string`

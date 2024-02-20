@@ -34,13 +34,13 @@ public function show()
     ])->reply();
 }
 
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
-    if ($message->isText('yes')) {
+    if ($message->isClicked('yes')) {
         // User clicked on "Yes, please"
     }
     
-    if ($message->isText('no')) {
+    if ($message->isClicked('no')) {
         // User clicked on "No, thanks"
     }
 }
@@ -55,14 +55,13 @@ You can add a keyboard to any outgoing message as array of buttons or as a `Keyb
 Latest argument of the `make` method is a keyboard object or array.
 
 ```php
-TextOutgoingMessage::make('Hello, world!', $keyboard)->reply();
+return TextOutgoingMessage::make('Hello, world!', $keyboard);
 ```
 or using `withKeyboard` method:
 
 ```php
-TextOutgoingMessage::make('Hello, world!')
-    ->withKeyboard($keyboard, 'placeholder text')
-    ->reply();
+return TextOutgoingMessage::make('Hello, world!')
+    ->withKeyboard($keyboard, 'placeholder text');
 ```
 
 ## Button object
@@ -73,11 +72,11 @@ Use the `Button` class to create a button.
 `SequentSoft\ThreadFlow\Keyboard\Button`
 
 ```php
-TextOutgoingMessage::make('Hello, world!', [
+return TextOutgoingMessage::make('Hello, world!', [
     Button::text('Yes, please', 'yes'),
     Button::text('No, thanks', 'no'),
     Button::text('Cancel', 'cancel'),
-])->reply();
+]);
 ```
 
 Also, you can use the `Button` class to create a button with a different type:
@@ -151,10 +150,6 @@ Sets the keyboard to be resizable. By default, the keyboard is resizable.
 Sets the keyboard to be not resizable.
 
 ### `placeholder(string $placeholder): Keyboard`
-
-Sets the placeholder text for the keyboard.
-
-### `inline(): Keyboard`
 
 Sets the keyboard to be inline. By default, the keyboard is not inline.
 

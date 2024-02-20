@@ -9,7 +9,6 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Dispatcher\FakeDispatcherFactory;
@@ -20,6 +19,7 @@ use SequentSoft\ThreadFlow\Testing\FakeChannelManager;
  * @method static void on(string $event, callable $callback)
  * @method static ChannelInterface channel(string $channelName)
  * @method static void registerExceptionHandler(Closure $callback)
+ * @method static void setUserResolver(?Closure $userResolver)
  * @method static void disableExceptionsHandlers()
  * @method static ResultsRecorderInterface assertState(string $pageClass, ?string $method = null, ?array $attributes = null)
  * @method static ResultsRecorderInterface assertOutgoingMessagesCount(int $count)
@@ -49,7 +49,9 @@ class ThreadFlowBot extends Facade
         );
 
         $fakeChannelManager->setFakeDispatcherFactory(
-            new FakeDispatcherFactory(static::$app->make(PageFactoryInterface::class))
+            new FakeDispatcherFactory(
+                new Config(static::$app->make('config')->get('thread-flow', [])),
+            )
         );
 
         $originalChannelManager = static::$app->make(ChannelManagerInterface::class);
@@ -61,6 +63,8 @@ class ThreadFlowBot extends Facade
         foreach ($originalChannelManager->getExceptionsHandlers() as $handler) {
             $fakeChannelManager->registerExceptionHandler($handler);
         }
+
+        $fakeChannelManager->setUserResolver($originalChannelManager->getUserResolver());
 
         static::swap($fakeChannelManager);
 

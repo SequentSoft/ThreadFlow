@@ -8,47 +8,35 @@ use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
-use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Testing\PendingTestInput;
 
 interface ChannelInterface
 {
+    public function setUserResolver(?Closure $userResolver): void;
+
     public function getName(): string;
 
     public function on(string $event, callable $callback): void;
 
     public function getConfig(): ConfigInterface;
 
-    public function incoming(IncomingMessageInterface $message): void;
+    public function incoming(CommonIncomingMessageInterface $message): void;
 
     public function forParticipant(string|ParticipantInterface $participant): ChannelPendingSend;
 
     public function forRoom(string|RoomInterface $room): ChannelPendingSend;
 
-    public function showPage(
-        MessageContextInterface|string $context,
-        PendingDispatchPageInterface|string $page,
-        array $pageAttributes = []
-    ): void;
-
-    public function sendMessage(
-        MessageContextInterface|string $context,
-        OutgoingMessageInterface|string $message,
-    ): OutgoingMessageInterface;
+    public function dispatchTo(
+        MessageContextInterface                      $context,
+        PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
+    ): ?CommonOutgoingMessageInterface;
 
     public function registerExceptionHandler(Closure $callback): void;
 
     public function disableExceptionsHandlers(): void;
 
     public function test(): PendingTestInput;
-
-    public function testInput(
-        string|IncomingMessageInterface $message,
-        string|PageStateInterface|null $state = null,
-        array $sessionAttributes = [],
-    ): ResultsRecorderInterface;
 }

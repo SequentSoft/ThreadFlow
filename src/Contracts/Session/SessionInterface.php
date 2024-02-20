@@ -2,17 +2,26 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Session;
 
+use Closure;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
+
 interface SessionInterface
 {
+    public function setUserResolver(?Closure $userResolver): void;
+
+    public function pushPendingInteraction(mixed $interaction): void;
+
+    public function takePendingInteraction(): mixed;
+
+    public function hasPendingInteractions(): bool;
+
     public function getData(): SessionDataInterface;
 
-    public function getPageState(): PageStateInterface;
+    public function getServiceData(): SessionDataInterface;
 
-    public function setPageState(PageStateInterface $pageState): void;
+    public function getCurrentPage(): ?PageInterface;
 
-    public function getBackgroundPageStates(): BackgroundPageStatesCollectionInterface;
-
-    public function getBreadcrumbs(): BreadcrumbsCollectionInterface;
+    public function setCurrentPage(?PageInterface $currentPage): void;
 
     public function delete(string $key): void;
 

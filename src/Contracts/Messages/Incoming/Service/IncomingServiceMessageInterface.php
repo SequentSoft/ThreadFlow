@@ -2,8 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service;
 
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
 
-interface IncomingServiceMessageInterface extends IncomingMessageInterface
+interface IncomingServiceMessageInterface extends CommonIncomingMessageInterface
 {
 }

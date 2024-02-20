@@ -2,84 +2,34 @@
 
 namespace SequentSoft\ThreadFlow\Keyboard;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\ContactButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\LocationButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\TextButtonInterface;
+use SequentSoft\ThreadFlow\Keyboard\Buttons\BackButton;
+use SequentSoft\ThreadFlow\Keyboard\Buttons\ContactButton;
+use SequentSoft\ThreadFlow\Keyboard\Buttons\LocationButton;
+use SequentSoft\ThreadFlow\Keyboard\Buttons\TextButton;
 
-class Button implements ButtonInterface
+class Button
 {
-    protected bool $requestContact = false;
-
-    protected bool $requestLocation = false;
-
-    final public function __construct(
-        protected string $text,
-        protected ?string $callbackData = null,
-    ) {
+    public static function text(string $title, ?string $callbackData = null): TextButtonInterface
+    {
+        return new TextButton($title, $callbackData);
     }
 
-    public function getText(): string
+    public static function contact(string $title): ContactButtonInterface
     {
-        return $this->text;
+        return new ContactButton($title);
     }
 
-    public function getCallbackData(): ?string
+    public static function location(string $title): LocationButtonInterface
     {
-        return $this->callbackData;
+        return new LocationButton($title);
     }
 
-    public function isRequestContact(): bool
+    public static function back(string $title, ?string $callbackData = 'back'): BackButtonInterface
     {
-        return $this->requestContact;
-    }
-
-    public function isRequestLocation(): bool
-    {
-        return $this->requestLocation;
-    }
-
-    public function callbackData(?string $callbackData): static
-    {
-        $this->callbackData = $callbackData;
-
-        return $this;
-    }
-
-    public function setRequestContact(bool $requestContact): static
-    {
-        $this->requestContact = $requestContact;
-
-        return $this;
-    }
-
-    public function setRequestLocation(bool $requestLocation): static
-    {
-        $this->requestLocation = $requestLocation;
-
-        return $this;
-    }
-
-    protected static function make(string $text, ?string $callbackData = null): static
-    {
-        return new static($text, $callbackData);
-    }
-
-    public static function text(string $text, ?string $callbackData = null): static
-    {
-        return static::make($text, $callbackData);
-    }
-
-    public static function contact(string $text, ?string $callbackData = null): static
-    {
-        $button = static::make($text, $callbackData);
-        $button->setRequestContact(true);
-
-        return $button;
-    }
-
-    public static function location(string $text, ?string $callbackData = null): static
-    {
-        $button = static::make($text, $callbackData);
-        $button->setRequestLocation(true);
-
-        return $button;
+        return new BackButton($title, $callbackData);
     }
 }

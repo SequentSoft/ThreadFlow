@@ -3,46 +3,50 @@
 namespace SequentSoft\ThreadFlow\Session;
 
 use Exception;
-use SequentSoft\ThreadFlow\Contracts\Session\BackgroundPageStatesCollectionInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\BreadcrumbsCollectionInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
+use SequentSoft\ThreadFlow\Traits\HasUserResolver;
 
 class Session implements SessionInterface
 {
+    use HasUserResolver;
+
     protected SessionDataInterface $data;
 
-    protected PageStateInterface $pageState;
+    protected SessionDataInterface $serviceData;
 
-    protected BackgroundPageStatesCollectionInterface $backgroundPageStates;
+    protected ?PageInterface $currentPage;
 
-    protected BreadcrumbsCollectionInterface $breadcrumbs;
+    protected array $pendingInteractions = [];
 
     /**
      * @throws Exception
      */
     final public function __construct(
         SessionDataInterface|array $data = [],
-        PageStateInterface|string|null $pageState = null,
-        BackgroundPageStatesCollectionInterface|array $backgroundPageStates = [],
-        BreadcrumbsCollectionInterface|array $breadcrumbs = [],
+        ?PageInterface $currentPage = null,
+        SessionDataInterface|array $serviceData = [],
+        array $pendingInteractions = [],
     ) {
         $this->data = $data instanceof SessionDataInterface
             ? $data
             : SessionData::create($data);
 
-        $this->pageState = $pageState instanceof PageStateInterface
-            ? $pageState
-            : PageState::create($pageState);
+        $this->currentPage = $currentPage;
 
-        $this->backgroundPageStates = $backgroundPageStates instanceof BackgroundPageStatesCollectionInterface
-            ? $backgroundPageStates
-            : BackgroundPageStatesCollection::create($backgroundPageStates);
+        $this->serviceData = $serviceData instanceof SessionDataInterface
+            ? $serviceData
+            : SessionData::create($serviceData);
 
-        $this->breadcrumbs = $breadcrumbs instanceof BreadcrumbsCollectionInterface
-            ? $breadcrumbs
-            : BreadcrumbsCollection::create($breadcrumbs);
+        $this->pendingInteractions = $pendingInteractions;
+    }
+
+    public function getUser(): mixed
+    {
+        return $this->userResolver
+            ? call_user_func($this->userResolver, $this)
+            : null;
     }
 
     /**
@@ -51,9 +55,24 @@ class Session implements SessionInterface
     public function reset(): void
     {
         $this->data = SessionData::create();
-        $this->pageState = PageState::create();
-        $this->backgroundPageStates = BackgroundPageStatesCollection::create();
-        $this->breadcrumbs = BreadcrumbsCollection::create();
+        $this->serviceData = SessionData::create();
+        $this->currentPage = null;
+        $this->pendingInteractions = [];
+    }
+
+    public function pushPendingInteraction(mixed $interaction): void
+    {
+        $this->pendingInteractions[] = $interaction;
+    }
+
+    public function takePendingInteraction(): mixed
+    {
+        return array_shift($this->pendingInteractions);
+    }
+
+    public function hasPendingInteractions(): bool
+    {
+        return ! empty($this->pendingInteractions);
     }
 
     public function getData(): SessionDataInterface
@@ -61,24 +80,19 @@ class Session implements SessionInterface
         return $this->data;
     }
 
-    public function getPageState(): PageStateInterface
+    public function getServiceData(): SessionDataInterface
     {
-        return $this->pageState;
+        return $this->serviceData;
     }
 
-    public function setPageState(PageStateInterface $pageState): void
+    public function getCurrentPage(): ?PageInterface
     {
-        $this->pageState = $pageState;
+        return $this->currentPage;
     }
 
-    public function getBackgroundPageStates(): BackgroundPageStatesCollectionInterface
+    public function setCurrentPage(?PageInterface $currentPage): void
     {
-        return $this->backgroundPageStates;
-    }
-
-    public function getBreadcrumbs(): BreadcrumbsCollectionInterface
-    {
-        return $this->breadcrumbs;
+        $this->currentPage = $currentPage;
     }
 
     public function delete(string $key): void
@@ -100,9 +114,9 @@ class Session implements SessionInterface
     {
         return [
             'data' => $this->data->all(),
-            'pageState' => $this->pageState->toArray(),
-            'backgroundPageStates' => $this->backgroundPageStates->all(),
-            'breadcrumbs' => $this->breadcrumbs->all(),
+            'currentPage' => $this->currentPage,
+            'serviceData' => $this->serviceData->all(),
+            'pendingInteractions' => $this->pendingInteractions,
         ];
     }
 
@@ -110,9 +124,9 @@ class Session implements SessionInterface
     {
         return new static(
             SessionData::create($data['data']),
-            PageState::create()->fromArray($data['pageState']),
-            BackgroundPageStatesCollection::create($data['backgroundPageStates']),
-            BreadcrumbsCollection::create($data['breadcrumbs']),
+            $data['currentPage'],
+            SessionData::create($data['serviceData']),
+            $data['pendingInteractions'],
         );
     }
 
@@ -124,8 +138,8 @@ class Session implements SessionInterface
     public function __unserialize(array $data): void
     {
         $this->data = SessionData::create($data['data']);
-        $this->pageState = PageState::create()->fromArray($data['pageState']);
-        $this->backgroundPageStates = BackgroundPageStatesCollection::create($data['backgroundPageStates']);
-        $this->breadcrumbs = BreadcrumbsCollection::create($data['breadcrumbs']);
+        $this->currentPage = $data['currentPage'];
+        $this->serviceData = SessionData::create($data['serviceData']);
+        $this->pendingInteractions = $data['pendingInteractions'];
     }
 }

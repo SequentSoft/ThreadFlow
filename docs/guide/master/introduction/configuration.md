@@ -32,11 +32,13 @@ This command will create a `thread-flow.php` configuration file in the `config` 
     'cache' => [
         'driver' => 'cache',
         'store' => env('THREAD_FLOW_SESSION_CACHE_STORE', null),
+        'max_lock_seconds' => 10,
+        'max_lock_wait_seconds' => 15,
     ],
 
     'array' => [
         'driver' => 'array',
-    ],
+    ]
 ],
 
 

@@ -2,7 +2,7 @@
 
 namespace {{ namespace }};
 
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Laravel\Page\AbstractPage;
 
@@ -13,7 +13,7 @@ class {{ class }} extends AbstractPage
         //
     }
 
-    protected function handleMessage(IncomingRegularMessageInterface $message)
+    protected function answer(IncomingMessageInterface $message)
     {
         //
     }

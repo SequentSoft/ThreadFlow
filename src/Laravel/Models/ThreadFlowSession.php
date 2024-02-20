@@ -45,9 +45,11 @@ class ThreadFlowSession extends Model implements SessionStoreModelInterface
 
     public function fillSession(string $serializedSession, SessionInterface $session): SessionStoreModelInterface&Model
     {
+        $page = $session->getCurrentPage();
+
         $this->attributes['data'] = $serializedSession;
-        $this->attributes['current_page'] = $session->getPageState()->getPageClass();
-        $this->attributes['dont_disturb_at'] = $session->getPageState()->getDontDisturbMarkedAt();
+        $this->attributes['current_page'] = $page ? get_class($page) : null;
+        $this->attributes['dont_disturb_at'] = $page->isDontDisturb() ? now() : null;
 
         return $this;
     }

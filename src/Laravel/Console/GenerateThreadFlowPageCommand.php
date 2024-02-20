@@ -16,8 +16,8 @@ class GenerateThreadFlowPageCommand extends GeneratorCommand
     protected function getStub(): string
     {
         return $this->option('empty')
-                        ? $this->resolveStubPath('/stubs/thread-flow-page-empty.stub')
-                        : $this->resolveStubPath('/stubs/thread-flow-page.stub');
+            ? $this->resolveStubPath('/stubs/thread-flow-page-empty.stub')
+            : $this->resolveStubPath('/stubs/thread-flow-page.stub');
     }
 
     protected function getDefaultNamespace($rootNamespace): string
@@ -35,7 +35,7 @@ class GenerateThreadFlowPageCommand extends GeneratorCommand
     protected function resolveStubPath(string $stub): string
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
-                        ? $customPath
-                        : __DIR__.$stub;
+            ? $customPath
+            : __DIR__.$stub;
     }
 }

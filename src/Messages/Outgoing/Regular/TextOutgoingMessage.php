@@ -3,78 +3,40 @@
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 
-class TextOutgoingMessage extends OutgoingRegularMessage implements TextOutgoingRegularMessageInterface
+class TextOutgoingMessage extends OutgoingMessage implements TextOutgoingMessageInterface
 {
-    protected string $template = '';
-
-    protected array $templateAttributes = [];
-
     final public function __construct(
-        protected string $text,
+        protected string|array $text,
         KeyboardInterface|array|null $keyboard = null,
     ) {
         $this->withKeyboard($keyboard);
     }
 
+    public function getLineSeparator(): string
+    {
+        return "\n";
+    }
+
     public function getText(): string
     {
-        return $this->text ?: $this->renderTemplateWithAttributes();
+        if (is_array($this->text)) {
+            return implode($this->getLineSeparator(), $this->text);
+        }
+
+        return $this->text;
     }
 
-    public function setText(string $text): void
+    public function setText(string|array $text): void
     {
         $this->text = $text;
-    }
-
-    public function setTemplate(string $template): static
-    {
-        $this->template = $template;
-
-        return $this;
-    }
-
-    public function setTemplateAttribute(string $name, string $value): static
-    {
-        $this->templateAttributes[$name] = $value;
-
-        return $this;
-    }
-
-    public function getTemplateAttribute(string $name): string
-    {
-        return $this->templateAttributes[$name] ?? '';
-    }
-
-    protected function renderTemplateWithAttributes(): string
-    {
-        $template = $this->template;
-        foreach ($this->templateAttributes as $name => $value) {
-            $template = str_replace('{'.$name.'}', $value, $template);
-        }
-
-        return $template;
-    }
-
-    public static function makeWithTemplate(
-        string $template,
-        array $templateAttributes = [],
-        KeyboardInterface|array|null $keyboard = null,
-    ): TextOutgoingRegularMessageInterface {
-        $message = new static('', $keyboard);
-        $message->setTemplate($template);
-        foreach ($templateAttributes as $name => $value) {
-            $message->setTemplateAttribute($name, $value);
-        }
-
-        return $message;
     }
 
     public static function make(
         string $text,
         KeyboardInterface|array|null $keyboard = null,
-    ): TextOutgoingRegularMessageInterface {
+    ): TextOutgoingMessageInterface {
         return new static($text, $keyboard);
     }
 }

@@ -3,10 +3,9 @@
 A page is a php class that describes the logic of the bot's behavior.
 
 Each page has a `show` method that describes the logic for sending the initial message to the user when the page is opened.
-Also, each page has a `handle` method that describes the logic for handling user input.
+Also, each page has a `answer` method that describes the logic for handling user input.
 
-If you need to go to another page when processing a message, use the `next` method,
-which takes the name of the page to go to and attributes.
+If you need to go to another page when processing a message, just
 
 ::: info INFO
 By default, all pages are located in the `app/ThreadFlow/Pages` directory.
@@ -23,6 +22,8 @@ $ php artisan threadflow:page IndexPage
 It will create a new page class `app/ThreadFlow/Pages/IndexPage.php`:
 
 ```php
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
+
 class IndexPage extends Page
 {
     protected function show()
@@ -30,7 +31,7 @@ class IndexPage extends Page
         // Send initial message
     }
 
-    protected function answer(IncomingRegularMessageInterface $message)
+    protected function answer(IncomingMessageInterface $message)
     {
         // Send answers or/and go to another page
     }

@@ -4,9 +4,9 @@ namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\MessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\ForwardOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\ForwardOutgoingMessageInterface;
 
-class ForwardOutgoingMessage extends OutgoingRegularMessage implements ForwardOutgoingRegularMessageInterface
+class ForwardOutgoingMessage extends OutgoingMessage implements ForwardOutgoingMessageInterface
 {
     final public function __construct(
         protected MessageInterface $message,

@@ -28,6 +28,8 @@ You can find more information about this in the [Telegram driver documentation](
 The corresponding parameters for the driver must be configured in the `.env` file.
 ```
 TELEGRAM_API_TOKEN="your-token-here"
+
+# In case you are using the webhook method
 TELEGRAM_WEBHOOK_URL="/my-app/webhook"
 TELEGRAM_WEBHOOK_SECRET="random string to verify webhook requests"
 ```

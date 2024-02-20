@@ -16,10 +16,12 @@ protected int $counter = 0;
 
 public function show()
 {
-    $this->counterMessage = TextOutgoingMessage::make('Hello, world! First time')->reply();
+    return $this->counterMessage = TextOutgoingMessage::make(
+        'Hello, world! First time'
+    );
 }
 
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
     $this->counter++;
     $this->counterMessage->setText(
@@ -39,17 +41,18 @@ protected ?OutgoingMessageInterface $message = null;
 
 public function show()
 {
-    $this->message = TextOutgoingMessage::make('Hello!')->withKeyboard(
-        Keyboard::make()->inline()->row([
-            Button::text('Click me', 'click'),
-        ])
-    )->reply();
+    return $this->message = TextOutgoingMessage::make('Hello!')
+        ->withKeyboard(
+            Keyboard::make()->row([
+                Button::text('Click me', 'click'),
+            ])
+        );
 }
 
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
     $this->message->withKeyboard(
-        Keyboard::make()->inline()->row([
+        Keyboard::make()->row([
             Button::text('Clicked', 'clicked'),
         ])
     )->update();
@@ -64,7 +67,7 @@ You can add a reaction to the message using the `addReaction` method:
 ```php
 use SequentSoft\ThreadFlowTelegram\Enums\Messages\EmojiReaction;
 
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
     $message->sendReaction(EmojiReaction::THUMBS_UP);
 }

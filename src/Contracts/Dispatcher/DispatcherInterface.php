@@ -3,29 +3,28 @@
 namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 interface DispatcherInterface
 {
     public function incoming(
-        IncomingMessageInterface $message,
-        SessionInterface $session
+        CommonIncomingMessageInterface $message,
+        SessionInterface               $session
     ): void;
 
     public function outgoing(
-        OutgoingMessageInterface $message,
-        ?SessionInterface $session,
-        ?PageInterface $page
-    ): OutgoingMessageInterface;
+        CommonOutgoingMessageInterface $message,
+        ?SessionInterface              $session,
+        ?PageInterface                 $page
+    ): CommonOutgoingMessageInterface;
 
     public function transition(
         MessageContextInterface $messageContext,
         SessionInterface $session,
-        PendingDispatchPageInterface $pendingDispatchPage,
+        PageInterface $page,
         ?PageInterface $contextPage = null
     ): void;
 }

@@ -3,9 +3,9 @@
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\ImageOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\ImageOutgoingMessageInterface;
 
-class ImageOutgoingMessage extends OutgoingRegularMessage implements ImageOutgoingRegularMessageInterface
+class ImageOutgoingMessage extends OutgoingMessage implements ImageOutgoingMessageInterface
 {
     final public function __construct(
         protected string $url,

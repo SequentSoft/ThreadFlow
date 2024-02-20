@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Builders;
 
+use Closure;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Chat\Participant;
 use SequentSoft\ThreadFlow\Chat\Room;
@@ -9,13 +10,14 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
 class ChannelPendingSend
 {
     public function __construct(
         protected ChannelInterface $channel,
+        protected Closure $makeTextMessageCallback,
         protected ?ParticipantInterface $participant = null,
         protected ?RoomInterface $room = null,
     ) {
@@ -58,16 +60,20 @@ class ChannelPendingSend
         );
     }
 
-    public function showPage(
-        PendingDispatchPageInterface|string $page,
-        array $pageAttributes = []
-    ): void {
-        $this->channel->showPage($this->createMessageContext(), $page, $pageAttributes);
+    public function showPage(PageInterface $page): void
+    {
+        $this->channel->dispatchTo($this->createMessageContext(), $page);
     }
 
     public function sendMessage(
-        string|OutgoingMessageInterface $message,
-    ): OutgoingMessageInterface {
-        return $this->channel->sendMessage($this->createMessageContext(), $message);
+        string|CommonOutgoingMessageInterface $message,
+    ): ?CommonOutgoingMessageInterface {
+        $context = $this->createMessageContext();
+
+        if (is_string($message)) {
+            $message = call_user_func($this->makeTextMessageCallback, $message, $context);
+        }
+
+        return $this->channel->dispatchTo($context, $message);
     }
 }

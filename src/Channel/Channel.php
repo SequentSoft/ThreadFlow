@@ -5,7 +5,6 @@ namespace SequentSoft\ThreadFlow\Channel;
 use Closure;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Builders\ChannelPendingSend;
-use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
@@ -14,23 +13,21 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PendingDispatchPageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
-use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
-use SequentSoft\ThreadFlow\Page\PendingDispatchPage;
 use SequentSoft\ThreadFlow\Testing\PendingTestInput;
 use SequentSoft\ThreadFlow\Traits\HandleExceptions;
+use SequentSoft\ThreadFlow\Traits\HasUserResolver;
 use SequentSoft\ThreadFlow\Traits\TestInputResults;
 use Throwable;
 
@@ -38,6 +35,7 @@ abstract class Channel implements ChannelInterface
 {
     use HandleExceptions;
     use TestInputResults;
+    use HasUserResolver;
 
     public function __construct(
         protected string $channelName,
@@ -58,36 +56,53 @@ abstract class Channel implements ChannelInterface
         return $this->config;
     }
 
+    /**
+     * This method is used for cli channels to make incoming message from input text.
+     * Can be overridden in specific channel implementation.
+     */
     protected function makeIncomingMessageFromText(
         string $id,
         string $text,
         DateTimeImmutable $date,
         MessageContextInterface $context
-    ): ?IncomingMessageInterface {
-        return new TextIncomingRegularMessage(
-            $id,
-            $context,
-            $date,
-            $text,
-        );
+    ): ?CommonIncomingMessageInterface {
+        return new TextIncomingMessage($id, $context, $date, $text);
     }
 
-    public function incoming(IncomingMessageInterface $message): void
+    private function useSession(
+        MessageContextInterface $context,
+        Closure $callback
+    ): mixed {
+        return $this->sessionStore->useSession($context, function (SessionInterface $session) use ($callback) {
+            $this->eventBus->fire(new SessionStartedEvent($session));
+            return call_user_func($callback, $session);
+        });
+    }
+
+    /**
+     * This method is called when a new message is received from the channel.
+     * It is the main entry point for the channel to handle incoming messages.
+     */
+    public function incoming(CommonIncomingMessageInterface $message): void
     {
-        $this->sessionStore->useSession(
+        $this->useSession(
             $message->getContext(),
-            function (SessionInterface $session) use ($message) {
-                if ($message instanceof BotStartedIncomingServiceMessageInterface) {
-                    $session->reset();
-                }
-                $this->eventBus->fire(new SessionStartedEvent($session));
-                $this->dispatch($message, $session);
-            }
+            fn (SessionInterface $session) => $this->dispatch($message, $session)
         );
     }
 
-    protected function dispatch(IncomingMessageInterface $message, SessionInterface $session): void
+    protected function dispatch(CommonIncomingMessageInterface $message, SessionInterface $session): void
     {
+        // Reset the session if the bot has been started or restarted.
+        // This is useful for channels like Telegram where the bot can be restarted.
+        if ($message instanceof BotStartedIncomingMessageInterface) {
+            $session->reset();
+        }
+
+        if ($this->userResolver) {
+            $session->setUserResolver($this->userResolver);
+        }
+
         $this->eventBus->fire(
             new IncomingMessageDispatchingEvent($message)
         );
@@ -95,12 +110,7 @@ abstract class Channel implements ChannelInterface
         try {
             $this->getDispatcher()->incoming($message, $session);
         } catch (Throwable $exception) {
-            $this->handleException(
-                $exception,
-                $session,
-                $message->getContext(),
-                $message,
-            );
+            $this->handleException($exception, $session, $message->getContext(), $message);
         }
     }
 
@@ -121,65 +131,71 @@ abstract class Channel implements ChannelInterface
 
     public function forParticipant(string|ParticipantInterface $participant): ChannelPendingSend
     {
-        return (new ChannelPendingSend($this))->withParticipant($participant);
+        return (new ChannelPendingSend($this, $this->makeTextMessage(...)))
+            ->withParticipant($participant);
     }
 
     public function forRoom(string|RoomInterface $room): ChannelPendingSend
     {
-        return (new ChannelPendingSend($this))->withRoom($room);
+        return (new ChannelPendingSend($this, $this->makeTextMessage(...)))
+            ->withRoom($room);
     }
 
-    public function showPage(
-        MessageContextInterface|string $context,
-        PendingDispatchPageInterface|string $page,
-        array $pageAttributes = []
-    ): void {
-        if (is_string($context)) {
-            $context = MessageContext::createFromIds(
-                channelName: $this->channelName,
-                participantId: $context
-            );
-        }
+    public function dispatchTo(
+        MessageContextInterface                      $context,
+        PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
+    ): ?CommonOutgoingMessageInterface {
+        $pageOrMessage->setContext($context);
 
-        $page = is_string($page)
-            ? new PendingDispatchPage($page, $pageAttributes)
-            : $page->appendAttributes($pageAttributes);
-
-        $this->sessionStore->useSession($context, function (SessionInterface $session) use ($page, $context) {
-            $this->eventBus->fire(new SessionStartedEvent($session));
-            $this->getDispatcher()->transition($context, $session, $page);
-        });
+        return $this->useSession(
+            $context,
+            fn (SessionInterface $session) => $this->processDispatchTo(
+                $context,
+                $session->getCurrentPage(),
+                $session,
+                $pageOrMessage
+            )
+        );
     }
 
-    public function sendMessage(
-        MessageContextInterface|string $context,
-        OutgoingMessageInterface|string $message,
-    ): OutgoingMessageInterface {
-        if (is_string($context)) {
-            $context = MessageContext::createFromIds(
-                channelName: $this->channelName,
-                participantId: $context
-            );
+    protected function processDispatchTo(
+        MessageContextInterface                      $messageContext,
+        PageInterface                                $contextPage,
+        SessionInterface                             $session,
+        PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
+    ): ?CommonOutgoingMessageInterface {
+        if ($session->getCurrentPage()->isDontDisturb()) {
+            $session->pushPendingInteraction($pageOrMessage);
+            return null;
         }
 
-        if (is_string($message)) {
-            $message = $this->makeTextMessage($message, $context);
+        if ($this->userResolver) {
+            $session->setUserResolver($this->userResolver);
         }
 
-        return $this->getDispatcher()->outgoing($message, null, null);
+        if ($pageOrMessage instanceof PageInterface) {
+            $this->getDispatcher()->transition($messageContext, $session, $pageOrMessage, $contextPage);
+            return null;
+        }
+
+        return $this->getDispatcher()->outgoing($pageOrMessage, $session, null);
     }
 
     protected function makeTextMessage(
         string $text,
         MessageContextInterface $messageContext
-    ): TextOutgoingRegularMessageInterface {
+    ): TextOutgoingMessageInterface {
         return TextOutgoingMessage::make($text)
             ->setContext($messageContext);
     }
 
-    protected function testInputText(string $text, MessageContextInterface $context): IncomingMessageInterface
+    /**
+     * This method is used for testing purposes to create an incoming message from text.
+     * Can be overridden in specific channel implementation.
+     */
+    protected function testInputText(string $text, MessageContextInterface $context): CommonIncomingMessageInterface
     {
-        return new TextIncomingRegularMessage(
+        return new TextIncomingMessage(
             'test',
             $context,
             new DateTimeImmutable(),
@@ -189,16 +205,15 @@ abstract class Channel implements ChannelInterface
 
     protected function pendingTestInputCallback(
         Closure $prepareSession,
-        IncomingMessageInterface $message
+        CommonIncomingMessageInterface $message
     ): ResultsRecorderInterface {
-        return $this->captureTestInputResults($this->eventBus, fn () => $this->sessionStore->useSession(
-            $message->getContext(),
-            function (SessionInterface $session) use ($prepareSession, $message) {
-                $prepareSession($session);
-                $this->eventBus->fire(new SessionStartedEvent($session));
-                $this->dispatch($message, $session);
-            }
-        ));
+        return $this->captureTestInputResults(
+            $this->eventBus,
+            fn () => $this->useSession(
+                $message->getContext(),
+                fn (SessionInterface $session) => $this->dispatch($message, $prepareSession($session))
+            )
+        );
     }
 
     public function test(): PendingTestInput
@@ -215,20 +230,9 @@ abstract class Channel implements ChannelInterface
         return $pendingTestInput;
     }
 
-    public function testInput(
-        string|IncomingMessageInterface $message,
-        string|PageStateInterface|null $state = null,
-        array $sessionAttributes = [],
-    ): ResultsRecorderInterface {
-        return $this->test()
-            ->withState($state)
-            ->withSessionAttributes($sessionAttributes)
-            ->input($message);
-    }
-
     abstract protected function outgoing(
-        OutgoingMessageInterface $message,
-        ?SessionInterface $session,
-        ?PageInterface $contextPage
-    ): OutgoingMessageInterface;
+        CommonOutgoingMessageInterface $message,
+        ?SessionInterface              $session,
+        ?PageInterface                 $contextPage
+    ): CommonOutgoingMessageInterface;
 }

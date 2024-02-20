@@ -16,7 +16,6 @@ class FakeDispatcherFactory extends DispatcherFactory
         Closure $outgoing,
     ): DispatcherInterface {
         return new FakeDispatcher(
-            $this->pageFactory,
             $eventBus,
             new Config([
                 'driver' => 'fake',

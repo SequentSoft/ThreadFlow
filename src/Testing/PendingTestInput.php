@@ -5,17 +5,20 @@ namespace SequentSoft\ThreadFlow\Testing;
 use Closure;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\PageStateInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
-use SequentSoft\ThreadFlow\Session\PageState;
+use SequentSoft\ThreadFlow\Keyboard\Button;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\ClickIncomingMessage;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\ContactIncomingMessage;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\LocationIncomingMessage;
 
 class PendingTestInput
 {
     protected ?Closure $textMessageResolver = null;
 
-    protected ?PageStateInterface $state = null;
+    protected ?PageInterface $page = null;
 
     protected ?MessageContextInterface $context = null;
 
@@ -45,16 +48,16 @@ class PendingTestInput
         return $this;
     }
 
-    public function withState(string|PageStateInterface|null $state = null, array $attributes = []): static
+    public function withPage(string|PageInterface|null $page = null, array $attributes = []): static
     {
-        if (! $state) {
-            $this->state = null;
+        if (! $page) {
+            $this->page = null;
             return $this;
         }
 
-        $this->state = is_string($state)
-            ? PageState::create($state, $attributes)
-            : $state;
+        $this->page = is_string($page)
+            ? new $page(...$attributes)
+            : $page;
 
         return $this;
     }
@@ -73,16 +76,76 @@ class PendingTestInput
         return $this;
     }
 
-    protected function resolveTextMessage(string $text, MessageContextInterface $context): IncomingMessageInterface
-    {
-        if (! $this->textMessageResolver) {
+    protected function resolveTextMessage(
+        string $text,
+        MessageContextInterface $context
+    ): CommonIncomingMessageInterface {
+        if (!$this->textMessageResolver) {
             throw new \RuntimeException('Text message resolver is not set.');
         }
 
-        return call_user_func($this->textMessageResolver, $text, $context);
+        return call_user_func($this->textMessageResolver, $text, $context)
+            ->setContext($context);
     }
 
-    public function input(string|IncomingMessageInterface|Closure $message): ResultsRecorderInterface
+    protected function run(CommonIncomingMessageInterface $message): ResultsRecorderInterface
+    {
+        return call_user_func($this->run, function (SessionInterface $session) use ($message) {
+            if ($this->page) {
+                $session->setCurrentPage($this->page);
+                $this->page->setContext($message->getContext());
+            }
+
+            foreach ($this->sessionAttributes as $key => $value) {
+                $session->set($key, $value);
+            }
+
+            return $session;
+        }, $message);
+    }
+
+    public function contact(
+        string $phoneNumber,
+        string $firstName = '',
+        string $lastName = '',
+        string $userId = ''
+    ): ResultsRecorderInterface {
+        $message = ContactIncomingMessage::make(
+            phoneNumber: $phoneNumber,
+            firstName: $firstName,
+            lastName: $lastName,
+            userId: $userId,
+        );
+
+        $message->setContext($this->getContext());
+
+        return $this->run($message);
+    }
+
+    public function click(string $key): ResultsRecorderInterface
+    {
+        $message = ClickIncomingMessage::make(
+            button: Button::text($key, $key),
+        );
+
+        $message->setContext($this->getContext());
+
+        return $this->run($message);
+    }
+
+    public function location(float $latitude, float $longitude): ResultsRecorderInterface
+    {
+        $message = LocationIncomingMessage::make(
+            latitude: $latitude,
+            longitude: $longitude,
+        );
+
+        $message->setContext($this->getContext());
+
+        return $this->run($message);
+    }
+
+    public function input(string|CommonIncomingMessageInterface|Closure $message): ResultsRecorderInterface
     {
         if ($message instanceof Closure) {
             $message = $message($this->getContext());
@@ -92,14 +155,6 @@ class PendingTestInput
             ? $this->resolveTextMessage($message, $this->getContext())
             : $message;
 
-        return call_user_func($this->run, function (SessionInterface $session) {
-            if ($this->state) {
-                $session->setPageState($this->state);
-            }
-
-            foreach ($this->sessionAttributes as $key => $value) {
-                $session->set($key, $value);
-            }
-        }, $message);
+        return $this->run($message);
     }
 }

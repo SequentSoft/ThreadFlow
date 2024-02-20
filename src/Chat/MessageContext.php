@@ -5,16 +5,16 @@ namespace SequentSoft\ThreadFlow\Chat;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 
 class MessageContext implements MessageContextInterface
 {
     final public function __construct(
-        protected string $channelName,
-        protected ParticipantInterface $participant,
-        protected RoomInterface $room,
-        protected ?ParticipantInterface $forwardFrom = null,
-        protected ?IncomingRegularMessageInterface $replyToMessage = null,
+        protected string                    $channelName,
+        protected ParticipantInterface      $participant,
+        protected RoomInterface             $room,
+        protected ?ParticipantInterface     $forwardFrom = null,
+        protected ?IncomingMessageInterface $replyToMessage = null,
     ) {
     }
 
@@ -52,7 +52,7 @@ class MessageContext implements MessageContextInterface
         return $this->forwardFrom;
     }
 
-    public function getReplyToMessage(): ?IncomingRegularMessageInterface
+    public function getReplyToMessage(): ?IncomingMessageInterface
     {
         return $this->replyToMessage;
     }

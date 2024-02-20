@@ -9,7 +9,6 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
 use SequentSoft\ThreadFlow\Laravel\Console\SessionTableThreadFlowCommand;
@@ -18,7 +17,6 @@ use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
-use SequentSoft\ThreadFlow\Laravel\Page\PageFactory;
 use SequentSoft\ThreadFlow\Laravel\Session\EloquentSessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStore;
 use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
@@ -31,8 +29,6 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->mergeConfigFrom($this->getPackageConfigPath(), 'thread-flow');
 
-        $this->app->bind(PageFactoryInterface::class, PageFactory::class);
-
         $this->app->bind(EventBusInterface::class, EventBus::class);
 
         $this->app->singleton(ChannelManagerInterface::class, function () {
@@ -44,7 +40,9 @@ class ServiceProvider extends BaseServiceProvider
             );
         });
 
-        $this->app->singleton(ArraySessionStoreStorage::class, ArraySessionStoreStorage::class);
+        $this->app->singleton(ArraySessionStoreStorage::class, function () {
+            return new ArraySessionStoreStorage();
+        });
 
         $this->app->singleton(SessionStoreFactoryInterface::class, function () {
             $factory = new SessionStoreFactory(
@@ -77,13 +75,11 @@ class ServiceProvider extends BaseServiceProvider
 
         $this->app->singleton(DispatcherFactoryInterface::class, function () {
             $factory = new DispatcherFactory(
-                $this->app->make(PageFactoryInterface::class),
                 new Config($this->app->make('config')->get('thread-flow.dispatchers', []))
             );
             $factory->registerDriver(
                 'sync',
-                fn ($pageFactory, $eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
-                    $pageFactory,
+                fn ($eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
                     $eventBus,
                     $defaultPageClass,
                     $outgoing
@@ -91,8 +87,7 @@ class ServiceProvider extends BaseServiceProvider
             );
             $factory->registerDriver(
                 'queue',
-                fn ($pageFactory, $eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
-                    $pageFactory,
+                fn ($eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
                     $eventBus,
                     $defaultPageClass,
                     $outgoing

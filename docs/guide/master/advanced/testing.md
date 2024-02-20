@@ -33,21 +33,61 @@ It will create a fake incoming message with the text `Hello`.
 Also, you can pass incoming message data as object.
 
 ```php
-use SequentSoft\ThreadFlow\Messages\Incoming\Regular\LocationIncomingRegularMessage;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\LocationIncomingMessage;
 
 ThreadFlowBot::channel('telegram')
     ->test()
     ->input(fn (MessageContextInterface $context) => 
-        new LocationIncomingRegularMessage(
-            'message-id-1',
-            $context,
-            new DateTimeImmutable(),
-            49.8419388,
-            24.0315747
+        LocationIncomingMessage::make(
+            latitude: 49.8419388,
+            longitude: 24.0315747,
+            context: $context
         )
     );
 ```
 Use closure to create a message with fake message context.
+
+## Clicking buttons
+
+You can fake clicking buttons using the `click` method.
+
+```php
+ThreadFlowBot::channel('telegram')
+    ->test()
+    ->click('yes');
+```
+
+## Contact message
+
+You can fake sending contact message using the `contact` method.
+
+```php
+ThreadFlowBot::channel('telegram')
+    ->test()
+    ->contact('+380123456789', 'John', 'Doe', 'user-id-1');
+```
+
+## Location message
+
+You can fake sending location message using the `location` method.
+
+```php
+ThreadFlowBot::channel('telegram')
+    ->test()
+    ->location(49.8419388, 24.0315747);
+```
+
+### Use initial state
+
+You can use the `withPage` method to set the initial state of the bot.
+
+```php
+ThreadFlowBot::channel('telegram')
+    ->test()
+    ->withPage(new IndexPage()) // object or class name IndexPage::class
+    ->click('yes')
+    ->assertState(IndexPage::class)
+````
 
 ## Asserting
 
@@ -56,7 +96,7 @@ After you have faked incoming messages, you can assert that the bot sent a messa
 ```php
 ThreadFlowBot::channel('telegram')
     ->test()
-    ->input('Hello')
+    ->click('yes')
     ->assertState(IndexPage::class)
     ->assertOutgoingMessagesCount(1)
     ->assertOutgoingMessageTextContains('Hello, world!');

@@ -33,6 +33,8 @@ The corresponding parameters for the driver must be configured in the `.env` fil
 
 ```
 TELEGRAM_API_TOKEN="your-token-here"
+
+# In case you are using the webhook method
 TELEGRAM_WEBHOOK_URL="/my-app/webhook"
 TELEGRAM_WEBHOOK_SECRET="random string to verify webhook requests"
 ```

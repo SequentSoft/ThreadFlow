@@ -1,8 +1,7 @@
 # Attributes
 
 Pages can have attributes. Attributes are used to store data that is needed to process the user's input.
-
-It can be stored inside the page class as a property or passed as a parameter to the `next` method.
+It can be stored inside the page class as a property or passed to the next page as constructor arguments.
 
 ## Define attributes
 
@@ -21,16 +20,16 @@ class RegistrationPage extends Page
 
 ## Pass attributes to the next page
 
-You can pass attributes to the next page using the `next` method:
+You can pass attributes to the next page as constructor arguments:
 
 ```php
-public function answer(IncomingRegularMessageInterface $message)
+public function answer(IncomingMessageInterface $message)
 {
-    return $this->next(FinishRegistrationPage::class, [
-        'name' => $this->name,
-        'age' => $this->age,
-        'password' => $message->getText(),
-    ]);
+    return new FinishRegistrationPage(
+        name: $this->name,
+        age: $this->age,
+        password: $message->getText(),
+    );
 }
 ```
 And then you can access these attributes in the next page:
@@ -46,10 +45,10 @@ class FinishRegistrationPage extends Page
 
     public function show()
     {
-        TextOutgoingMessage::make(
-            "Your name is {$this->name}, you are {$this->age} years old, "
-                . "and your password is {$this->password}"
-        )->reply();
+        return TextOutgoingMessage::make([
+            "Your name is {$this->name}, you are {$this->age} years old,",
+            "and your password is {$this->password}"
+        ]);
     }
     
     // ...
@@ -64,21 +63,19 @@ For example, the incoming message to process it later:
 ```php
 class RegistrationPage extends Page
 {
-    protected ?IncomingRegularMessageInterface $incomingMessage = null;
+    protected ?IncomingMessageInterface $incomingMessage = null;
     
     // ...
 
-    public function answer(IncomingRegularMessageInterface $message)
+    public function answer(IncomingMessageInterface $message)
     {
         if ($this->incomingMessage === null) {
             $this->incomingMessage = $message;
-            TextOutgoingMessage::make('Forward this?')->reply();
-            return;
+            return TextOutgoingMessage::make('Forward this?');
         }
         
         if ($message->isText('yes')) {
-            ForwardOutgoingMessage::make($this->incomingMessage)->reply();
-            return;
+            return ForwardOutgoingMessage::make($this->incomingMessage);
         }
     }
 }

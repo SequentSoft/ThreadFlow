@@ -3,9 +3,9 @@
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\FileOutgoingRegularMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\FileOutgoingMessageInterface;
 
-class FileOutgoingMessage extends OutgoingRegularMessage implements FileOutgoingRegularMessageInterface
+class FileOutgoingMessage extends OutgoingMessage implements FileOutgoingMessageInterface
 {
     protected bool $isFromUrl = false;
 

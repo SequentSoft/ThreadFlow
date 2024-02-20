@@ -6,7 +6,9 @@ use SequentSoft\ThreadFlow\Page\AbstractPage;
 
 class WithAttributePage extends AbstractPage
 {
-    protected string $foo;
+    public function __construct(protected string $foo)
+    {
+    }
 
     public function show()
     {

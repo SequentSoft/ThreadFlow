@@ -3,6 +3,7 @@
 namespace SequentSoft\ThreadFlow\Keyboard;
 
 use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\TextButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\RowInterface;
 
 class Row implements RowInterface
@@ -20,8 +21,8 @@ class Row implements RowInterface
 
         foreach ($row as $callbackData => $buttonOrText) {
             if ($buttonOrText instanceof ButtonInterface) {
-                if (is_null($buttonOrText->getCallbackData())) {
-                    $buttonOrText->callbackData($isList ? $buttonOrText->getText() : $callbackData);
+                if ($buttonOrText instanceof TextButtonInterface && is_null($buttonOrText->getCallbackData())) {
+                    $buttonOrText->setCallbackData($isList ? $buttonOrText->getTitle() : $callbackData);
                 }
                 $buttons[] = $buttonOrText;
             } else {

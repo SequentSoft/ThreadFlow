@@ -6,6 +6,10 @@ use Closure;
 
 interface ChannelManagerInterface
 {
+    public function setUserResolver(?Closure $userResolver): void;
+
+    public function getUserResolver(): ?Closure;
+
     public function registerChannelDriver(string $channelName, Closure $callback): void;
 
     public function registerExceptionHandler(Closure $callback): void;
@@ -13,8 +17,6 @@ interface ChannelManagerInterface
     public function getExceptionsHandlers(): array;
 
     public function disableExceptionsHandlers(): void;
-
-    public function handleProcessingExceptions(Closure $callback): void;
 
     public function on(string $event, callable $callback): void;
 

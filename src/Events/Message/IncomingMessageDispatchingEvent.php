@@ -3,16 +3,16 @@
 namespace SequentSoft\ThreadFlow\Events\Message;
 
 use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
 
 class IncomingMessageDispatchingEvent implements EventInterface
 {
     public function __construct(
-        protected IncomingMessageInterface $message
+        protected CommonIncomingMessageInterface $message
     ) {
     }
 
-    public function getMessage(): IncomingMessageInterface
+    public function getMessage(): CommonIncomingMessageInterface
     {
         return $this->message;
     }

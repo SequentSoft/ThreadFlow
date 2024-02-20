@@ -2,16 +2,17 @@
 
 use SequentSoft\ThreadFlow\ChannelManager;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 
 beforeEach(function () {
     $this->config = Mockery::mock(ConfigInterface::class);
+    $this->channelsConfig = Mockery::mock(ConfigInterface::class);
+    $this->channelConfig = Mockery::mock(ConfigInterface::class);
+
     $this->sessionStoreFactory = Mockery::mock(SessionStoreFactoryInterface::class);
     $this->dispatcherFactory = Mockery::mock(DispatcherFactoryInterface::class);
     $this->eventBus = Mockery::mock(EventBusInterface::class);
@@ -38,7 +39,7 @@ test('registerChannelDriver registers a channel driver', function () {
 });
 
 test('makeChannel creates a channel successfully', function () {
-    $channelName = 'testChannel';
+    $driverName = 'testChannelDriver';
     $channel = Mockery::mock(ChannelInterface::class);
     $nestedEventBus = Mockery::mock(EventBusInterface::class);
     $callback = function () use ($channel) {
@@ -46,64 +47,34 @@ test('makeChannel creates a channel successfully', function () {
     };
 
     $channel->shouldReceive('registerExceptionHandler')->with(Mockery::type('closure'))->once();
+    $channel->shouldReceive('setUserResolver')->with(Mockery::type('null'))->once();
 
-    $this->channelManager->registerChannelDriver($channelName, $callback);
-    $this->config->shouldReceive('get')->with('session')->once()->andReturn('array');
-    $this->config->shouldReceive('getNested')->with('channels')->andReturn($this->config);
-    $this->config->shouldReceive('getNested')->with($channelName)->andReturn($this->config);
+    $this->channelManager->registerChannelDriver($driverName, $callback);
+    $this->config->shouldReceive('getNested')->with('channels')->andReturn($this->channelsConfig);
+    $this->channelsConfig->shouldReceive('getNested')->with($driverName)->andReturn($this->channelConfig);
+    $this->channelConfig->shouldReceive('get')->with('session')->once()->andReturn('array');
+    $this->channelConfig->shouldReceive('get')->with('driver')->once()->andReturn($driverName);
+
     $this->sessionStoreFactory->shouldReceive('make')->andReturn(Mockery::mock(SessionStoreInterface::class));
 
-    $this->eventBus->shouldReceive('nested')->with($channelName)->once()->andReturn($nestedEventBus);
+    $this->eventBus->shouldReceive('nested')->with($driverName)->once()->andReturn($nestedEventBus);
 
-    $createdChannel = $this->channelManager->channel($channelName);
-    $theSameChannel = $this->channelManager->channel($channelName);
+    $createdChannel = $this->channelManager->channel($driverName);
+    $theSameChannel = $this->channelManager->channel($driverName);
 
     expect($createdChannel)->toBe($theSameChannel)
         ->and($createdChannel)->toBe($channel);
 });
 
-test('Custom error handler', function () {
-    $channelName = 'testChannel';
-    $channel = Mockery::mock(ChannelInterface::class);
-    $nestedEventBus = Mockery::mock(EventBusInterface::class);
-    $callback = function () use ($channel) {
-        return $channel;
-    };
-
-    $channel->shouldReceive('registerExceptionHandler')
-        ->with(Mockery::type('closure'))
-        ->once()
-        ->withArgs(function ($closure) {
-            $closure(
-                new Exception(),
-                Mockery::mock(SessionInterface::class),
-                Mockery::mock(MessageContextInterface::class),
-            );
-
-            return true;
-        });
-
-    $this->channelManager->registerChannelDriver($channelName, $callback);
-    $this->config->shouldReceive('get')->with('session')->once()->andReturn('array');
-    $this->config->shouldReceive('getNested')->with('channels')->andReturn($this->config);
-    $this->config->shouldReceive('getNested')->with($channelName)->andReturn($this->config);
-    $this->sessionStoreFactory->shouldReceive('make')->andReturn(Mockery::mock(SessionStoreInterface::class));
-
-    $this->eventBus->shouldReceive('nested')->with($channelName)->once()->andReturn($nestedEventBus);
-
-    // check legacy error handler
-    $this->channelManager->handleProcessingExceptions(function ($exception) {
-        expect($exception)->toBeInstanceOf(Exception::class);
-    });
-
-    $this->channelManager->channel($channelName);
-});
-
 test('channel throws exception if driver not registered', function () {
-    $channelName = 'nonExistentChannel';
+    $driverName = 'nonExistentChannel';
+
+    $this->config->shouldReceive('getNested')->with('channels')->andReturn($this->channelsConfig);
+    $this->channelsConfig->shouldReceive('getNested')->with($driverName)->andReturn($this->channelConfig);
+    $this->channelConfig->shouldReceive('get')->with('driver')->once()->andReturn($driverName);
 
     $this->expectException(RuntimeException::class);
-    $this->channelManager->channel($channelName);
+    $this->channelManager->channel($driverName);
 });
 
 test('on method registers event listener', function () {

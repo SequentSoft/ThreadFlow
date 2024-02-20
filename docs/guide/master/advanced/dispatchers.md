@@ -6,8 +6,8 @@ Available dispatchers: `sync` and `queue`.
 ## Sync
 
 With the `sync` dispatcher, all messages will be handled synchronously.
-It is useful for local development, testing, AWS Lambda etc.
+In most cases, you should use the `sync` dispatcher its usually faster response time and easier to debug.
 
 ## Queue
 
-With the `queue` dispatcher, all messages will be handled asynchronously.
+With the `queue` dispatcher, all messages will be handled asynchronously using Laravel's queue system.

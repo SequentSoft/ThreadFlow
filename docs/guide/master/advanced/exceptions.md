@@ -1,7 +1,7 @@
 # Exceptions Handling
 
 ThreadFlowBot provides a way to handle exceptions that occur during the processing of messages.
-You can use the `ThreadFlowBot::handleProcessingExceptions` method to handle exceptions globally.
+You can use the `ThreadFlowBot::registerExceptionHandler` method to handle exceptions globally.
 
 For example, you can add the following code to the `boot` method of the `App\Providers\AppServiceProvider` class:
 
@@ -12,7 +12,7 @@ use SequentSoft\ThreadFlow\Laravel\Facades\ThreadFlowBot;
 
 // ...
 
-ThreadFlowBot::handleProcessingExceptions(
+ThreadFlowBot::registerExceptionHandler(
     static function (
         string $channelName,
         Throwable $exception,

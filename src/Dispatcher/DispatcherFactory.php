@@ -9,14 +9,12 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Page\PageFactoryInterface;
 
 class DispatcherFactory implements DispatcherFactoryInterface
 {
     protected array $drivers = [];
 
     public function __construct(
-        protected PageFactoryInterface $pageFactory,
         protected ConfigInterface $config,
     ) {
     }
@@ -50,7 +48,6 @@ class DispatcherFactory implements DispatcherFactoryInterface
 
         return call_user_func(
             $this->drivers[$dispatcherName],
-            $this->pageFactory,
             $eventBus,
             new Config($config),
             $outgoing

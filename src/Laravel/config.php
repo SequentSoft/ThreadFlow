@@ -16,7 +16,7 @@ return [
         'telegram' => [
             'driver' => 'telegram',
             'session' => env('THREAD_FLOW_SESSION', 'cache'),
-            'dispatcher' => env('THREAD_FLOW_DISPATCHER', 'sync'),
+            'dispatcher' => 'sync',
             'entry' => \App\ThreadFlow\Pages\IndexPage::class,
             'api_token' => env('TELEGRAM_API_TOKEN', null),
             'webhook_url' => env('TELEGRAM_WEBHOOK_URL', null),

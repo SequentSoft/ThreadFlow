@@ -2,8 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Service;
 
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
 
-interface OutgoingServiceMessageInterface extends OutgoingMessageInterface
+interface OutgoingServiceMessageInterface extends CommonOutgoingMessageInterface
 {
 }

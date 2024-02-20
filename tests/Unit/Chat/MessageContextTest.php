@@ -5,8 +5,8 @@ use SequentSoft\ThreadFlow\Chat\Participant;
 use SequentSoft\ThreadFlow\Chat\Room;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingRegularMessageInterface;
-use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingRegularMessage;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingMessage;
 
 it('can be created', function () {
     $messageContext1 = new MessageContext(
@@ -69,7 +69,7 @@ it('can be created with reply to message', function () {
         new Participant('participant_id1'),
         new Room('room_id1'),
         null,
-        new TextIncomingRegularMessage(
+        new TextIncomingMessage(
             'message_id1',
             MessageContext::createFromIds('participant_id2', 'room_id2'),
             new DateTimeImmutable(),
@@ -77,5 +77,5 @@ it('can be created with reply to message', function () {
         )
     );
 
-    expect($messageContext->getReplyToMessage())->toBeInstanceOf(IncomingRegularMessageInterface::class);
+    expect($messageContext->getReplyToMessage())->toBeInstanceOf(IncomingMessageInterface::class);
 });

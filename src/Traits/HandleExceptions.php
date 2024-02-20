@@ -4,7 +4,7 @@ namespace SequentSoft\ThreadFlow\Traits;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\IncomingMessageInterface as IMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface as IMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use Throwable;
 
