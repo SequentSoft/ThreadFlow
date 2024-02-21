@@ -100,7 +100,9 @@ abstract class Channel implements ChannelInterface
         }
 
         if ($this->userResolver) {
-            $session->setUserResolver($this->userResolver);
+            $session->setUserResolver(
+                fn (SessionInterface $session) => call_user_func($this->userResolver, $session, $message->getContext())
+            );
         }
 
         $this->eventBus->fire(
@@ -170,7 +172,9 @@ abstract class Channel implements ChannelInterface
         }
 
         if ($this->userResolver) {
-            $session->setUserResolver($this->userResolver);
+            $session->setUserResolver(
+                fn (SessionInterface $session) => call_user_func($this->userResolver, $session, $messageContext)
+            );
         }
 
         if ($pageOrMessage instanceof PageInterface) {

@@ -34,7 +34,7 @@ class TextOutgoingMessage extends OutgoingMessage implements TextOutgoingMessage
     }
 
     public static function make(
-        string $text,
+        string|array $text,
         KeyboardInterface|array|null $keyboard = null,
     ): TextOutgoingMessageInterface {
         return new static($text, $keyboard);

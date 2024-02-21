@@ -184,11 +184,11 @@ class SyncDispatcher implements DispatcherInterface
         if (! $page) {
             $pageClass = $this->config->get('entry');
             $page = new $pageClass();
-
-            $page
-                ->setContext($message->getContext())
-                ->setSession($session);
         }
+
+        $page
+            ->setContext($message->getContext())
+            ->setSession($session);
 
         $this->executePage($page, $session, $message->getContext(), $message);
     }

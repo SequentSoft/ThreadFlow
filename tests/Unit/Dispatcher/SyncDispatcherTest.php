@@ -78,6 +78,8 @@ test('incoming processes message and executes page', function () {
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(OutgoingMessageSentEvent::class))->twice();
 
     $currentPage->shouldReceive('isTrackingPrev')->once()->andReturn(false);
+    $currentPage->shouldReceive('setContext')->once();
+    $currentPage->shouldReceive('setSession')->once();
     $currentPage->shouldReceive('setPrev')->once()->withArgs([null]);
 
     $nextPage->shouldReceive('setContext')->once();

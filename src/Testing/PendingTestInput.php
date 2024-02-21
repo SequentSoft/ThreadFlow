@@ -55,9 +55,21 @@ class PendingTestInput
             return $this;
         }
 
-        $this->page = is_string($page)
-            ? new $page(...$attributes)
-            : $page;
+        if (is_string($page)) {
+            $this->page = new $page(...$attributes);
+            return $this;
+        }
+
+        $this->page = $page;
+
+        // fill page properties
+        // private and protected properties are not accessible from outside the class,
+        // so we need to use a closure to access them
+        (function () use ($attributes) {
+            foreach ($attributes as $key => $value) {
+                $this->{$key} = $value;
+            }
+        })->call($page);
 
         return $this;
     }
