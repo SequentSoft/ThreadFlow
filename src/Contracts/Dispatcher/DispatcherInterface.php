@@ -12,13 +12,13 @@ interface DispatcherInterface
 {
     public function incoming(
         CommonIncomingMessageInterface $message,
-        SessionInterface               $session
+        SessionInterface $session
     ): void;
 
     public function outgoing(
         CommonOutgoingMessageInterface $message,
-        ?SessionInterface              $session,
-        ?PageInterface                 $page
+        ?SessionInterface $session,
+        ?PageInterface $page
     ): CommonOutgoingMessageInterface;
 
     public function transition(

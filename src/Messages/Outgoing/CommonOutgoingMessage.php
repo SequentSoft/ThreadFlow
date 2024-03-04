@@ -26,7 +26,7 @@ abstract class CommonOutgoingMessage extends Message implements CommonOutgoingMe
     public function reply(): static
     {
         return (function (CommonOutgoingMessageInterface $message) {
-            if (!method_exists($this, 'reply')) {
+            if (! method_exists($this, 'reply')) {
                 throw new RuntimeException('Method reply() not implemented');
             }
 
@@ -37,7 +37,7 @@ abstract class CommonOutgoingMessage extends Message implements CommonOutgoingMe
     public function update(): static
     {
         return (function (CommonOutgoingMessageInterface $message) {
-            if (!method_exists($this, 'updateMessage')) {
+            if (! method_exists($this, 'updateMessage')) {
                 throw new RuntimeException('Method updateMessage() not implemented');
             }
 

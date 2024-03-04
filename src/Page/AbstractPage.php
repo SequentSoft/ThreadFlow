@@ -41,19 +41,24 @@ abstract class AbstractPage implements PageInterface
 
     private MessageContextInterface $messageContext;
 
+    /**
+     * The unique identifier of the page
+     */
     protected ?string $id = null;
 
-    /**
-     * This attribute is used to determine whether to store a reference
-     * to the previous page after moving to the next page
-     */
     protected bool $trackingPrev = false;
 
     /**
-     * This attribute stores a reference to the previous page if it is necessary
+     * The reference to the previous page if it is necessary to store it
      */
     protected ?PageInterface $prev = null;
 
+    /**
+     * This method is used to determine whether to store a reference
+     * to the previous page after moving to the next page
+     * can be overridden in the child class
+     * (by default, the reference is stored if the previous page has a back button)
+     */
     public function isTrackingPrev(): bool
     {
         return $this->trackingPrev;
@@ -69,6 +74,9 @@ abstract class AbstractPage implements PageInterface
         return $this;
     }
 
+    /**
+     * It can be used to get an instance of the previous page
+     */
     public function getPrev(): ?PageInterface
     {
         return $this->prev;
@@ -76,6 +84,7 @@ abstract class AbstractPage implements PageInterface
 
     /**
      * This method is used to get the unique identifier of the page
+     * (if the identifier is not set, it will be generated automatically)
      */
     public function getId(): string
     {
@@ -209,7 +218,7 @@ abstract class AbstractPage implements PageInterface
 
     private function executeServiceMessageHandler(
         IncomingServiceMessageInterface $message,
-        EventBusInterface               $eventBus
+        EventBusInterface $eventBus
     ): PageInterface|CommonOutgoingMessageInterface|null {
         if ($message instanceof BotStartedIncomingMessage) {
             if (method_exists($this, 'welcome')) {
@@ -339,7 +348,7 @@ abstract class AbstractPage implements PageInterface
             }
         }
 
-        if (!$message->getContext()) {
+        if (! $message->getContext()) {
             $message->setContext($this->messageContext);
         }
 
@@ -348,9 +357,7 @@ abstract class AbstractPage implements PageInterface
 
     /**
      * @phpstan-template T of CommonOutgoingMessageInterface
-     *
      * @phpstan-param T $message
-     *
      * @phpstan-return T
      */
     protected function reply(CommonOutgoingMessageInterface $message): CommonOutgoingMessageInterface
@@ -362,14 +369,12 @@ abstract class AbstractPage implements PageInterface
 
     /**
      * @phpstan-template T of CommonOutgoingMessageInterface
-     *
      * @phpstan-param T $message
-     *
      * @phpstan-return T
      */
     protected function updateMessage(CommonOutgoingMessageInterface $message): CommonOutgoingMessageInterface
     {
-        if (!$message->getId()) {
+        if (! $message->getId()) {
             throw new \InvalidArgumentException('Message id is required for update');
         }
 

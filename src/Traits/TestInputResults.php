@@ -15,6 +15,9 @@ use SequentSoft\ThreadFlow\Testing\Illuminate\Testing\ResultsRecorder;
 
 trait TestInputResults
 {
+    /**
+     * Register listeners to capture test input results.
+     */
     private function registerTestInputResultListeners(
         EventBusInterface $eventBus,
         ResultsRecorderInterface $resultsRecorder
@@ -61,6 +64,10 @@ trait TestInputResults
         );
     }
 
+    /**
+     * Capture test input results.
+     * The event bus listeners will be temporarily replaced with the test input result listeners.
+     */
     protected function captureTestInputResults(EventBusInterface $eventBus, Closure $callback): ResultsRecorder
     {
         $originalListeners = $eventBus->getListeners();

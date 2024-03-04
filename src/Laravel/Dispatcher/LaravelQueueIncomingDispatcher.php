@@ -23,7 +23,7 @@ class LaravelQueueIncomingDispatcher extends SyncDispatcher
 
     public function incoming(
         CommonIncomingMessageInterface $message,
-        SessionInterface               $session
+        SessionInterface $session
     ): void {
         if (static::$async) {
             IncomingMessageJob::dispatch(

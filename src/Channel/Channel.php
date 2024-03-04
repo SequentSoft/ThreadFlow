@@ -144,7 +144,7 @@ abstract class Channel implements ChannelInterface
     }
 
     public function dispatchTo(
-        MessageContextInterface                      $context,
+        MessageContextInterface $context,
         PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
     ): ?CommonOutgoingMessageInterface {
         $pageOrMessage->setContext($context);
@@ -161,9 +161,9 @@ abstract class Channel implements ChannelInterface
     }
 
     protected function processDispatchTo(
-        MessageContextInterface                      $messageContext,
-        PageInterface                                $contextPage,
-        SessionInterface                             $session,
+        MessageContextInterface $messageContext,
+        PageInterface $contextPage,
+        SessionInterface $session,
         PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
     ): ?CommonOutgoingMessageInterface {
         if ($session->getCurrentPage()->isDontDisturb()) {
@@ -236,7 +236,7 @@ abstract class Channel implements ChannelInterface
 
     abstract protected function outgoing(
         CommonOutgoingMessageInterface $message,
-        ?SessionInterface              $session,
-        ?PageInterface                 $contextPage
+        ?SessionInterface $session,
+        ?PageInterface $contextPage
     ): CommonOutgoingMessageInterface;
 }

@@ -11,8 +11,8 @@ class OutgoingMessageSentEvent implements EventInterface
 {
     public function __construct(
         protected CommonOutgoingMessageInterface $message,
-        protected SessionInterface               $session,
-        protected ?PageInterface                 $contextPage = null,
+        protected SessionInterface $session,
+        protected ?PageInterface $contextPage = null,
     ) {
     }
 

@@ -30,7 +30,7 @@ interface ChannelInterface
     public function forRoom(string|RoomInterface $room): ChannelPendingSend;
 
     public function dispatchTo(
-        MessageContextInterface                      $context,
+        MessageContextInterface $context,
         PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
     ): ?CommonOutgoingMessageInterface;
 

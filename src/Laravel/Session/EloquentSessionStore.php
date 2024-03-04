@@ -38,7 +38,7 @@ class EloquentSessionStore implements SessionStoreInterface
                 ->filterByContext($context)
                 ->first();
 
-            if (!$model) {
+            if (! $model) {
                 $model = new $modelClass();
                 $model->fillContext($context);
             }

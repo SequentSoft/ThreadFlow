@@ -31,8 +31,8 @@ interface PageInterface
     public function isBackground(): bool;
 
     public function execute(
-        EventBusInterface               $eventBus,
+        EventBusInterface $eventBus,
         ?CommonIncomingMessageInterface $message,
-        Closure                         $callback
+        Closure $callback
     ): ?PageInterface;
 }

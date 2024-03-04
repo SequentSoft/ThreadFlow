@@ -47,7 +47,7 @@ class SessionTableThreadFlowCommand extends MigrationGeneratorCommand
     /**
      * Determine whether a migration for the table already exists.
      *
-     * @param  string  $table
+     * @param string $table
      * @return bool
      */
     protected function migrationExists($table)

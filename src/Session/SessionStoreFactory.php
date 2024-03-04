@@ -17,11 +17,18 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
     {
     }
 
+    /**
+     * Register a custom session store driver.
+     */
     public function registerDriver(string $name, Closure $callback): void
     {
         $this->drivers[$name] = $callback;
     }
 
+    /**
+     * Make a new session store instance for the given channel.
+     * @throws InvalidArgumentException
+     */
     public function make(string $name, string $channelName): SessionStoreInterface
     {
         $config = $this->config->get($name);
@@ -29,13 +36,21 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
         $driverName = $config['driver'] ?? null;
 
         if ($driverName === null) {
-            throw new InvalidArgumentException("Session store {$name} is not configured.");
+            throw new InvalidArgumentException(
+                "Session store {$name} is not configured."
+            );
         }
 
-        if (!isset($this->drivers[$driverName])) {
-            throw new InvalidArgumentException("Session store driver {$driverName} is not registered.");
+        if (! isset($this->drivers[$driverName])) {
+            throw new InvalidArgumentException(
+                "Session store driver {$driverName} is not registered."
+            );
         }
 
-        return call_user_func($this->drivers[$driverName], $channelName, new Config($config));
+        return call_user_func(
+            $this->drivers[$driverName],
+            $channelName,
+            new Config($config)
+        );
     }
 }

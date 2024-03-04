@@ -9,7 +9,7 @@ use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 class PageHandleServiceMessageEvent implements EventInterface
 {
     public function __construct(
-        protected PageInterface                   $page,
+        protected PageInterface $page,
         protected IncomingServiceMessageInterface $message,
     ) {
     }

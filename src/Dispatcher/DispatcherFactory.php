@@ -38,7 +38,7 @@ class DispatcherFactory implements DispatcherFactoryInterface
             throw new InvalidArgumentException("Dispatcher {$dispatcherName} is not configured.");
         }
 
-        if (!isset($this->drivers[$driverName])) {
+        if (! isset($this->drivers[$driverName])) {
             throw new InvalidArgumentException("Dispatcher driver {$driverName} is not registered.");
         }
 

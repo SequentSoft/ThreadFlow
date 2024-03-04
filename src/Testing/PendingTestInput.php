@@ -39,6 +39,10 @@ class PendingTestInput
         return MessageContext::createFromIds($this->channelName, 'test-participant', 'test-chat');
     }
 
+    /**
+     * Set the message context for the test input.
+     * If the context is a string, it will be used as the participant ID.
+     */
     public function withContext(MessageContextInterface|string $context): static
     {
         $this->context = is_string($context)
@@ -48,6 +52,10 @@ class PendingTestInput
         return $this;
     }
 
+    /**
+     * Set the current page for the test input.
+     * If the page is a string, it will be used as the page class name.
+     */
     public function withPage(string|PageInterface|null $page = null, array $attributes = []): static
     {
         if (! $page) {
@@ -74,6 +82,10 @@ class PendingTestInput
         return $this;
     }
 
+    /**
+     * Set the session attributes for the test input.
+     * The attributes will be set to the session before the test input is run.
+     */
     public function withSessionAttributes(array $sessionAttributes): static
     {
         $this->sessionAttributes = $sessionAttributes;
@@ -81,6 +93,10 @@ class PendingTestInput
         return $this;
     }
 
+    /**
+     * Set the text message resolver for the test input.
+     * The resolver will be used to resolve text messages depending on the text and the driver.
+     */
     public function setTextMessageResolver(Closure $textMessageResolver): static
     {
         $this->textMessageResolver = $textMessageResolver;
@@ -92,7 +108,7 @@ class PendingTestInput
         string $text,
         MessageContextInterface $context
     ): CommonIncomingMessageInterface {
-        if (!$this->textMessageResolver) {
+        if (! $this->textMessageResolver) {
             throw new \RuntimeException('Text message resolver is not set.');
         }
 
@@ -116,6 +132,9 @@ class PendingTestInput
         }, $message);
     }
 
+    /**
+     * Send a contact message to the fake channel.
+     */
     public function contact(
         string $phoneNumber,
         string $firstName = '',
@@ -134,6 +153,9 @@ class PendingTestInput
         return $this->run($message);
     }
 
+    /**
+     * Click a button in the fake channel.
+     */
     public function click(string $key): ResultsRecorderInterface
     {
         $message = ClickIncomingMessage::make(
@@ -145,6 +167,9 @@ class PendingTestInput
         return $this->run($message);
     }
 
+    /**
+     * Send a location message to the fake channel.
+     */
     public function location(float $latitude, float $longitude): ResultsRecorderInterface
     {
         $message = LocationIncomingMessage::make(
@@ -157,6 +182,9 @@ class PendingTestInput
         return $this->run($message);
     }
 
+    /**
+     * Send a text message or a message instance of any type to the fake channel.
+     */
     public function input(string|CommonIncomingMessageInterface|Closure $message): ResultsRecorderInterface
     {
         if ($message instanceof Closure) {

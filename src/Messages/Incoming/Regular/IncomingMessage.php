@@ -20,7 +20,7 @@ class IncomingMessage extends CommonIncomingMessage implements IncomingMessageIn
 
     public function isClicked(string $key): bool
     {
-        if (!$this instanceof ClickIncomingMessageInterface) {
+        if (! $this instanceof ClickIncomingMessageInterface) {
             return false;
         }
 
@@ -29,7 +29,7 @@ class IncomingMessage extends CommonIncomingMessage implements IncomingMessageIn
 
     public function isText(?string $text = null): bool
     {
-        if (!$this instanceof TextIncomingMessageInterface) {
+        if (! $this instanceof TextIncomingMessageInterface) {
             return false;
         }
 
@@ -38,7 +38,7 @@ class IncomingMessage extends CommonIncomingMessage implements IncomingMessageIn
 
     public function isTextAndContains(string $text): bool
     {
-        if (!$this->isText()) {
+        if (! $this->isText()) {
             return false;
         }
 
@@ -47,7 +47,7 @@ class IncomingMessage extends CommonIncomingMessage implements IncomingMessageIn
 
     public function isTextAndMatch(string $pattern): bool
     {
-        if (!$this->isText()) {
+        if (! $this->isText()) {
             return false;
         }
 

@@ -28,17 +28,20 @@ class SyncDispatcher implements DispatcherInterface
     ) {
     }
 
+    /**
+     * Handle all outgoing messages.
+     */
     public function outgoing(
         CommonOutgoingMessageInterface $message,
-        ?SessionInterface              $session,
-        ?PageInterface                 $page
+        ?SessionInterface $session,
+        ?PageInterface $page
     ): CommonOutgoingMessageInterface {
         return call_user_func($this->outgoingCallback, $message, $session, $page);
     }
 
     private function tryExecutePage(
-        PageInterface                   $page,
-        SessionInterface                $session,
+        PageInterface $page,
+        SessionInterface $session,
         ?CommonIncomingMessageInterface $message,
     ): ?PageInterface {
         try {
@@ -64,12 +67,16 @@ class SyncDispatcher implements DispatcherInterface
         }
     }
 
+    /**
+     * Execute the page and handle the result.
+     * If the result is a page, it will be executed and transitioned to.
+     */
     protected function executePage(
-        PageInterface                   $page,
-        SessionInterface                $session,
-        MessageContextInterface         $messageContext,
+        PageInterface $page,
+        SessionInterface $session,
+        MessageContextInterface $messageContext,
         ?CommonIncomingMessageInterface $message,
-        ?PageInterface                  $contextPage = null,
+        ?PageInterface $contextPage = null,
     ): void {
         $this->eventBus->fire(
             new PageDispatchingEvent($page, $contextPage)
@@ -119,8 +126,8 @@ class SyncDispatcher implements DispatcherInterface
 
     protected function handleNotHandledMessage(
         MessageHandlerNotDeclaredException $exception,
-        SessionInterface                   $session,
-        ?CommonIncomingMessageInterface    $message,
+        SessionInterface $session,
+        ?CommonIncomingMessageInterface $message,
     ): void {
         $fromPage = $exception->getPage();
 
@@ -149,6 +156,10 @@ class SyncDispatcher implements DispatcherInterface
         );
     }
 
+    /**
+     * Transition to the new page.
+     * If the context page is not trackable, it will be cleaned up.
+     */
     public function transition(
         MessageContextInterface $messageContext,
         SessionInterface $session,
@@ -175,9 +186,12 @@ class SyncDispatcher implements DispatcherInterface
         );
     }
 
+    /**
+     * Handle all incoming messages.
+     */
     public function incoming(
         CommonIncomingMessageInterface $message,
-        SessionInterface               $session
+        SessionInterface $session
     ): void {
         $page = $session->getCurrentPage();
 

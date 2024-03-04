@@ -43,8 +43,8 @@ class CliChannel extends Channel
 
     protected function outgoing(
         CommonOutgoingMessageInterface $message,
-        ?SessionInterface              $session,
-        ?PageInterface                 $contextPage
+        ?SessionInterface $session,
+        ?PageInterface $contextPage
     ): CommonOutgoingMessageInterface {
         if ($this->callback !== null) {
             return call_user_func($this->callback, $message, $session, $contextPage);

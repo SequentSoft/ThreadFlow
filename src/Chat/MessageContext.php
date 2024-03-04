@@ -10,10 +10,10 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageIn
 class MessageContext implements MessageContextInterface
 {
     final public function __construct(
-        protected string                    $channelName,
-        protected ParticipantInterface      $participant,
-        protected RoomInterface             $room,
-        protected ?ParticipantInterface     $forwardFrom = null,
+        protected string $channelName,
+        protected ParticipantInterface $participant,
+        protected RoomInterface $room,
+        protected ?ParticipantInterface $forwardFrom = null,
         protected ?IncomingMessageInterface $replyToMessage = null,
     ) {
     }
