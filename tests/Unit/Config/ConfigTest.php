@@ -73,4 +73,4 @@ it('throws exception when nested config is invalid', function () {
     ]);
 
     $config->getNested('nested');
-})->throws(InvalidNestedConfigException::class, 'Invalid nested config: nested');
+})->throws(InvalidNestedConfigException::class, 'The nested config key [nested] does not exist in the config.');
