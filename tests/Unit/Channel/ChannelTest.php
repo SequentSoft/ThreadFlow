@@ -61,7 +61,8 @@ test('forRoom returns ChannelPendingSend with correct room', function () {
 
 test('on registers event listener correctly', function () {
     $event = 'testEvent';
-    $callback = function () {};
+    $callback = function () {
+    };
 
     $this->eventBus->shouldReceive('listen')->with($event, $callback)->once();
 
