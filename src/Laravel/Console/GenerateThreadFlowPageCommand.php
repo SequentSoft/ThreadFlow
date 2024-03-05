@@ -22,7 +22,7 @@ class GenerateThreadFlowPageCommand extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        return $rootNamespace.'\ThreadFlow\Pages';
+        return $rootNamespace . '\ThreadFlow\Pages';
     }
 
     protected function getOptions(): array
@@ -36,6 +36,6 @@ class GenerateThreadFlowPageCommand extends GeneratorCommand
     {
         return file_exists($customPath = $this->laravel->basePath(trim($stub, '/')))
             ? $customPath
-            : __DIR__.$stub;
+            : __DIR__ . $stub;
     }
 }

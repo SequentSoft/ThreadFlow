@@ -41,7 +41,7 @@ class SessionTableThreadFlowCommand extends MigrationGeneratorCommand
      */
     protected function migrationStubFile()
     {
-        return __DIR__.'/stubs/thread-flow-session-table.stub';
+        return __DIR__ . '/stubs/thread-flow-session-table.stub';
     }
 
     /**

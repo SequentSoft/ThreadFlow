@@ -42,7 +42,7 @@ class CliThreadFlowCommand extends Command
         if ($message instanceof TextOutgoingMessageInterface) {
             $this->line($message->getText());
         } else {
-            $this->line('Message type: '.get_class($message));
+            $this->line('Message type: ' . get_class($message));
         }
 
         if ($message instanceof WithKeyboardInterface && $message->getKeyboard()) {

@@ -17,7 +17,7 @@ class LocationIncomingMessage extends IncomingMessage implements LocationIncomin
     ) {
         parent::__construct($id, $context, $timestamp);
 
-        $this->setText($latitude.','.$longitude);
+        $this->setText($latitude . ',' . $longitude);
     }
 
     public static function make(

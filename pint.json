@@ -1,6 +1,9 @@
 {
     "preset": "psr12",
     "rules": {
+        "concat_space": {
+            "spacing": "one"
+        },
         "phpdoc_align": {
             "align": "left"
         },

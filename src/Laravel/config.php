@@ -25,6 +25,18 @@ return [
             'limit' => 100,
         ],
 
+        'whatsapp' => [
+            'driver' => 'whatsapp',
+            'session' => env('THREAD_FLOW_SESSION', 'cache'),
+            'dispatcher' => 'sync',
+            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
+            'from_phone_number_id' => env('WHATSAPP_FROM_PHONE_NUMBER_ID', null),
+            'api_token' => env('WHATSAPP_API_TOKEN', null),
+            'webhook_url' => env('WHATSAPP_WEBHOOK_URL', null),
+            'webhook_secret' => env('WHATSAPP_WEBHOOK_SECRET', null),
+            'timeout' => 30,
+            'limit' => 100,
+        ],
     ],
 
     /*

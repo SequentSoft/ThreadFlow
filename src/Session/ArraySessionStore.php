@@ -37,6 +37,6 @@ class ArraySessionStore implements SessionStoreInterface
 
     protected function makeKeyString(string $channelName, MessageContextInterface $context): string
     {
-        return $channelName.':'.$context->getRoom()->getId();
+        return $channelName . ':' . $context->getRoom()->getId();
     }
 }
