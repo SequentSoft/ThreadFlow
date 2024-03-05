@@ -5,7 +5,6 @@ use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
 
 it('can be created', function () {
-
     $config = new Config([
         //
     ]);
@@ -14,7 +13,6 @@ it('can be created', function () {
 });
 
 it('all values can be retrieved', function () {
-
     $config = new Config([
         'value-key' => 'value',
     ]);
@@ -27,7 +25,6 @@ it('all values can be retrieved', function () {
 });
 
 it('value can be retrieved', function () {
-
     $config = new Config([
         'value-key' => 'value',
     ]);
@@ -38,7 +35,6 @@ it('value can be retrieved', function () {
 });
 
 it('value can be retrieved with default', function () {
-
     $config = new Config([
         //
     ]);
@@ -49,7 +45,6 @@ it('value can be retrieved with default', function () {
 });
 
 it('nested config can be retrieved', function () {
-
     $config = new Config([
         'nested' => [
             'value-key' => 'value',
@@ -61,7 +56,6 @@ it('nested config can be retrieved', function () {
 });
 
 it('nested config value can be retrieved', function () {
-
     $config = new Config([
         'nested' => [
             'value-key' => 'value',
@@ -74,7 +68,6 @@ it('nested config value can be retrieved', function () {
 });
 
 it('throws exception when nested config is invalid', function () {
-
     $config = new Config([
         'nested' => 'value',
     ]);
