@@ -8,24 +8,21 @@ use SequentSoft\ThreadFlow\Laravel\Page\Page;
 
 class {{ class }} extends Page
 {
-    public function show(): void
+    public function show()
     {
-        TextOutgoingMessage::make('This is {{class}}', [
+        return TextOutgoingMessage::make('This is {{class}}', [
             'next' => 'Go to next page',
-        ])->reply();
+        ]);
     }
 
     public function answer(IncomingMessageInterface $message)
     {
-        if ($message->isText('next')) {
-            TextOutgoingMessage::make('Next page not defined')->reply();
-            return;
+        if ($message->isClicked('next')) {
+            return TextOutgoingMessage::make('Next page not defined');
         }
 
-        TextOutgoingMessage::make('Please enter message or press button')
-            ->withKeyboard([
-                ['next' => 'Next page'],
-            ])
-            ->reply();
+        return TextOutgoingMessage::make('Please press the button')->withKeyboard([
+            'next' => 'Next page',
+        ]);
     }
 }

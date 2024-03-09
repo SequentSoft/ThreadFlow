@@ -2,13 +2,11 @@
 
 namespace SequentSoft\ThreadFlow\Laravel\Console;
 
-use Illuminate\Console\MigrationGeneratorCommand;
-use Symfony\Component\Console\Attribute\AsCommand;
+use Illuminate\Console\Command;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Composer;
 
-use function Illuminate\Filesystem\join_paths;
-
-#[AsCommand(name: 'threadflow:session-table')]
-class SessionTableThreadFlowCommand extends MigrationGeneratorCommand
+class SessionTableThreadFlowCommand extends Command
 {
     /**
      * The console command name.
@@ -25,35 +23,59 @@ class SessionTableThreadFlowCommand extends MigrationGeneratorCommand
     protected $description = 'Create a migration for the thread flow session database table';
 
     /**
-     * Get the migration table name.
+     * The filesystem instance.
      *
-     * @return string
+     * @var \Illuminate\Filesystem\Filesystem
      */
-    protected function migrationTableName()
+    protected $files;
+
+    /**
+     * @var \Illuminate\Support\Composer
+     */
+    protected $composer;
+
+    /**
+     * Create a new session table command instance.
+     *
+     * @param \Illuminate\Filesystem\Filesystem $files
+     * @param \Illuminate\Support\Composer $composer
+     * @return void
+     */
+    public function __construct(Filesystem $files, Composer $composer)
     {
-        return 'thread_flow_sessions';
+        parent::__construct();
+
+        $this->files = $files;
+        $this->composer = $composer;
     }
 
     /**
-     * Get the path to the migration stub file.
+     * Execute the console command.
      *
-     * @return string
+     * @return void
      */
-    protected function migrationStubFile()
+    public function handle()
     {
-        return __DIR__ . '/stubs/thread-flow-session-table.stub';
+        $fullPath = $this->createBaseMigration();
+
+        $this->files->put($fullPath, $this->files->get(__DIR__ . '/stubs/thread-flow-session-table.stub'));
+
+        $this->info('Migration created successfully!');
+
+        $this->composer->dumpAutoloads();
     }
 
     /**
-     * Determine whether a migration for the table already exists.
+     * Create a base migration file for the session.
      *
-     * @param string $table
-     * @return bool
+     * @return string
      */
-    protected function migrationExists($table)
+    protected function createBaseMigration()
     {
-        return count($this->files->glob(
-            join_paths($this->laravel->databasePath('migrations'), '*_*_*_*_create_' . $table . '_table.php'),
-        )) !== 0;
+        $name = 'create_thread_flow_sessions_table';
+
+        $path = $this->laravel->databasePath() . '/migrations';
+
+        return $this->laravel['migration.creator']->create($name, $path);
     }
 }

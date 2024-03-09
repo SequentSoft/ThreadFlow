@@ -69,7 +69,7 @@ use SequentSoft\ThreadFlowTelegram\Enums\Messages\EmojiReaction;
 
 public function answer(IncomingMessageInterface $message)
 {
-    $message->sendReaction(EmojiReaction::THUMBS_UP);
+    $message->addReaction(EmojiReaction::THUMBS_UP);
 }
 
 ```

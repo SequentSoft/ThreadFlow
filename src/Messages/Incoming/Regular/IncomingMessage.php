@@ -45,13 +45,13 @@ class IncomingMessage extends CommonIncomingMessage implements IncomingMessageIn
         return str_contains($this->getText(), $text);
     }
 
-    public function isTextAndMatch(string $pattern): bool
+    public function isTextAndMatch(string $expression): bool
     {
         if (! $this->isText()) {
             return false;
         }
 
-        return preg_match($pattern, $this->getText()) > 0;
+        return preg_match($expression, $this->getText()) > 0;
     }
 
     public function getText(): string
@@ -97,5 +97,10 @@ class IncomingMessage extends CommonIncomingMessage implements IncomingMessageIn
     public function isAudio(): bool
     {
         return $this instanceof AudioIncomingMessageInterface;
+    }
+
+    public function isFormResult(): bool
+    {
+        return $this instanceof FormResultIncomingMessage;
     }
 }

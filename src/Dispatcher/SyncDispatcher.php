@@ -15,9 +15,7 @@ use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSendingEvent;
 use SequentSoft\ThreadFlow\Events\Message\OutgoingMessageSentEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchedEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageDispatchingEvent;
-use SequentSoft\ThreadFlow\Events\Page\PageHandleDelegatedEvent;
-use SequentSoft\ThreadFlow\Events\Page\PageHasNoMessageHandlerEvent;
-use SequentSoft\ThreadFlow\Exceptions\Page\MessageHandlerNotDeclaredException;
+use SequentSoft\ThreadFlow\Page\AnswerToPage;
 
 class SyncDispatcher implements DispatcherInterface
 {
@@ -39,34 +37,6 @@ class SyncDispatcher implements DispatcherInterface
         return call_user_func($this->outgoingCallback, $message, $session, $page);
     }
 
-    private function tryExecutePage(
-        PageInterface $page,
-        SessionInterface $session,
-        ?CommonIncomingMessageInterface $message,
-    ): ?PageInterface {
-        try {
-            return $page->execute(
-                $this->eventBus,
-                $message,
-                function (CommonOutgoingMessageInterface $message) use ($session, $page) {
-                    $this->eventBus->fire(new OutgoingMessageSendingEvent($message, $session, $page));
-                    $message = $this->outgoing($message, $session, $page);
-                    $this->eventBus->fire(new OutgoingMessageSentEvent($message, $session, $page));
-
-                    return $message;
-                }
-            );
-        } catch (MessageHandlerNotDeclaredException $exception) {
-            $this->handleNotHandledMessage(
-                $exception,
-                $session,
-                $message,
-            );
-
-            return null;
-        }
-    }
-
     /**
      * Execute the page and handle the result.
      * If the result is a page, it will be executed and transitioned to.
@@ -82,7 +52,17 @@ class SyncDispatcher implements DispatcherInterface
             new PageDispatchingEvent($page, $contextPage)
         );
 
-        $next = $this->tryExecutePage($page, $session, $message);
+        $next = $page->execute(
+            $this->eventBus,
+            $message,
+            function (CommonOutgoingMessageInterface $message) use ($session, $page) {
+                $this->eventBus->fire(new OutgoingMessageSendingEvent($message, $session, $page));
+                $message = $this->outgoing($message, $session, $page);
+                $this->eventBus->fire(new OutgoingMessageSentEvent($message, $session, $page));
+
+                return $message;
+            }
+        );
 
         $session->setCurrentPage($page);
 
@@ -90,70 +70,76 @@ class SyncDispatcher implements DispatcherInterface
             new PageDispatchedEvent($page, $contextPage)
         );
 
-        $this->processPageExecutionResult($page, $session, $messageContext, $next);
-    }
-
-    protected function processPageExecutionResult(
-        PageInterface $page,
-        SessionInterface $session,
-        MessageContextInterface $messageContext,
-        mixed $result
-    ): void {
-        if (! $result instanceof PageInterface) {
+        if ($next instanceof AnswerToPage) {
+            $this->processResultAnswerToPage($page, $session, $messageContext, $next);
+            $this->processPendingInteractions($session, $messageContext, $next->getPage());
             return;
         }
 
-        $result
-            ->setContext($messageContext)
-            ->setSession($session);
+        if ($next instanceof PageInterface) {
+            $this->processResultPage($page, $session, $messageContext, $next);
+            $this->processPendingInteractions($session, $messageContext, $next);
+            return;
+        }
 
+        if (! is_null($next)) {
+            throw new \RuntimeException('The page result is not supported.');
+        }
+    }
+
+    protected function processResultAnswerToPage(
+        PageInterface $page,
+        SessionInterface $session,
+        MessageContextInterface $messageContext,
+        AnswerToPage $result
+    ): void {
+        $result->getPage()->setContext($messageContext)->setSession($session);
+        $session->setCurrentPage($result->getPage());
+        $this->setupPrevPage($result->getPage(), $page);
+        $this->executePage($result->getPage(), $session, $messageContext, $result->getMessage(), $page);
+    }
+
+    protected function processResultPage(
+        PageInterface $page,
+        SessionInterface $session,
+        MessageContextInterface $messageContext,
+        PageInterface $result
+    ): void {
+        $result->setContext($messageContext)->setSession($session);
         $this->transition($messageContext, $session, $result, $page);
+    }
 
-        if ($session->hasPendingInteractions()) {
-            while (! $result->isDontDisturb() && $interaction = $session->takePendingInteraction()) {
-                if ($interaction instanceof PageInterface) {
-                    $interaction
-                        ->setContext($messageContext)
-                        ->setSession($session);
+    protected function processPendingInteractions(
+        SessionInterface $session,
+        MessageContextInterface $messageContext,
+        PageInterface $result
+    ): void {
+        if (! $session->hasPendingInteractions()) {
+            return;
+        }
 
-                    $this->transition($messageContext, $session, $interaction, $result);
-                } else {
-                    $this->outgoing($interaction, $session, null);
-                }
+        while (! $result->isDontDisturb() && $interaction = $session->takePendingInteraction()) {
+            if ($interaction instanceof PageInterface) {
+                $interaction->setContext($messageContext)->setSession($session);
+                $this->transition($messageContext, $session, $interaction, $result);
+            } else {
+                $this->outgoing($interaction, $session, null);
             }
         }
     }
 
-    protected function handleNotHandledMessage(
-        MessageHandlerNotDeclaredException $exception,
-        SessionInterface $session,
-        ?CommonIncomingMessageInterface $message,
+    protected function setupPrevPage(
+        PageInterface $page,
+        ?PageInterface $contextPage
     ): void {
-        $fromPage = $exception->getPage();
-
-        if ($exception->getHandlerType() !== MessageHandlerNotDeclaredException::TYPE_SERVICE) {
-            $this->eventBus->fire(
-                new PageHasNoMessageHandlerEvent($fromPage)
-            );
-
-            return;
+        // clean up the prev page if it's not trackable
+        if (! $contextPage?->isTrackingPrev()) {
+            $contextPage?->setPrev(null);
         }
 
-        $pageClass = $this->config->get('entry');
-        $toPage = new $pageClass();
-
-        // pass the service message to the entry page
-        $this->executePage(
-            $toPage,
-            $session,
-            $fromPage->getContext(),
-            $message,
-            $fromPage,
-        );
-
-        $this->eventBus->fire(
-            new PageHandleDelegatedEvent($fromPage, $toPage)
-        );
+        if (! $page->getPrev()) {
+            $page->setPrev($contextPage);
+        }
     }
 
     /**
@@ -167,23 +153,8 @@ class SyncDispatcher implements DispatcherInterface
         ?PageInterface $contextPage = null
     ): void {
         $session->setCurrentPage($page);
-
-        // clean up the prev page if it's not trackable
-        if (! $contextPage?->isTrackingPrev()) {
-            $contextPage?->setPrev(null);
-        }
-
-        if (! $page->getPrev()) {
-            $page->setPrev($contextPage);
-        }
-
-        $this->executePage(
-            $page,
-            $session,
-            $messageContext,
-            null,
-            $contextPage,
-        );
+        $this->setupPrevPage($page, $contextPage);
+        $this->executePage($page, $session, $messageContext, null, $contextPage);
     }
 
     /**

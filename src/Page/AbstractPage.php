@@ -7,13 +7,16 @@ use ReflectionMethod;
 use ReflectionUnionType;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Forms\FormInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ClickIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\HtmlOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\DontDisturbPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
@@ -23,8 +26,9 @@ use SequentSoft\ThreadFlow\Events\Page\PageHandleRegularMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleServiceMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageHandleWelcomeMessageEvent;
 use SequentSoft\ThreadFlow\Events\Page\PageShowEvent;
-use SequentSoft\ThreadFlow\Exceptions\Page\MessageHandlerNotDeclaredException;
 use SequentSoft\ThreadFlow\Messages\Incoming\Service\BotStartedIncomingMessage;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\HtmlOutgoingMessage;
+use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Service\TypingOutgoingServiceMessage;
 
 abstract class AbstractPage implements PageInterface
@@ -138,6 +142,27 @@ abstract class AbstractPage implements PageInterface
         return $this->messageContext;
     }
 
+    protected function buttons(): ?array
+    {
+        return null;
+    }
+
+    protected function textMessage(string $text): TextOutgoingMessageInterface
+    {
+        $message = TextOutgoingMessage::make($text);
+        $message->withKeyboard($this->buttons());
+
+        return $message;
+    }
+
+    protected function htmlMessage(string $text): HtmlOutgoingMessageInterface
+    {
+        $message = HtmlOutgoingMessage::make($text);
+        $message->withKeyboard($this->buttons());
+
+        return $message;
+    }
+
     /**
      * This method is called when a message is received
      * and is used to handle the message
@@ -146,55 +171,84 @@ abstract class AbstractPage implements PageInterface
         EventBusInterface $eventBus,
         ?CommonIncomingMessageInterface $message,
         Closure $callback
-    ): ?PageInterface {
+    ): mixed {
         $this->outgoingCallback = $callback;
 
         if ($message && $message->getContext() === null) {
             $message->setContext($this->messageContext);
         }
 
-        if ($message instanceof IncomingMessageInterface) {
-            return $this->handleResult(
-                $this->executeRegularMessageHandler($message, $eventBus)
-            );
-        }
-
-        if ($message instanceof IncomingServiceMessageInterface) {
-            return $this->handleResult(
-                $this->executeServiceMessageHandler($message, $eventBus)
-            );
-        }
-
         return $this->handleResult(
-            $this->executeShowHandler($eventBus)
+            $this->executeHandler($eventBus, $message)
         );
     }
 
-    private function handleResult(PageInterface|CommonOutgoingMessageInterface|null $result): ?PageInterface
+    protected function handleResult(mixed $result): mixed
     {
+        if (is_array($result)) {
+            $result = json_encode(
+                $result,
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT
+            );
+        }
+
+        if (is_numeric($result)) {
+            $result = (string) $result;
+        }
+
+        if (is_string($result)) {
+            $result = $this->textMessage($result);
+        }
+
         if ($result instanceof CommonOutgoingMessageInterface && $result->getId() === null) {
             $this->reply($result);
             return null;
         }
 
+        if ($result instanceof FormInterface) {
+            return $this->makeFormPage($result);
+        }
+
         return $result;
     }
 
-    private function executeShowHandler(EventBusInterface $eventBus): PageInterface|CommonOutgoingMessageInterface|null
+    private function executeHandler(EventBusInterface $eventBus, ?CommonIncomingMessageInterface $message): mixed
+    {
+        if ($message instanceof IncomingMessageInterface) {
+            return $this->executeRegularMessageHandler($message, $eventBus);
+        }
+
+        if ($message instanceof IncomingServiceMessageInterface) {
+            return $this->executeServiceMessageHandler($message, $eventBus);
+        }
+
+        return $this->executeShowHandler($eventBus);
+    }
+
+    protected function makeFormPage(FormInterface $form): BaseFormPage
+    {
+        return new BaseFormPage($form, $this);
+    }
+
+    private function executeShowHandler(EventBusInterface $eventBus): mixed
     {
         if (! method_exists($this, self::METHOD_SHOW)) {
-            throw new MessageHandlerNotDeclaredException(self::METHOD_SHOW, $this);
+            return null;
         }
 
         $eventBus->fire(new PageShowEvent($this));
 
-        return $this->callHandlerMethod(self::METHOD_SHOW, null);
+        $result = $this->callHandlerMethod(self::METHOD_SHOW, null);
+
+        if ($result === $this) {
+            throw new \RuntimeException('The infinite loop is detected. The page returns itself in the show method.');
+        }
+
+        return $result;
     }
 
-    private function executeRegularMessageHandler(
-        IncomingMessageInterface $message,
-        EventBusInterface $eventBus
-    ): PageInterface|CommonOutgoingMessageInterface|null {
+    private function executeRegularMessageHandler(IncomingMessageInterface $message, EventBusInterface $eventBus): mixed
+    {
         if ($message instanceof ClickIncomingMessageInterface) {
             $button = $message->getButton();
 
@@ -204,7 +258,7 @@ abstract class AbstractPage implements PageInterface
         }
 
         if (! method_exists($this, self::METHOD_ANSWER)) {
-            throw new MessageHandlerNotDeclaredException(self::METHOD_ANSWER, $this);
+            return null;
         }
 
         $eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
@@ -219,7 +273,7 @@ abstract class AbstractPage implements PageInterface
     private function executeServiceMessageHandler(
         IncomingServiceMessageInterface $message,
         EventBusInterface $eventBus
-    ): PageInterface|CommonOutgoingMessageInterface|null {
+    ): mixed {
         if ($message instanceof BotStartedIncomingMessage) {
             if (method_exists($this, 'welcome')) {
                 $eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
@@ -231,8 +285,8 @@ abstract class AbstractPage implements PageInterface
             return $this->executeShowHandler($eventBus);
         }
 
-        if (! method_exists($this, self::METHOD_SERVICE)) {
-            throw new MessageHandlerNotDeclaredException(self::METHOD_SERVICE, $this);
+        if (method_exists($this, self::METHOD_SERVICE)) {
+            return null;
         }
 
         $eventBus->fire(new PageHandleServiceMessageEvent($this, $message));

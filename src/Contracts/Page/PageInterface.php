@@ -34,5 +34,5 @@ interface PageInterface
         EventBusInterface $eventBus,
         ?CommonIncomingMessageInterface $message,
         Closure $callback
-    ): ?PageInterface;
+    ): mixed;
 }

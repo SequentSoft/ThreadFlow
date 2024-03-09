@@ -15,6 +15,12 @@ abstract class OutgoingMessage extends CommonOutgoingMessage implements Outgoing
         KeyboardInterface|array|null $keyboard,
         ?string $placeholder = null,
     ): OutgoingMessageInterface {
+        if (is_null($keyboard)) {
+            $this->keyboard = null;
+
+            return $this;
+        }
+
         $this->keyboard = is_array($keyboard)
             ? Keyboard::createFromArray($keyboard)
             : $keyboard;

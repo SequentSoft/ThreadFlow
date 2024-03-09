@@ -18,6 +18,8 @@ interface IncomingMessageInterface extends CommonIncomingMessageInterface
 
     public function isTextAndMatch(string $expression): bool;
 
+    public function isFormResult(): bool;
+
     public function isLocation(): bool;
 
     public function isSticker(): bool;
