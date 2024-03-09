@@ -40,7 +40,7 @@ abstract class BaseForm implements FormInterface
         return $message->getText();
     }
 
-    public function prepareForStore(FormFieldInterface $field, mixed $message): mixed
+    public function prepareForStore(FormFieldInterface $field, IncomingMessageInterface $message): mixed
     {
         return $message->getText();
     }
