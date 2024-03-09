@@ -156,7 +156,6 @@ class ResultsRecorder implements ResultsRecorderInterface
 
     public function assertOutgoingMessagesCount(int $count): static
     {
-
         PHPUnit::assertCount($count, $this->sentOutgoingMessages, 'Outgoing messages count mismatch');
 
         return $this;
