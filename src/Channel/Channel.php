@@ -85,10 +85,14 @@ abstract class Channel implements ChannelInterface
      */
     public function incoming(CommonIncomingMessageInterface $message): void
     {
-        $this->useSession(
-            $message->getContext(),
-            fn (SessionInterface $session) => $this->dispatch($message, $session)
-        );
+        try {
+            $this->useSession(
+                $message->getContext(),
+                fn (SessionInterface $session) => $this->dispatch($message, $session)
+            );
+        } catch (Throwable $exception) {
+            $this->handleException($exception, $message->getContext());
+        }
     }
 
     protected function dispatch(CommonIncomingMessageInterface $message, SessionInterface $session): void
@@ -105,22 +109,21 @@ abstract class Channel implements ChannelInterface
             );
         }
 
-        $this->eventBus->fire(
-            new IncomingMessageDispatchingEvent($message)
-        );
+        $this->eventBus->fire(new IncomingMessageDispatchingEvent($message));
 
-        try {
-            $this->getDispatcher()->incoming($message, $session);
-        } catch (Throwable $exception) {
-            $this->handleException($exception, $session, $message->getContext(), $message);
-        }
+        $this->getDispatcher()->incoming($message, $session);
+    }
+
+    protected function getEntryPageClass(): string
+    {
+        return $this->config->get('entry');
     }
 
     protected function getDispatcher(): DispatcherInterface
     {
         return $this->dispatcherFactory->make(
             $this->config->get('dispatcher'),
-            $this->config->get('entry'),
+            $this->getEntryPageClass(),
             $this->eventBus,
             $this->outgoing(...)
         );

@@ -4,8 +4,6 @@ namespace SequentSoft\ThreadFlow\Traits;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface as IMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use Throwable;
 
 trait HandleExceptions
@@ -13,6 +11,9 @@ trait HandleExceptions
     protected bool $exceptionsHandlersEnabled = true;
 
     protected array $exceptionsHandlers = [];
+
+    // array of exceptions to handle later (delayed)
+    protected array $exceptionsToHandle = [];
 
     public function getExceptionsHandlers(): array
     {
@@ -29,14 +30,30 @@ trait HandleExceptions
         $this->exceptionsHandlersEnabled = false;
     }
 
+    protected function handleExceptionsLater(
+        Throwable $exception,
+        MessageContextInterface $messageContext,
+    ): void {
+        $this->exceptionsToHandle[] = [$exception, $messageContext];
+    }
+
+    /**
+     * @throws Throwable
+     */
+    protected function handleExceptionsNow(): void
+    {
+        foreach ($this->exceptionsToHandle as $exceptionToHandle) {
+            [$exception, $messageContext] = $exceptionToHandle;
+            $this->handleException($exception, $messageContext);
+        }
+    }
+
     /**
      * @throws Throwable
      */
     protected function handleException(
         Throwable $exception,
-        SessionInterface $session,
         MessageContextInterface $messageContext,
-        ?IMessageInterface $message = null,
     ): void {
         if (! $this->exceptionsHandlersEnabled) {
             throw $exception;
@@ -47,7 +64,7 @@ trait HandleExceptions
         }
 
         foreach ($this->exceptionsHandlers as $handler) {
-            $handler($exception, $session, $messageContext, $message);
+            $handler($exception, $messageContext);
         }
     }
 }

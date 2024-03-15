@@ -2,16 +2,15 @@
 
 namespace SequentSoft\ThreadFlow\Laravel\Session;
 
-use Closure;
+use Illuminate\Contracts\Cache\Lock;
 use Illuminate\Support\Facades\Cache;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
-use SequentSoft\ThreadFlow\Exceptions\Session\SessionSizeLimitExceededException;
-use SequentSoft\ThreadFlow\Session\Session;
+use Throwable;
 
-class CacheSessionStore implements SessionStoreInterface
+class CacheSessionStore extends BaseSessionStore implements SessionStoreInterface
 {
     public function __construct(
         protected string $channelName,
@@ -19,44 +18,52 @@ class CacheSessionStore implements SessionStoreInterface
     ) {
     }
 
-    public function useSession(MessageContextInterface $context, Closure $callback): mixed
+    protected function load(string $key): SessionInterface
     {
-        $key = $this->makeKeyString($this->channelName, $context);
+        return $this->makeFromData(
+            Cache::store($this->getCacheStoreName())->get($key)
+        );
+    }
 
+    protected function store(string $key, SessionInterface $session): void
+    {
+        Cache::store($this->getCacheStoreName())->put($key, $session->toArray());
+    }
+
+    protected function acquireLock(string $key): Lock
+    {
         $lock = Cache::lock("{$key}-lock", $this->getSessionMaxLockSeconds());
 
         $lock->block($this->getSessionMaxLockWaitSeconds());
 
-        $sessionData = Cache::store($this->getCacheStoreName())->get($key);
+        return $lock;
+    }
 
-        if (is_array($sessionData)) {
-            $session = Session::fromArray($sessionData);
-        } else {
-            $session = new Session();
+    public function useSession(MessageContextInterface $context, callable $callback): mixed
+    {
+        $key = $this->makeKeyString($this->channelName, $context);
+        $lock = $this->acquireLock($key);
+        $session = $this->load($key);
+
+        try {
+            $result = $this->run($session, $callback);
+        } catch (Throwable $e) {
+            $lock->release();
+
+            throw $e;
         }
 
-        $result = $callback($session);
-
-        $sessionSize = $this->calculateSize($session);
-
-        if ($sessionSize > $this->getMaxSize()) {
-            throw new SessionSizeLimitExceededException(
-                session: $session,
-                size: $sessionSize,
-                limit: $this->getMaxSize()
-            );
-        }
-
-        Cache::store($this->getCacheStoreName())->put($key, $session->toArray());
-
-        $lock?->release();
+        $this->store($key, $session);
+        $lock->release();
 
         return $result;
     }
 
     protected function makeKeyString(string $channelName, MessageContextInterface $context): string
     {
-        return $channelName . ':' . $context->getRoom()->getId();
+        $id = $context->getRoom()->getId();
+
+        return "{$channelName}:{$id}";
     }
 
     protected function getSessionMaxLockSeconds(): int
@@ -79,13 +86,8 @@ class CacheSessionStore implements SessionStoreInterface
         return $this->config->get('background_max', 5);
     }
 
-    protected function getMaxSize(): int
+    protected function getConfig(): ConfigInterface
     {
-        return $this->config->get('max_size', 1024 * 1024 * 0.5); // 512 KB by default
-    }
-
-    protected function calculateSize(SessionInterface $session): int
-    {
-        return strlen(serialize($session));
+        return $this->config;
     }
 }

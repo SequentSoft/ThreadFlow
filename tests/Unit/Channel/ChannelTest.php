@@ -149,9 +149,8 @@ test('dispatcher exception to be handled by handleException method', function ()
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
     $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
 
-    $this->channel->registerExceptionHandler(function ($exception, $session, $context) use ($messageContext) {
+    $this->channel->registerExceptionHandler(function ($exception, $context) use ($messageContext) {
         expect($exception)->toBeInstanceOf(Exception::class)
-            ->and($session)->toBe($session)
             ->and($context)->toBe($messageContext);
     });
 

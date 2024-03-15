@@ -2,9 +2,9 @@
 
 namespace SequentSoft\ThreadFlow\Session;
 
-use Closure;
 use Exception;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 
 class ArraySessionStore implements SessionStoreInterface
@@ -18,15 +18,11 @@ class ArraySessionStore implements SessionStoreInterface
     /**
      * @throws Exception
      */
-    public function useSession(MessageContextInterface $context, Closure $callback): mixed
+    public function useSession(MessageContextInterface $context, callable $callback): mixed
     {
         $key = $this->makeKeyString($this->channelName, $context);
 
-        $session = $this->storage->load($key);
-
-        $session = is_null($session)
-            ? new Session()
-            : $session;
+        $session = $this->load($key);
 
         $result = $callback($session);
 
@@ -35,8 +31,19 @@ class ArraySessionStore implements SessionStoreInterface
         return $result;
     }
 
+    protected function load(string $key): SessionInterface
+    {
+        $session = $this->storage->load($key);
+
+        return is_null($session)
+            ? new Session()
+            : $session;
+    }
+
     protected function makeKeyString(string $channelName, MessageContextInterface $context): string
     {
-        return $channelName . ':' . $context->getRoom()->getId();
+        $id = $context->getRoom()->getId();
+
+        return "{$channelName}:{$id}";
     }
 }
