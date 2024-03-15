@@ -18,6 +18,7 @@ use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
+use SequentSoft\ThreadFlow\Events\Bot\SessionClosedEvent;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 
@@ -91,6 +92,7 @@ test('incoming message triggers correct sequence of actions', function () {
 
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(IncomingMessageDispatchingEvent::class))->once();
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionClosedEvent::class))->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
     $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
@@ -116,6 +118,7 @@ test('incoming bot started message resets session', function () {
 
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(IncomingMessageDispatchingEvent::class))->once();
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionClosedEvent::class))->once();
 
     $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
     $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
@@ -176,6 +179,7 @@ test('dispatchTo handles context and page correctly', function () {
     });
     $this->dispatcherFactory->shouldReceive('make')->andReturn($dispatcher);
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionClosedEvent::class))->once();
     $dispatcher->shouldReceive('transition')->once();
 
     $this->channel->dispatchTo($context, $page);
@@ -198,6 +202,7 @@ test('dispatchTo returns correct OutgoingMessageInterface instance', function ()
     });
 
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
+    $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionClosedEvent::class))->once();
 
     $textMessage->shouldReceive('setContext')->with($context)->once();
     $session->shouldReceive('getCurrentPage')->andReturn($page);

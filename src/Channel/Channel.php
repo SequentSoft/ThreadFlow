@@ -21,6 +21,7 @@ use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
+use SequentSoft\ThreadFlow\Events\Bot\SessionClosedEvent;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
 use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingMessage;
@@ -75,7 +76,10 @@ abstract class Channel implements ChannelInterface
     ): mixed {
         return $this->sessionStore->useSession($context, function (SessionInterface $session) use ($callback) {
             $this->eventBus->fire(new SessionStartedEvent($session));
-            return call_user_func($callback, $session);
+            $result = call_user_func($callback, $session);
+            $this->eventBus->fire(new SessionClosedEvent($session));
+
+            return $result;
         });
     }
 
@@ -109,7 +113,7 @@ abstract class Channel implements ChannelInterface
             );
         }
 
-        $this->eventBus->fire(new IncomingMessageDispatchingEvent($message));
+        $this->eventBus->fire(new IncomingMessageDispatchingEvent($message, $session));
 
         $this->getDispatcher()->incoming($message, $session);
     }

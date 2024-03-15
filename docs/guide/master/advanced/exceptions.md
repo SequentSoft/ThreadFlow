@@ -13,12 +13,7 @@ use SequentSoft\ThreadFlow\Laravel\Facades\ThreadFlowBot;
 // ...
 
 ThreadFlowBot::registerExceptionHandler(
-    static function (
-        string $channelName,
-        Throwable $exception,
-        SessionInterface $session,
-        MessageContextInterface $messageContext
-    ) {
+    static function (Throwable $exception, MessageContextInterface $messageContext) {
         $info = config('app.debug', false)
             ? "\n" . $exception->getMessage()
             : '';
@@ -29,6 +24,10 @@ ThreadFlowBot::registerExceptionHandler(
             ->sendMessage(
                 "Sorry, something went wrong. Please try again later. {$info}"
             );
+            
+        if (app()->bound('sentry')) {
+            app('sentry')->captureException($exception);
+        }
     }
 );
 ```
