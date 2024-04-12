@@ -30,7 +30,7 @@ class SimpleFormPage extends BaseFormPage
             $field->getMessages()
         );
 
-        if ($validator->passes()) {
+        if (! $validator->fails()) {
             return null;
         }
 

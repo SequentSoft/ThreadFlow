@@ -2,11 +2,11 @@
 
 namespace SequentSoft\ThreadFlow\Keyboard;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\CommonKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\SimpleKeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\InlineKeyboardInterface;
-use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\BaseKeyboardInterface;
 
-class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
+class Keyboard extends BaseKeyboard implements SimpleKeyboardInterface
 {
     protected bool $oneTime = false;
 
@@ -19,12 +19,12 @@ class Keyboard extends BaseKeyboard implements CommonKeyboardInterface
         return new static([]);
     }
 
-    public static function makeFromKeyboard(KeyboardInterface $keyboard): CommonKeyboardInterface
+    public static function makeFromKeyboard(BaseKeyboardInterface $keyboard): SimpleKeyboardInterface
     {
         return new static($keyboard->getRows());
     }
 
-    public function oneTimeKeyboard(bool $oneTime = true): CommonKeyboardInterface
+    public function oneTimeKeyboard(bool $oneTime = true): SimpleKeyboardInterface
     {
         $this->oneTime = $oneTime;
 

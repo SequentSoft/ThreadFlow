@@ -4,7 +4,7 @@ namespace SequentSoft\ThreadFlow\Contracts\Messages\Outgoing;
 
 use SequentSoft\ThreadFlow\Contracts\Messages\MessageInterface;
 
-interface CommonOutgoingMessageInterface extends MessageInterface
+interface BasicOutgoingMessageInterface extends MessageInterface
 {
     public function reply(): static;
 

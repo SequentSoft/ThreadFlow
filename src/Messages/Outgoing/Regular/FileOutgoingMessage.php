@@ -2,7 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\BaseKeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\FileOutgoingMessageInterface;
 
 class FileOutgoingMessage extends OutgoingMessage implements FileOutgoingMessageInterface
@@ -12,7 +12,7 @@ class FileOutgoingMessage extends OutgoingMessage implements FileOutgoingMessage
     final public function __construct(
         protected string $pathOrUrl,
         protected ?string $caption = null,
-        KeyboardInterface|array|null $keyboard = null,
+        BaseKeyboardInterface|array|null $keyboard = null,
     ) {
         $this->withKeyboard($keyboard);
     }

@@ -3,20 +3,22 @@
 namespace SequentSoft\ThreadFlow\Page;
 
 use Closure;
-use ReflectionMethod;
-use ReflectionUnionType;
+use InvalidArgumentException;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\TextButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\SimpleKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ClickIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\HtmlOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesRepositoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\DontDisturbPageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
@@ -30,9 +32,14 @@ use SequentSoft\ThreadFlow\Messages\Incoming\Service\BotStartedIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\HtmlOutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Service\TypingOutgoingServiceMessage;
+use SequentSoft\ThreadFlow\Traits\AcceptableArguments;
+use SequentSoft\ThreadFlow\Traits\GenerateUniqueIdsTrait;
 
 abstract class AbstractPage implements PageInterface
 {
+    use AcceptableArguments;
+    use GenerateUniqueIdsTrait;
+
     private const METHOD_SHOW = 'show';
 
     private const METHOD_ANSWER = 'answer';
@@ -43,6 +50,8 @@ abstract class AbstractPage implements PageInterface
 
     private SessionInterface $session;
 
+    private ActivePagesRepositoryInterface $activePagesRepository;
+
     private MessageContextInterface $messageContext;
 
     /**
@@ -52,10 +61,17 @@ abstract class AbstractPage implements PageInterface
 
     protected bool $trackingPrev = false;
 
+    protected ?SimpleKeyboardInterface $lastKeyboard = null;
+
     /**
      * The reference to the previous page if it is necessary to store it
      */
-    protected ?PageInterface $prev = null;
+    protected ?string $prevPageId = null;
+
+    public function getLastKeyboard(): ?SimpleKeyboardInterface
+    {
+        return $this->lastKeyboard;
+    }
 
     /**
      * This method is used to determine whether to store a reference
@@ -68,22 +84,26 @@ abstract class AbstractPage implements PageInterface
         return $this->trackingPrev;
     }
 
-    /**
-     * This method is used to set a reference to the previous page
-     */
-    public function setPrev(?PageInterface $prev): static
+
+    public function setPrevPageId(?string $prevId): static
     {
-        $this->prev = $prev;
+        $this->prevPageId = $prevId;
 
         return $this;
     }
 
-    /**
-     * It can be used to get an instance of the previous page
-     */
-    public function getPrev(): ?PageInterface
+    public function getPrevPageId(): ?string
     {
-        return $this->prev;
+        return $this->prevPageId;
+    }
+
+    public function getPrevPage(): ?PageInterface
+    {
+        if (! $id = $this->getPrevPageId()) {
+            return null;
+        }
+
+        return $this->activePagesRepository->get($this->getContext(), $this->session, $id);
     }
 
     /**
@@ -93,7 +113,7 @@ abstract class AbstractPage implements PageInterface
     public function getId(): string
     {
         if ($this->id === null) {
-            $this->id = md5(uniqid('', true));
+            $this->id = static::generateUniqueId();
         }
 
         return $this->id;
@@ -101,7 +121,14 @@ abstract class AbstractPage implements PageInterface
 
     protected function getUser(): mixed
     {
-        return $this->session->getUser();
+        return $this->messageContext->getUser();
+    }
+
+    public function setActivePagesRepository(ActivePagesRepositoryInterface $activePagesRepository): static
+    {
+        $this->activePagesRepository = $activePagesRepository;
+
+        return $this;
     }
 
     public function setSession(SessionInterface $session): static
@@ -169,7 +196,7 @@ abstract class AbstractPage implements PageInterface
      */
     public function execute(
         EventBusInterface $eventBus,
-        ?CommonIncomingMessageInterface $message,
+        ?BasicIncomingMessageInterface $message,
         Closure $callback
     ): mixed {
         $this->outgoingCallback = $callback;
@@ -185,6 +212,10 @@ abstract class AbstractPage implements PageInterface
 
     protected function handleResult(mixed $result): mixed
     {
+        if ($result instanceof IncomingMessageInterface) {
+            $result = $result->getText();
+        }
+
         if (is_array($result)) {
             $result = json_encode(
                 $result,
@@ -200,8 +231,9 @@ abstract class AbstractPage implements PageInterface
             $result = $this->textMessage($result);
         }
 
-        if ($result instanceof CommonOutgoingMessageInterface && $result->getId() === null) {
+        if ($result instanceof BasicOutgoingMessageInterface && $result->getId() === null) {
             $this->reply($result);
+
             return null;
         }
 
@@ -212,7 +244,7 @@ abstract class AbstractPage implements PageInterface
         return $result;
     }
 
-    private function executeHandler(EventBusInterface $eventBus, ?CommonIncomingMessageInterface $message): mixed
+    private function executeHandler(EventBusInterface $eventBus, ?BasicIncomingMessageInterface $message): mixed
     {
         if ($message instanceof IncomingMessageInterface) {
             return $this->executeRegularMessageHandler($message, $eventBus);
@@ -253,17 +285,21 @@ abstract class AbstractPage implements PageInterface
             $button = $message->getButton();
 
             if ($button instanceof BackButtonInterface && $button->isAutoHandleAnswer()) {
-                return $this->prev;
+                return $this->getPrevPage();
+            }
+
+            if ($button instanceof TextButtonInterface && $page = $button->getAutoHandleAnswerPage()) {
+                return $page;
             }
         }
 
         if (! method_exists($this, self::METHOD_ANSWER)) {
-            return null;
+            return $this->callHandlerMethod(self::METHOD_SHOW, $message);
         }
 
         $eventBus->fire(new PageHandleRegularMessageEvent($this, $message));
 
-        if ($this->isArgumentAcceptableToAnswer($message)) {
+        if ($this->isArgumentAcceptableTo($this, self::METHOD_ANSWER, $message)) {
             return $this->callHandlerMethod(self::METHOD_ANSWER, $message);
         }
 
@@ -294,40 +330,7 @@ abstract class AbstractPage implements PageInterface
         return $this->callHandlerMethod(self::METHOD_SERVICE, $message);
     }
 
-    /**
-     * This method is used to determine whether the argument is acceptable to the answer method
-     * (i.e. the argument is an instance of the type specified in the answer method)
-     */
-    private function isArgumentAcceptableToAnswer(mixed $argument): bool
-    {
-        $reflection = new ReflectionMethod($this, 'answer');
-
-        $params = $reflection->getParameters();
-
-        if (count($params) < 1) {
-            return false;
-        }
-
-        $type = $params[0]->getType();
-
-        if ($type === null) {
-            return true;
-        }
-
-        if ($type instanceof ReflectionUnionType) {
-            foreach ($type->getTypes() as $type) {
-                if ($argument instanceof ($type->getName())) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        return $argument instanceof ($type->getName());
-    }
-
-    public function invalidAnswer(CommonIncomingMessageInterface $message)
+    public function invalidAnswer(BasicIncomingMessageInterface $message)
     {
         if (method_exists($this, self::METHOD_SHOW)) {
             return $this->callHandlerMethod(self::METHOD_SHOW, null);
@@ -336,7 +339,7 @@ abstract class AbstractPage implements PageInterface
         return null;
     }
 
-    protected function callHandlerMethod(string $method, ?CommonIncomingMessageInterface $message): mixed
+    protected function callHandlerMethod(string $method, ?BasicIncomingMessageInterface $message): mixed
     {
         return $this->{$method}($message);
     }
@@ -346,6 +349,11 @@ abstract class AbstractPage implements PageInterface
         $this->reply(
             TypingOutgoingServiceMessage::make($type)
         );
+    }
+
+    public function getSessionId(): string
+    {
+        return $this->session->getId();
     }
 
     protected function sessionData(): SessionDataInterface
@@ -370,7 +378,7 @@ abstract class AbstractPage implements PageInterface
         })->call($this);
     }
 
-    public function __serialize(): array
+    public function getAttributes(): array
     {
         $attributes = [];
 
@@ -379,6 +387,11 @@ abstract class AbstractPage implements PageInterface
         }
 
         return $attributes;
+    }
+
+    public function __serialize(): array
+    {
+        return $this->getAttributes();
     }
 
     public function __unserialize(array $data): void
@@ -390,31 +403,41 @@ abstract class AbstractPage implements PageInterface
         })->call($this, $data);
     }
 
-    protected function handleOutgoingMessage(CommonOutgoingMessageInterface $message): CommonOutgoingMessageInterface
+    protected function handleOutgoingMessage(BasicOutgoingMessageInterface $message): BasicOutgoingMessageInterface
     {
-        if ($message instanceof OutgoingMessageInterface) {
-            foreach ($message->getKeyboard()?->getRows() ?? [] as $row) {
-                foreach ($row->getButtons() as $button) {
-                    if ($button instanceof BackButtonInterface) {
-                        $this->trackingPrev = true;
-                    }
-                }
-            }
-        }
-
         if (! $message->getContext()) {
             $message->setContext($this->messageContext);
         }
 
-        return call_user_func($this->outgoingCallback, $message);
+        $sentMessage = call_user_func($this->outgoingCallback, $message);
+
+        if ($sentMessage instanceof OutgoingMessageInterface) {
+            $keyboard = $sentMessage->getKeyboard();
+
+            if ($keyboard instanceof SimpleKeyboardInterface) {
+                $this->lastKeyboard = $keyboard;
+            } else {
+                $this->lastKeyboard = null;
+            }
+
+            foreach ($keyboard?->getButtons() ?? [] as $button) {
+                if ($button instanceof BackButtonInterface) {
+                    $this->trackingPrev = true;
+                }
+            }
+        }
+
+        return $sentMessage;
     }
 
     /**
-     * @phpstan-template T of CommonOutgoingMessageInterface
+     * @phpstan-template T of BasicOutgoingMessageInterface
+     *
      * @phpstan-param T $message
+     *
      * @phpstan-return T
      */
-    protected function reply(CommonOutgoingMessageInterface $message): CommonOutgoingMessageInterface
+    protected function reply(BasicOutgoingMessageInterface $message): BasicOutgoingMessageInterface
     {
         $message->setId(null);
 
@@ -422,14 +445,16 @@ abstract class AbstractPage implements PageInterface
     }
 
     /**
-     * @phpstan-template T of CommonOutgoingMessageInterface
+     * @phpstan-template T of BasicOutgoingMessageInterface
+     *
      * @phpstan-param T $message
+     *
      * @phpstan-return T
      */
-    protected function updateMessage(CommonOutgoingMessageInterface $message): CommonOutgoingMessageInterface
+    protected function updateMessage(BasicOutgoingMessageInterface $message): BasicOutgoingMessageInterface
     {
         if (! $message->getId()) {
-            throw new \InvalidArgumentException('Message id is required for update');
+            throw new InvalidArgumentException('Message id is required for update');
         }
 
         return $this->handleOutgoingMessage($message);

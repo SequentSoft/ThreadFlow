@@ -2,9 +2,9 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\WithKeyboardInterface;
 
-interface OutgoingMessageInterface extends CommonOutgoingMessageInterface, WithKeyboardInterface
+interface OutgoingMessageInterface extends BasicOutgoingMessageInterface, WithKeyboardInterface
 {
 }

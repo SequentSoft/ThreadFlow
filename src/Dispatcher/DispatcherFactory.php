@@ -4,11 +4,12 @@ namespace SequentSoft\ThreadFlow\Dispatcher;
 
 use Closure;
 use InvalidArgumentException;
-use SequentSoft\ThreadFlow\Config;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesRepositoryInterface;
+use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessagesRepositoryInterface;
 
 class DispatcherFactory implements DispatcherFactoryInterface
 {
@@ -26,9 +27,9 @@ class DispatcherFactory implements DispatcherFactoryInterface
 
     public function make(
         string $dispatcherName,
-        ?string $entryPage,
         EventBusInterface $eventBus,
-        Closure $outgoing,
+        ActivePagesRepositoryInterface $activePagesRepository,
+        PendingMessagesRepositoryInterface $pendingMessagesRepository,
     ): DispatcherInterface {
         $config = $this->config->get($dispatcherName);
 
@@ -42,15 +43,11 @@ class DispatcherFactory implements DispatcherFactoryInterface
             throw new InvalidArgumentException("Dispatcher driver {$driverName} is not registered.");
         }
 
-        if ($entryPage !== null) {
-            $config['entry'] = $entryPage;
-        }
-
         return call_user_func(
             $this->drivers[$dispatcherName],
             $eventBus,
-            new Config($config),
-            $outgoing
+            $activePagesRepository,
+            $pendingMessagesRepository
         );
     }
 }

@@ -2,14 +2,14 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\BaseKeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 
 class TextOutgoingMessage extends OutgoingMessage implements TextOutgoingMessageInterface
 {
     final public function __construct(
         protected string|array $text,
-        KeyboardInterface|array|null $keyboard = null,
+        BaseKeyboardInterface|array|null $keyboard = null,
     ) {
         $this->withKeyboard($keyboard);
     }
@@ -35,7 +35,7 @@ class TextOutgoingMessage extends OutgoingMessage implements TextOutgoingMessage
 
     public static function make(
         string|array $text,
-        KeyboardInterface|array|null $keyboard = null,
+        BaseKeyboardInterface|array|null $keyboard = null,
     ): TextOutgoingMessageInterface {
         return new static($text, $keyboard);
     }

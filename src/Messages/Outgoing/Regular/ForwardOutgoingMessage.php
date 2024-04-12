@@ -2,7 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Messages\Outgoing\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\BaseKeyboardInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\MessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\ForwardOutgoingMessageInterface;
 
@@ -10,7 +10,7 @@ class ForwardOutgoingMessage extends OutgoingMessage implements ForwardOutgoingM
 {
     final public function __construct(
         protected MessageInterface $message,
-        KeyboardInterface|array|null $keyboard = null,
+        BaseKeyboardInterface|array|null $keyboard = null,
     ) {
         $this->withKeyboard($keyboard);
     }

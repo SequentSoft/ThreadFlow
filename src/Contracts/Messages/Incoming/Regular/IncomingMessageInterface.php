@@ -2,9 +2,9 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular;
 
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
 
-interface IncomingMessageInterface extends CommonIncomingMessageInterface
+interface IncomingMessageInterface extends BasicIncomingMessageInterface
 {
     public function getText(): string;
 

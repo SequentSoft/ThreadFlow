@@ -14,15 +14,16 @@ use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\ContactButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\LocationButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\TextButtonInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\WithKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Serializers\SerializerInterface;
 use SequentSoft\ThreadFlow\DataFetchers\InvokableDataFetcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\ClickIncomingMessage;
-use SequentSoft\ThreadFlow\Session\ArraySessionStore;
-use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
+use SequentSoft\ThreadFlow\Session\Drivers\ArraySessionStore;
+use SequentSoft\ThreadFlow\Session\Drivers\ArraySessionStoreStorage;
 
 class CliThreadFlowCommand extends Command
 {
@@ -33,8 +34,8 @@ class CliThreadFlowCommand extends Command
     protected array $lastKeyboardOptions = [];
 
     protected function processOutgoing(
-        CommonOutgoingMessageInterface $message
-    ): CommonOutgoingMessageInterface {
+        BasicOutgoingMessageInterface $message
+    ): BasicOutgoingMessageInterface {
         $this->lastKeyboardOptions = [];
 
         $this->comment('[BOT ANSWER]:');
@@ -56,6 +57,7 @@ class CliThreadFlowCommand extends Command
                         $button instanceof BackButtonInterface => $button->getCallbackData(),
                         $button instanceof ContactButtonInterface => '::contact::',
                         $button instanceof LocationButtonInterface => '::location::',
+                        default => '',
                     };
 
                     $text = match (true) {
@@ -63,6 +65,7 @@ class CliThreadFlowCommand extends Command
                         $button instanceof BackButtonInterface => '[Back]',
                         $button instanceof ContactButtonInterface => '[Contact]',
                         $button instanceof LocationButtonInterface => '[Location]',
+                        default => '',
                     };
 
                     $this->lastKeyboardOptions[$key] = $button;
@@ -78,7 +81,7 @@ class CliThreadFlowCommand extends Command
         return $message;
     }
 
-    protected function inputTextFromUser(MessageContextInterface $messageContext): string|CommonIncomingMessageInterface
+    protected function inputTextFromUser(MessageContextInterface $messageContext): string|BasicIncomingMessageInterface
     {
         if ($this->lastKeyboardOptions && function_exists('Laravel\Prompts\suggest')) {
             $answer = \Laravel\Prompts\suggest(
@@ -117,31 +120,41 @@ class CliThreadFlowCommand extends Command
         );
 
         $cliConfig = new Config([
-            'entry' => \App\ThreadFlow\Pages\IndexPage::class,
+            'entry' => 'App\ThreadFlow\Pages\IndexPage',
             'dispatcher' => 'sync',
         ]);
 
         $eventBus = new EventBus();
 
+        $sessionStore = new ArraySessionStore(
+            'cli',
+            new Config([]),
+            app(SerializerInterface::class),
+            app(ArraySessionStoreStorage::class),
+        );
+
         $channel = new CliChannel(
             'cli',
             $cliConfig,
-            new ArraySessionStore('cli', app(ArraySessionStoreStorage::class)),
+            $sessionStore,
             app(DispatcherFactoryInterface::class),
             $eventBus
         );
 
-        $channel->setCallback(fn (CommonOutgoingMessageInterface $message) => $this->processOutgoing($message));
+        $channel->setCallback(fn (BasicOutgoingMessageInterface $message) => $this->processOutgoing($message));
 
         $dataFetcher = new InvokableDataFetcher();
 
         $channel->listen($messageContext, $dataFetcher);
 
         while (true) {
-            $dataFetcher([
-                'id' => Str::uuid(),
-                'message' => $this->inputTextFromUser($messageContext),
-            ]);
+            $input = $this->inputTextFromUser($messageContext);
+
+            if ($input === 'exit()') {
+                return;
+            }
+
+            $dataFetcher(['id' => Str::uuid(), 'message' => $input]);
         }
     }
 }

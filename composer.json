@@ -27,7 +27,8 @@
         "phpstan/phpstan": "^1.10"
     },
     "suggest": {
-        "laravel/prompts": "Required for interactive cli commands"
+        "laravel/prompts": "Required for interactive cli commands",
+        "laravel/framework": "Required for Laravel integration"
     },
     "autoload": {
         "psr-4": {

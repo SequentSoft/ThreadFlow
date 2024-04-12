@@ -16,7 +16,6 @@ This command will create a `thread-flow.php` configuration file in the `config` 
         'dispatcher' => env('THREAD_FLOW_DISPATCHER', 'sync'),
         'entry' => \App\ThreadFlow\Pages\IndexPage::class,
         'api_token' => env('TELEGRAM_API_TOKEN', null),
-        'webhook_url' => env('TELEGRAM_WEBHOOK_URL', null),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET', null),
         'timeout' => 30,
         'limit' => 100,
@@ -99,4 +98,4 @@ This is the first page that will be displayed to the user when he starts the con
 ## Other settings
 
 Other settings are specific to the driver you are using.
-For example, for the Telegram driver, you can use the `api_token`, `webhook_url`, `webhook_secret`, `timeout` and `limit` options.
+For example, for the Telegram driver, you can use the `api_token`, `webhook_secret`, `timeout` and `limit` options.

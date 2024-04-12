@@ -12,9 +12,9 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\LocationIncomingM
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\StickerIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\TextIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\VideoIncomingMessageInterface;
-use SequentSoft\ThreadFlow\Messages\Incoming\CommonIncomingMessage;
+use SequentSoft\ThreadFlow\Messages\Incoming\BasicIncomingMessage;
 
-class IncomingMessage extends CommonIncomingMessage implements IncomingMessageInterface
+class IncomingMessage extends BasicIncomingMessage implements IncomingMessageInterface
 {
     protected string $text = '[message]';
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Page;
+namespace SequentSoft\ThreadFlow\Page\Responses;
 
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;

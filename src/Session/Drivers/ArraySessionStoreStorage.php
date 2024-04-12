@@ -1,6 +1,6 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Session;
+namespace SequentSoft\ThreadFlow\Session\Drivers;
 
 class ArraySessionStoreStorage
 {

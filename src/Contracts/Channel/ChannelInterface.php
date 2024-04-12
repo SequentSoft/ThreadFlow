@@ -8,8 +8,8 @@ use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Testing\PendingTestInput;
 
@@ -23,7 +23,7 @@ interface ChannelInterface
 
     public function getConfig(): ConfigInterface;
 
-    public function incoming(CommonIncomingMessageInterface $message): void;
+    public function incoming(BasicIncomingMessageInterface $message): void;
 
     public function forParticipant(string|ParticipantInterface $participant): ChannelPendingSend;
 
@@ -31,8 +31,8 @@ interface ChannelInterface
 
     public function dispatchTo(
         MessageContextInterface $context,
-        PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
-    ): ?CommonOutgoingMessageInterface;
+        PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
+    ): ?BasicOutgoingMessageInterface;
 
     public function registerExceptionHandler(Closure $callback): void;
 

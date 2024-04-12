@@ -5,7 +5,8 @@ namespace SequentSoft\ThreadFlow\Contracts\Page;
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\SimpleKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
 interface PageInterface
@@ -16,13 +17,21 @@ interface PageInterface
 
     public function getId(): string;
 
+    public function setActivePagesRepository(ActivePagesRepositoryInterface $activePagesRepository): static;
+
+    public function getSessionId(): string;
+
     public function setSession(SessionInterface $session): static;
 
     public function setContext(MessageContextInterface $messageContext): static;
 
-    public function setPrev(?PageInterface $prev): static;
+    public function setPrevPageId(?string $prevId): static;
 
-    public function getPrev(): ?PageInterface;
+    public function getPrevPageId(): ?string;
+
+    public function getPrevPage(): ?PageInterface;
+
+    public function getLastKeyboard(): ?SimpleKeyboardInterface;
 
     public function getChannelName(): string;
 
@@ -30,9 +39,11 @@ interface PageInterface
 
     public function isBackground(): bool;
 
+    public function getAttributes(): array;
+
     public function execute(
         EventBusInterface $eventBus,
-        ?CommonIncomingMessageInterface $message,
+        ?BasicIncomingMessageInterface $message,
         Closure $callback
     ): mixed;
 }

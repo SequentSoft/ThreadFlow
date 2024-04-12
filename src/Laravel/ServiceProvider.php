@@ -9,18 +9,34 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesStorageFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessagesStorageFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Serializers\SerializerInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
-use SequentSoft\ThreadFlow\Laravel\Console\SessionTableThreadFlowCommand;
-use SequentSoft\ThreadFlow\Laravel\Dispatcher\LaravelQueueIncomingDispatcher;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
+use SequentSoft\ThreadFlow\Laravel\Console\ActivePagesTableThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
-use SequentSoft\ThreadFlow\Laravel\Session\EloquentSessionStore;
-use SequentSoft\ThreadFlow\Session\ArraySessionStore;
-use SequentSoft\ThreadFlow\Session\ArraySessionStoreStorage;
+use SequentSoft\ThreadFlow\Laravel\Console\PendingMessagesTableThreadFlowCommand;
+use SequentSoft\ThreadFlow\Laravel\Console\SessionTableThreadFlowCommand;
+use SequentSoft\ThreadFlow\Laravel\Dispatcher\LaravelQueueIncomingDispatcher;
+use SequentSoft\ThreadFlow\Laravel\Page\ActivePages\StorageDrivers\CacheActivePagesStorage;
+use SequentSoft\ThreadFlow\Laravel\Page\ActivePages\StorageDrivers\EloquentActivePagesStorage;
+use SequentSoft\ThreadFlow\Laravel\PendingMessages\StorageDrivers\CachePendingMessagesStorage;
+use SequentSoft\ThreadFlow\Laravel\PendingMessages\StorageDrivers\EloquentPendingMessagesStorage;
 use SequentSoft\ThreadFlow\Laravel\Session\CacheSessionStore;
+use SequentSoft\ThreadFlow\Laravel\Session\EloquentSessionStore;
+use SequentSoft\ThreadFlow\Page\ActivePages\ActivePagesStorageFactory;
+use SequentSoft\ThreadFlow\Page\ActivePages\StorageDrivers\ArrayActivePagesStorage;
+use SequentSoft\ThreadFlow\Page\ActivePages\StorageDrivers\SessionActivePagesStorage;
+use SequentSoft\ThreadFlow\PendingMessages\PendingMessagesStorageFactory;
+use SequentSoft\ThreadFlow\PendingMessages\StorageDrivers\ArrayPendingMessagesStorage;
+use SequentSoft\ThreadFlow\PendingMessages\StorageDrivers\SessionPendingMessagesStorage;
+use SequentSoft\ThreadFlow\Serializers\SimpleSerializer;
+use SequentSoft\ThreadFlow\Session\Drivers\ArraySessionStore;
+use SequentSoft\ThreadFlow\Session\Drivers\ArraySessionStoreStorage;
 use SequentSoft\ThreadFlow\Session\SessionStoreFactory;
 
 class ServiceProvider extends BaseServiceProvider
@@ -30,13 +46,30 @@ class ServiceProvider extends BaseServiceProvider
         $this->mergeConfigFrom($this->getPackageConfigPath(), 'thread-flow');
 
         $this->app->bind(EventBusInterface::class, EventBus::class);
+        $this->app->bind(SerializerInterface::class, SimpleSerializer::class);
 
         $this->app->singleton(ChannelManagerInterface::class, function () {
             return new ChannelManager(
                 new Config($this->app->make('config')->get('thread-flow', [])),
                 $this->app->make(SessionStoreFactoryInterface::class),
                 $this->app->make(DispatcherFactoryInterface::class),
+                $this->app->make(PendingMessagesStorageFactoryInterface::class),
+                $this->app->make(ActivePagesStorageFactoryInterface::class),
                 $this->app->make(EventBusInterface::class),
+            );
+        });
+
+        $this->app->singleton(ArrayPendingMessagesStorage::class, function ($app, $params) {
+            return new ArrayPendingMessagesStorage(
+                $params['config'],
+                $params['serializer'],
+            );
+        });
+
+        $this->app->singleton(ArrayActivePagesStorage::class, function ($app, $params) {
+            return new ArrayActivePagesStorage(
+                $params['config'],
+                $params['serializer'],
             );
         });
 
@@ -44,21 +77,115 @@ class ServiceProvider extends BaseServiceProvider
             return new ArraySessionStoreStorage();
         });
 
+        $this->app->singleton(PendingMessagesStorageFactoryInterface::class, function () {
+            $factory = new PendingMessagesStorageFactory(
+                new Config($this->app->make('config')->get('thread-flow.pending_messages', []))
+            );
+
+            $factory->registerDriver(
+                'array',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(ArrayPendingMessagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            $factory->registerDriver(
+                'eloquent',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(EloquentPendingMessagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            $factory->registerDriver(
+                'cache',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(CachePendingMessagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            $factory->registerDriver(
+                'session',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(SessionPendingMessagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            return $factory;
+        });
+
+        $this->app->singleton(ActivePagesStorageFactoryInterface::class, function () {
+            $factory = new ActivePagesStorageFactory(
+                new Config($this->app->make('config')->get('thread-flow.active_pages', []))
+            );
+
+            $factory->registerDriver(
+                'array',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(ArrayActivePagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            $factory->registerDriver(
+                'eloquent',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(EloquentActivePagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            $factory->registerDriver(
+                'cache',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(CacheActivePagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            $factory->registerDriver(
+                'session',
+                fn (ConfigInterface $config) => $this->app
+                    ->make(SessionActivePagesStorage::class, [
+                        'config' => $config,
+                        'serializer' => $this->app->make(SerializerInterface::class),
+                    ])
+            );
+
+            return $factory;
+        });
+
         $this->app->singleton(SessionStoreFactoryInterface::class, function () {
             $factory = new SessionStoreFactory(
                 new Config($this->app->make('config')->get('thread-flow.sessions', []))
             );
 
-            $factory->registerDriver('array', fn (string $channelName) => new ArraySessionStore(
-                $channelName,
-                $this->app->make(ArraySessionStoreStorage::class),
-            ));
+            $factory->registerDriver(
+                'array',
+                fn (string $channelName, ConfigInterface $config) => new ArraySessionStore(
+                    $channelName,
+                    $config,
+                    $this->app->make(SerializerInterface::class),
+                    $this->app->make(ArraySessionStoreStorage::class),
+                )
+            );
 
             $factory->registerDriver(
                 'cache',
                 fn (string $channelName, ConfigInterface $config) => new CacheSessionStore(
                     $channelName,
                     $config,
+                    $this->app->make(SerializerInterface::class),
                 )
             );
 
@@ -67,6 +194,7 @@ class ServiceProvider extends BaseServiceProvider
                 fn (string $channelName, ConfigInterface $config) => new EloquentSessionStore(
                     $channelName,
                     $config,
+                    $this->app->make(SerializerInterface::class),
                 )
             );
 
@@ -79,19 +207,11 @@ class ServiceProvider extends BaseServiceProvider
             );
             $factory->registerDriver(
                 'sync',
-                fn ($eventBus, $defaultPageClass, $outgoing) => new SyncDispatcher(
-                    $eventBus,
-                    $defaultPageClass,
-                    $outgoing
-                )
+                fn (...$dependencies) => new SyncDispatcher(...$dependencies)
             );
             $factory->registerDriver(
                 'queue',
-                fn ($eventBus, $defaultPageClass, $outgoing) => new LaravelQueueIncomingDispatcher(
-                    $eventBus,
-                    $defaultPageClass,
-                    $outgoing
-                )
+                fn (...$dependencies) => new LaravelQueueIncomingDispatcher(...$dependencies)
             );
 
             return $factory;
@@ -114,6 +234,8 @@ class ServiceProvider extends BaseServiceProvider
                 GenerateThreadFlowPageCommand::class,
                 CliThreadFlowCommand::class,
                 SessionTableThreadFlowCommand::class,
+                ActivePagesTableThreadFlowCommand::class,
+                PendingMessagesTableThreadFlowCommand::class,
             ]);
         }
     }

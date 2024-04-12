@@ -5,6 +5,7 @@ use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
@@ -16,15 +17,16 @@ use SequentSoft\ThreadFlow\Session\Session;
 beforeEach(function () {
     $this->config = Mockery::mock(ConfigInterface::class);
     $this->sessionStore = Mockery::mock(SessionStoreInterface::class);
-    $this->dispatcherFactory = Mockery::mock(DispatcherFactoryInterface::class);
+    $this->dispatcher = Mockery::mock(DispatcherInterface::class);
     $this->eventBus = Mockery::mock(EventBusInterface::class);
-    $this->syncDispatcher = Mockery::mock(SyncDispatcher::class);
+
+    $this->dispatcher->shouldReceive('setOutgoingCallback')->with(Mockery::type('closure'))->once();
 
     $this->channel = new CliChannel(
         'testChannel',
         $this->config,
         $this->sessionStore,
-        $this->dispatcherFactory,
+        $this->dispatcher,
         $this->eventBus
     );
 });
@@ -42,13 +44,10 @@ test('listen method processes incoming messages correctly', function () {
         return $closure(new Session());
     });
 
-    $this->eventBus->shouldReceive('fire')->with(Mockery::type(IncomingMessageDispatchingEvent::class))->once();
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionStartedEvent::class))->once();
     $this->eventBus->shouldReceive('fire')->with(Mockery::type(SessionClosedEvent::class))->once();
-    $this->config->shouldReceive('get')->with('dispatcher')->once()->andReturn('sync');
     $this->config->shouldReceive('get')->with('entry')->once()->andReturn(\Tests\Stubs\EmptyPage::class);
-    $this->dispatcherFactory->shouldReceive('make')->once()->andReturn($this->syncDispatcher);
-    $this->syncDispatcher->shouldReceive('incoming')->once();
+    $this->dispatcher->shouldReceive('incoming')->once();
 
     $this->channel->listen($messageContext, $fetcher);
 });

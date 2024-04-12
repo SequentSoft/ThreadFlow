@@ -3,7 +3,7 @@
 namespace SequentSoft\ThreadFlow\Dispatcher;
 
 use Random\RandomException;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
@@ -21,10 +21,10 @@ class FakeDispatcher extends SyncDispatcher
      * @throws RandomException
      */
     public function outgoing(
-        CommonOutgoingMessageInterface $message,
+        BasicOutgoingMessageInterface $message,
         ?SessionInterface $session,
         ?PageInterface $page
-    ): CommonOutgoingMessageInterface {
+    ): BasicOutgoingMessageInterface {
         $message->setId(
             $this->makeRandomId()
         );

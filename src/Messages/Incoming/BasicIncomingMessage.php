@@ -4,11 +4,14 @@ namespace SequentSoft\ThreadFlow\Messages\Incoming;
 
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Messages\Message;
+use SequentSoft\ThreadFlow\Traits\GenerateUniqueIdsTrait;
 
-abstract class CommonIncomingMessage extends Message implements CommonIncomingMessageInterface
+abstract class BasicIncomingMessage extends Message implements BasicIncomingMessageInterface
 {
+    use GenerateUniqueIdsTrait;
+
     protected ?string $pageId = null;
 
     public function __construct(
@@ -22,7 +25,7 @@ abstract class CommonIncomingMessage extends Message implements CommonIncomingMe
 
     public static function generateId(): string
     {
-        return md5(uniqid('', true));
+        return static::generateUniqueId();
     }
 
     public function getPageId(): ?string

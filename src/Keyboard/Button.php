@@ -2,10 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Keyboard;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
-use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\ContactButtonInterface;
-use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\LocationButtonInterface;
-use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\TextButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Keyboard\Buttons\BackButton;
 use SequentSoft\ThreadFlow\Keyboard\Buttons\ContactButton;
 use SequentSoft\ThreadFlow\Keyboard\Buttons\LocationButton;
@@ -13,22 +10,32 @@ use SequentSoft\ThreadFlow\Keyboard\Buttons\TextButton;
 
 class Button
 {
-    public static function text(string $title, ?string $callbackData = null): TextButtonInterface
+    public static function text(string $title, ?string $key = null, ?PageInterface $transition = null): TextButton
     {
-        return new TextButton($title, $callbackData);
+        if ($key === null) {
+            $key = md5($title);
+        }
+
+        $button = new TextButton($title, $key);
+
+        if ($transition !== null) {
+            $button->autoHandleAnswerPage($transition);
+        }
+
+        return $button;
     }
 
-    public static function contact(string $title): ContactButtonInterface
+    public static function contact(string $title): ContactButton
     {
         return new ContactButton($title);
     }
 
-    public static function location(string $title): LocationButtonInterface
+    public static function location(string $title): LocationButton
     {
         return new LocationButton($title);
     }
 
-    public static function back(string $title, ?string $callbackData = 'back'): BackButtonInterface
+    public static function back(string $title, ?string $callbackData = 'back'): BackButton
     {
         return new BackButton($title, $callbackData);
     }

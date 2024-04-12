@@ -2,7 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Keyboard;
 
-interface CommonKeyboardInterface extends KeyboardInterface
+interface SimpleKeyboardInterface extends BaseKeyboardInterface
 {
     public function oneTimeKeyboard(bool $oneTime = true): self;
 

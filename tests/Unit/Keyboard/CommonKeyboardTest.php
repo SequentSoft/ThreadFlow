@@ -1,6 +1,6 @@
 <?php
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\CommonKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\SimpleKeyboardInterface;
 use SequentSoft\ThreadFlow\Keyboard\Keyboard;
 
 it('can be created', function () {
@@ -9,7 +9,7 @@ it('can be created', function () {
         ['callback_data' => 'payload'],
     ]);
 
-    expect($keyboard)->toBeInstanceOf(CommonKeyboardInterface::class);
+    expect($keyboard)->toBeInstanceOf(SimpleKeyboardInterface::class);
     expect($keyboard->getRows())->toHaveCount(2);
 });
 

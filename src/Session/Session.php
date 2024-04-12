@@ -6,19 +6,17 @@ use Exception;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionDataInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
-use SequentSoft\ThreadFlow\Traits\HasUserResolver;
+use SequentSoft\ThreadFlow\Traits\GenerateUniqueIdsTrait;
 
 class Session implements SessionInterface
 {
-    use HasUserResolver;
+    use GenerateUniqueIdsTrait;
+
+    protected string $id;
 
     protected SessionDataInterface $data;
 
-    protected SessionDataInterface $serviceData;
-
     protected ?PageInterface $currentPage;
-
-    protected array $pendingInteractions = [];
 
     /**
      * @throws Exception
@@ -26,27 +24,20 @@ class Session implements SessionInterface
     final public function __construct(
         SessionDataInterface|array $data = [],
         ?PageInterface $currentPage = null,
-        SessionDataInterface|array $serviceData = [],
-        array $pendingInteractions = [],
+        ?string $id = null,
     ) {
+        $this->id = $id ?? static::generateUniqueId();
+
         $this->data = $data instanceof SessionDataInterface
             ? $data
             : SessionData::create($data);
 
         $this->currentPage = $currentPage;
-
-        $this->serviceData = $serviceData instanceof SessionDataInterface
-            ? $serviceData
-            : SessionData::create($serviceData);
-
-        $this->pendingInteractions = $pendingInteractions;
     }
 
-    public function getUser(): mixed
+    public function getId(): string
     {
-        return $this->userResolver
-            ? call_user_func($this->userResolver, $this)
-            : null;
+        return $this->id;
     }
 
     /**
@@ -55,34 +46,13 @@ class Session implements SessionInterface
     public function reset(): void
     {
         $this->data = SessionData::create();
-        $this->serviceData = SessionData::create();
         $this->currentPage = null;
-        $this->pendingInteractions = [];
-    }
-
-    public function pushPendingInteraction(mixed $interaction): void
-    {
-        $this->pendingInteractions[] = $interaction;
-    }
-
-    public function takePendingInteraction(): mixed
-    {
-        return array_shift($this->pendingInteractions);
-    }
-
-    public function hasPendingInteractions(): bool
-    {
-        return ! empty($this->pendingInteractions);
+        $this->id = static::generateUniqueId();
     }
 
     public function getData(): SessionDataInterface
     {
         return $this->data;
-    }
-
-    public function getServiceData(): SessionDataInterface
-    {
-        return $this->serviceData;
     }
 
     public function getCurrentPage(): ?PageInterface
@@ -113,10 +83,9 @@ class Session implements SessionInterface
     public function toArray(): array
     {
         return [
+            'id' => $this->id,
             'data' => $this->data->all(),
             'currentPage' => $this->currentPage,
-            'serviceData' => $this->serviceData->all(),
-            'pendingInteractions' => $this->pendingInteractions,
         ];
     }
 
@@ -125,8 +94,7 @@ class Session implements SessionInterface
         return new static(
             SessionData::create($data['data']),
             $data['currentPage'],
-            SessionData::create($data['serviceData']),
-            $data['pendingInteractions'],
+            $data['id'] ?? static::generateUniqueId(),
         );
     }
 
@@ -137,9 +105,8 @@ class Session implements SessionInterface
 
     public function __unserialize(array $data): void
     {
+        $this->id = $data['id'] ?? static::generateUniqueId();
         $this->data = SessionData::create($data['data']);
         $this->currentPage = $data['currentPage'];
-        $this->serviceData = SessionData::create($data['serviceData']);
-        $this->pendingInteractions = $data['pendingInteractions'];
     }
 }

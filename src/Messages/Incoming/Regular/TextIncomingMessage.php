@@ -5,8 +5,9 @@ namespace SequentSoft\ThreadFlow\Messages\Incoming\Regular;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\TextIncomingMessageInterface;
+use Stringable;
 
-class TextIncomingMessage extends IncomingMessage implements TextIncomingMessageInterface
+class TextIncomingMessage extends IncomingMessage implements TextIncomingMessageInterface, Stringable
 {
     final public function __construct(
         string $id,
@@ -31,5 +32,10 @@ class TextIncomingMessage extends IncomingMessage implements TextIncomingMessage
             $timestamp ?? new DateTimeImmutable(),
             $text ?? '',
         );
+    }
+
+    public function __toString()
+    {
+        return $this->getText();
     }
 }

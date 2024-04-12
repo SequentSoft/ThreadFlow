@@ -2,13 +2,11 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
-interface TextButtonInterface extends ButtonInterface
+interface TextButtonInterface extends ButtonWithCallbackDataInterface
 {
-    public function getCallbackData(): ?string;
-
     public function answerAsText(): TextButtonInterface;
 
-    public function setCallbackData(?string $callbackData): TextButtonInterface;
+    public function getAutoHandleAnswerPage(): ?PageInterface;
 }

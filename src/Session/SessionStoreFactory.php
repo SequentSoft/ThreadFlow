@@ -27,6 +27,7 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
 
     /**
      * Make a new session store instance for the given channel.
+     *
      * @throws InvalidArgumentException
      */
     public function make(string $name, string $channelName): SessionStoreInterface

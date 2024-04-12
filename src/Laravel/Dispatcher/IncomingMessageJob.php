@@ -8,7 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
 
 class IncomingMessageJob implements ShouldQueue
 {
@@ -18,7 +18,7 @@ class IncomingMessageJob implements ShouldQueue
     use SerializesModels;
 
     public function __construct(
-        protected CommonIncomingMessageInterface $message
+        protected BasicIncomingMessageInterface $message
     ) {
     }
 

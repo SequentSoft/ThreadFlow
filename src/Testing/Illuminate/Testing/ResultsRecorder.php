@@ -8,7 +8,7 @@ use Closure;
 use PHPUnit\Framework\Assert as PHPUnit;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\IncomingServiceMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
@@ -21,7 +21,7 @@ class ResultsRecorder implements ResultsRecorderInterface
 
     protected array $dispatchedPagesMethods = [];
 
-    public function recordSentOutgoingMessage(CommonOutgoingMessageInterface $message): static
+    public function recordSentOutgoingMessage(BasicOutgoingMessageInterface $message): static
     {
         $this->sentOutgoingMessages[] = $message;
 
@@ -75,7 +75,7 @@ class ResultsRecorder implements ResultsRecorderInterface
         return $this;
     }
 
-    public function getOutgoingMessage(?int $index = null): ?CommonOutgoingMessageInterface
+    public function getOutgoingMessage(?int $index = null): ?BasicOutgoingMessageInterface
     {
         return $index !== null
             ? $this->sentOutgoingMessages[$index] ?? null
@@ -134,7 +134,7 @@ class ResultsRecorder implements ResultsRecorderInterface
         }
 
         if ($attributes !== null) {
-            PHPUnit::assertEquals($attributes, $latestPage->getState()->getAttributes());
+            PHPUnit::assertEquals($attributes, $latestPage->getAttributes());
         }
 
         return $this;

@@ -3,7 +3,8 @@
 namespace SequentSoft\ThreadFlow\Laravel\Dispatcher;
 
 use Closure;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 
@@ -22,8 +23,9 @@ class LaravelQueueIncomingDispatcher extends SyncDispatcher
     }
 
     public function incoming(
-        CommonIncomingMessageInterface $message,
-        SessionInterface $session
+        BasicIncomingMessageInterface $message,
+        SessionInterface $session,
+        PageInterface $page,
     ): void {
         if (static::$async) {
             IncomingMessageJob::dispatch(
@@ -33,6 +35,6 @@ class LaravelQueueIncomingDispatcher extends SyncDispatcher
             return;
         }
 
-        parent::incoming($message, $session);
+        parent::incoming($message, $session, $page);
     }
 }

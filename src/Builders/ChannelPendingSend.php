@@ -10,7 +10,7 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
 class ChannelPendingSend
@@ -66,8 +66,8 @@ class ChannelPendingSend
     }
 
     public function sendMessage(
-        string|CommonOutgoingMessageInterface $message,
-    ): ?CommonOutgoingMessageInterface {
+        string|BasicOutgoingMessageInterface $message,
+    ): ?BasicOutgoingMessageInterface {
         $context = $this->createMessageContext();
 
         if (is_string($message)) {
