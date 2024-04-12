@@ -5,8 +5,6 @@ use SequentSoft\ThreadFlow\Chat\Participant;
 use SequentSoft\ThreadFlow\Chat\Room;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
-use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingMessage;
 
 it('can be created', function () {
     $messageContext1 = new MessageContext(

@@ -21,7 +21,6 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionClosedEvent;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
-use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 
 beforeEach(function () {
     $this->config = Mockery::mock(ConfigInterface::class);
@@ -33,8 +32,7 @@ beforeEach(function () {
 
     $this->dispatcher->shouldReceive('setOutgoingCallback')->with(Mockery::type('closure'))->once();
 
-    $this->channel = new class('testChannel', $this->config, $this->sessionStore, $this->dispatcher, $this->eventBus) extends Channel
-    {
+    $this->channel = new class ('testChannel', $this->config, $this->sessionStore, $this->dispatcher, $this->eventBus) extends Channel {
         protected function outgoing(BasicOutgoingMessageInterface $message, ?SessionInterface $session, ?PageInterface $contextPage): BasicOutgoingMessageInterface
         {
             return $message;
