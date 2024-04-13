@@ -330,7 +330,7 @@ abstract class AbstractPage implements PageInterface
         return $this->callHandlerMethod(self::METHOD_SERVICE, $message);
     }
 
-    public function invalidAnswer(BasicIncomingMessageInterface $message)
+    public function invalidAnswer(BasicIncomingMessageInterface $message): mixed
     {
         if (method_exists($this, self::METHOD_SHOW)) {
             return $this->callHandlerMethod(self::METHOD_SHOW, null);

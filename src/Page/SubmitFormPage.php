@@ -55,7 +55,7 @@ class SubmitFormPage extends AbstractPage
             ->withKeyboard($this->buttons());
     }
 
-    public function answer(IncomingMessageInterface $message)
+    public function answer(IncomingMessageInterface $message): mixed
     {
         if ($result = $this->handleConfirmableCancelAnswer(
             message: $message,

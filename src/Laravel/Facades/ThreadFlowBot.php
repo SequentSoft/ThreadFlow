@@ -41,7 +41,7 @@ class ThreadFlowBot extends Facade
         return ChannelManagerInterface::class;
     }
 
-    public static function fake()
+    public static function fake(): FakeChannelManager
     {
         $fakeChannelManager = new FakeChannelManager(
             new Config(static::$app->make('config')->get('thread-flow', [])),

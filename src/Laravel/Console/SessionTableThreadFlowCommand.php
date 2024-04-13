@@ -52,7 +52,7 @@ class SessionTableThreadFlowCommand extends Command
      *
      * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         $fullPath = $this->createBaseMigration();
 
@@ -68,7 +68,7 @@ class SessionTableThreadFlowCommand extends Command
      *
      * @return string
      */
-    protected function createBaseMigration()
+    protected function createBaseMigration(): string
     {
         $name = 'create_thread_flow_sessions_table';
 
