@@ -39,7 +39,6 @@ class CachePendingMessagesStorage implements PendingMessagesStorageInterface
         SessionInterface $session,
         PendingMessageInterface $message
     ): void {
-
         $pendingMessagesCount = $session->get('$pendingMessagesCount', 0) + 1;
         $session->set('$pendingMessagesCount', $pendingMessagesCount);
 

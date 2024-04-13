@@ -49,7 +49,6 @@ class EloquentSessionStore extends BaseSessionStore
     public function useSession(MessageContextInterface $context, callable $callback): mixed
     {
         return DB::transaction(function () use ($context, $callback) {
-
             $model = $this->loadModelByContext($context);
             $session = $this->load($model);
 

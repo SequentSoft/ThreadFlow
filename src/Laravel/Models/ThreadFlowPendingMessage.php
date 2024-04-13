@@ -52,7 +52,6 @@ class ThreadFlowPendingMessage extends Model implements PendingMessageStoreModel
 
     public function fillPendingMessage(string $serializedPendingMessage, PendingMessageInterface $page): PendingMessageStoreModelInterface&Model
     {
-
         $this->attributes['data'] = $serializedPendingMessage;
 
         return $this;
