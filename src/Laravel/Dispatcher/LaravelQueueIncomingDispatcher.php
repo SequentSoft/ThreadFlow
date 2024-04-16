@@ -6,9 +6,9 @@ use Closure;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
-use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
+use SequentSoft\ThreadFlow\Dispatcher\BaseDispatcher;
 
-class LaravelQueueIncomingDispatcher extends SyncDispatcher
+class LaravelQueueIncomingDispatcher extends BaseDispatcher
 {
     protected static bool $async = true;
 

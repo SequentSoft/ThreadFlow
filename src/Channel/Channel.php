@@ -157,12 +157,16 @@ abstract class Channel implements ChannelInterface
             return $page;
         }
 
-        $pageClass = $this->getEntryPageClass();
+        $pageClass = $this->getEntryPage();
+
+        if ($pageClass instanceof PageInterface) {
+            return $pageClass;
+        }
 
         return new $pageClass();
     }
 
-    protected function getEntryPageClass(): string
+    protected function getEntryPage(): string|PageInterface
     {
         return $this->config->get('entry');
     }

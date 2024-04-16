@@ -68,7 +68,7 @@ it('can set a room', function () {
 
 it('can show a page', function () {
     $channel = Mockery::mock(ChannelInterface::class);
-    $page = Mockery::mock(\Tests\Stubs\EmptyPage::class);
+    $page = Mockery::mock(\SequentSoft\ThreadFlow\Page\AbstractPage::class);
     $channelPendingSend = new ChannelPendingSend($channel, $this->outgoingMessageMakeCallback);
 
     $channel->shouldReceive('getName')->once()->andReturn('test');

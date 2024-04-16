@@ -84,7 +84,6 @@ abstract class AbstractPage implements PageInterface
         return $this->trackingPrev;
     }
 
-
     public function setPrevPageId(?string $prevId): static
     {
         $this->prevPageId = $prevId;
@@ -244,6 +243,26 @@ abstract class AbstractPage implements PageInterface
         return $result;
     }
 
+    protected function isShowMethodDefined(): bool
+    {
+        return method_exists($this, self::METHOD_SHOW);
+    }
+
+    protected function isWelcomeMethodDefined(): bool
+    {
+        return method_exists($this, 'welcome');
+    }
+
+    protected function isAnswerMethodDefined(): bool
+    {
+        return method_exists($this, self::METHOD_ANSWER);
+    }
+
+    protected function isServiceMethodDefined(): bool
+    {
+        return method_exists($this, self::METHOD_SERVICE);
+    }
+
     private function executeHandler(EventBusInterface $eventBus, ?BasicIncomingMessageInterface $message): mixed
     {
         if ($message instanceof IncomingMessageInterface) {
@@ -264,7 +283,7 @@ abstract class AbstractPage implements PageInterface
 
     private function executeShowHandler(EventBusInterface $eventBus): mixed
     {
-        if (! method_exists($this, self::METHOD_SHOW)) {
+        if (! $this->isShowMethodDefined()) {
             return null;
         }
 
@@ -293,7 +312,7 @@ abstract class AbstractPage implements PageInterface
             }
         }
 
-        if (! method_exists($this, self::METHOD_ANSWER)) {
+        if (! $this->isAnswerMethodDefined()) {
             return $this->callHandlerMethod(self::METHOD_SHOW, $message);
         }
 
@@ -311,7 +330,7 @@ abstract class AbstractPage implements PageInterface
         EventBusInterface $eventBus
     ): mixed {
         if ($message instanceof BotStartedIncomingMessage) {
-            if (method_exists($this, 'welcome')) {
+            if ($this->isWelcomeMethodDefined()) {
                 $eventBus->fire(new PageHandleWelcomeMessageEvent($this, $message));
 
                 return $this->callHandlerMethod('welcome', $message);
@@ -321,7 +340,7 @@ abstract class AbstractPage implements PageInterface
             return $this->executeShowHandler($eventBus);
         }
 
-        if (method_exists($this, self::METHOD_SERVICE)) {
+        if (! $this->isServiceMethodDefined()) {
             return null;
         }
 
@@ -332,7 +351,7 @@ abstract class AbstractPage implements PageInterface
 
     public function invalidAnswer(BasicIncomingMessageInterface $message): mixed
     {
-        if (method_exists($this, self::METHOD_SHOW)) {
+        if ($this->isShowMethodDefined()) {
             return $this->callHandlerMethod(self::METHOD_SHOW, null);
         }
 

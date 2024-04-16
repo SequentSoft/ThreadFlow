@@ -7,7 +7,7 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInter
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
-class FakeDispatcher extends SyncDispatcher
+class FakeDispatcher extends BaseDispatcher
 {
     /**
      * @throws RandomException
