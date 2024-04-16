@@ -6,6 +6,8 @@ use SequentSoft\ThreadFlow\ChannelManager;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesStorageFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessagesStorageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Traits\TestInputResults;
@@ -23,6 +25,8 @@ class FakeChannelManager extends ChannelManager
         protected ConfigInterface $config,
         protected SessionStoreFactoryInterface $sessionStoreFactory,
         protected DispatcherFactoryInterface $dispatcherFactory,
+        protected PendingMessagesStorageFactoryInterface $pendingMessagesStorageFactory,
+        protected ActivePagesStorageFactoryInterface $activePagesStorageFactory,
         protected EventBusInterface $eventBus,
     ) {
         $this->resultsRecorder = new ResultsRecorder();
@@ -33,6 +37,8 @@ class FakeChannelManager extends ChannelManager
             $config,
             $sessionStoreFactory,
             $dispatcherFactory,
+            $pendingMessagesStorageFactory,
+            $activePagesStorageFactory,
             $eventBus,
         );
     }

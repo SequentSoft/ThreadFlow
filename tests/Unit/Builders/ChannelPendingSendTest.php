@@ -5,7 +5,7 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 
@@ -35,7 +35,7 @@ it('can set a participant', function () {
     $participant->shouldReceive('getId')->once()->andReturn('test-id');
 
     $channel->shouldReceive('dispatchTo')->once()->withArgs(function ($context, $message) {
-        expect($message)->toBeInstanceOf(CommonOutgoingMessageInterface::class)
+        expect($message)->toBeInstanceOf(BasicOutgoingMessageInterface::class)
             ->and($context)->toBeInstanceOf(MessageContextInterface::class)
             ->and($context->getParticipant()->getId())->toBe('test-id');
 
@@ -54,7 +54,7 @@ it('can set a room', function () {
     $room->shouldReceive('getId')->twice()->andReturn('test-id');
 
     $channel->shouldReceive('dispatchTo')->once()->withArgs(function ($context, $message) {
-        expect($message)->toBeInstanceOf(CommonOutgoingMessageInterface::class)
+        expect($message)->toBeInstanceOf(BasicOutgoingMessageInterface::class)
             ->and($context)->toBeInstanceOf(MessageContextInterface::class)
             ->and($context->getRoom()->getId())->toBe('test-id');
 
@@ -68,7 +68,7 @@ it('can set a room', function () {
 
 it('can show a page', function () {
     $channel = Mockery::mock(ChannelInterface::class);
-    $page = Mockery::mock(\Tests\Stubs\EmptyPage::class);
+    $page = Mockery::mock(\SequentSoft\ThreadFlow\Page\AbstractPage::class);
     $channelPendingSend = new ChannelPendingSend($channel, $this->outgoingMessageMakeCallback);
 
     $channel->shouldReceive('getName')->once()->andReturn('test');
@@ -88,7 +88,7 @@ it('can show a page', function () {
 
 it('can send a message', function () {
     $channel = Mockery::mock(ChannelInterface::class);
-    $message = Mockery::mock(CommonOutgoingMessageInterface::class);
+    $message = Mockery::mock(BasicOutgoingMessageInterface::class);
     $channelPendingSend = new ChannelPendingSend($channel, $this->outgoingMessageMakeCallback);
 
     $channel->shouldReceive('getName')->once()->andReturn('test');

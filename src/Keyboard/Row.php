@@ -33,6 +33,9 @@ class Row implements RowInterface
         return new static($buttons);
     }
 
+    /**
+     * @return array<ButtonInterface>
+     */
     public function getButtons(): array
     {
         return $this->buttons;

@@ -31,6 +31,26 @@ You can use the `--timeout` option to specify the timeout in seconds. The defaul
 
 ## Telegram Webhook
 
+The webhook method is the best way to start a bot in production. It's more efficient than long polling.
+
+### Webhook route setup
+
+First, you need to set up a route to handle incoming messages from Telegram.
+You can change the route to any other route you want.
+
+```php
+Route::post(
+    '/thread-flow/webhook/telegram',
+    \SequentSoft\ThreadFlowTelegram\Laravel\Controllers\WebhookHandleController::class
+)->name('threadflow.telegram.webhook');
+```
+
+Also, you can add `TELEGRAM_WEBHOOK_SECRET` to your `.env` file to verify the incoming requests from Telegram.
+
+```
+TELEGRAM_WEBHOOK_SECRET="random-string-to-verify-webhook-requests"
+```
+
 To start a bot using a webhook, you need to configure the webhook URL in the Telegram API.
 But it requires a web server that have public address, and `APP_URL` in your `.env` file must be set to the public address of your application.
 

@@ -8,8 +8,9 @@ use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\TextButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ClickIncomingMessageInterface;
+use Stringable;
 
-class ClickIncomingMessage extends IncomingMessage implements ClickIncomingMessageInterface
+class ClickIncomingMessage extends IncomingMessage implements ClickIncomingMessageInterface, Stringable
 {
     final public function __construct(
         string $id,
@@ -19,7 +20,7 @@ class ClickIncomingMessage extends IncomingMessage implements ClickIncomingMessa
     ) {
         parent::__construct($id, $context, $timestamp);
 
-        $this->setText($button->getTitle());
+        $this->setText($this->getKey());
     }
 
     public static function make(
@@ -52,5 +53,10 @@ class ClickIncomingMessage extends IncomingMessage implements ClickIncomingMessa
     public function getButton(): ButtonInterface
     {
         return $this->button;
+    }
+
+    public function __toString()
+    {
+        return $this->getText();
     }
 }

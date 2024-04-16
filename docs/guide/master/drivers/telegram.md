@@ -33,10 +33,21 @@ The corresponding parameters for the driver must be configured in the `.env` fil
 
 ```
 TELEGRAM_API_TOKEN="your-token-here"
+TELEGRAM_WEBHOOK_SECRET="random-string-to-verify-webhook-requests"
+```
 
-# In case you are using the webhook method
-TELEGRAM_WEBHOOK_URL="/my-app/webhook"
-TELEGRAM_WEBHOOK_SECRET="random string to verify webhook requests"
+### Webhook setup
+
+To start a bot using a webhook, you need to configure the webhook URL in the Telegram API.
+
+First, you need to set up a route to handle incoming messages from Telegram.
+You can change the route to any other route you want.
+
+```php
+Route::post(
+    '/thread-flow/webhook/telegram',
+    \SequentSoft\ThreadFlowTelegram\Laravel\Controllers\WebhookHandleController::class
+)->name('threadflow.telegram.webhook');
 ```
 
 ## Artisan Commands
@@ -74,23 +85,3 @@ To get the webhook info for your bot, use the `threadflow:telegram-webhook-info`
 ```sh [artisan]
 $ php artisan threadflow:telegram-webhook-info --channel=my-telegram-channel
 ```
-
-## Outgoing Messages
-
-You can use telegram specific outgoing message classes to send messages to the user with additional features.
-
-### Text Messages
-
-```php
-use SequentSoft\ThreadFlowTelegram\Messages\Outgoing\Regular\TelegramTextOutgoingMessage;
-```
-
-This class has additional methods:
-
-#### withHtmlParseMode(): TelegramTextOutgoingMessage
-
-Sets the parse mode to HTML. You can use this method to send messages with HTML formatting.
-
-#### withMarkdownParseMode(): TelegramTextOutgoingMessage
-
-Sets the parse mode to Markdown. You can use this method to send messages with Markdown formatting.

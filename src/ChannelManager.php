@@ -10,11 +10,17 @@ use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelManagerInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesRepositoryInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesStorageFactoryInterface;
+use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessagesRepositoryInterface;
+use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessagesStorageFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
-use SequentSoft\ThreadFlow\Exceptions\Config\InvalidNestedConfigException;
+use SequentSoft\ThreadFlow\Page\ActivePages\ActivePagesRepository;
+use SequentSoft\ThreadFlow\PendingMessages\PendingMessagesRepository;
 use SequentSoft\ThreadFlow\Traits\HandleExceptions;
 use SequentSoft\ThreadFlow\Traits\HasUserResolver;
 
@@ -25,12 +31,14 @@ class ChannelManager implements ChannelManagerInterface
 
     /**
      * Array of registered channel drivers.
+     *
      * @var array<string, Closure>
      */
     protected array $channelDrivers = [];
 
     /**
      * Array of instantiated channels.
+     *
      * @var array<string, ChannelInterface>
      */
     protected array $channels = [];
@@ -39,6 +47,8 @@ class ChannelManager implements ChannelManagerInterface
         protected ConfigInterface $config,
         protected SessionStoreFactoryInterface $sessionStoreFactory,
         protected DispatcherFactoryInterface $dispatcherFactory,
+        protected PendingMessagesStorageFactoryInterface $pendingMessagesStorageFactory,
+        protected ActivePagesStorageFactoryInterface $activePagesStorageFactory,
         protected EventBusInterface $eventBus,
     ) {
     }
@@ -54,16 +64,15 @@ class ChannelManager implements ChannelManagerInterface
     /**
      * Register a channel driver.
      */
-    public function registerChannelDriver(string $channelName, Closure $callback): void
+    public function registerChannelDriver(string $driverName, Closure $callback): void
     {
-        $this->channelDrivers[$channelName] = $callback;
+        $this->channelDrivers[$driverName] = $callback;
     }
 
     /**
      * Make a channel instance.
      *
      * @throws RuntimeException
-     * @throws InvalidNestedConfigException
      */
     protected function makeChannel(string $channelName): ChannelInterface
     {
@@ -79,18 +88,56 @@ class ChannelManager implements ChannelManagerInterface
 
         $config = $this->getChannelConfig($channelName);
 
-        return $channelDriver(
-            $channelName,
-            $config,
-            $this->getSessionStore($channelName),
-            $this->getDispatcherFactory(),
-            $this->eventBus->nested($channelName),
+        $nestedEventBus = $this->eventBus->nested($channelName);
+
+        $activePagesRepository = $this->getActivePagesRepository(
+            $config->get('active_pages', 'array')
+        );
+
+        $pendingMessagesRepository = $this->getPendingMessagesRepository(
+            $config->get('pending_messages', 'array')
+        );
+
+        return call_user_func_array($channelDriver, [
+            'channelName' => $channelName,
+            'config' => $config,
+            'sessionStore' => $this->getSessionStore($channelName),
+            'dispatcher' => $this->getDispatcher(
+                $config->get('dispatcher'),
+                $nestedEventBus,
+                $activePagesRepository,
+                $pendingMessagesRepository,
+            ),
+            'eventBus' => $nestedEventBus,
+        ]);
+    }
+
+    protected function getActivePagesRepository(string $storageDriverName): ActivePagesRepositoryInterface
+    {
+        return new ActivePagesRepository(
+            $this->activePagesStorageFactory->make($storageDriverName)
         );
     }
 
-    protected function getDispatcherFactory(): DispatcherFactoryInterface
+    protected function getPendingMessagesRepository(string $storageDriverName): PendingMessagesRepositoryInterface
     {
-        return $this->dispatcherFactory;
+        return new PendingMessagesRepository(
+            $this->pendingMessagesStorageFactory->make($storageDriverName)
+        );
+    }
+
+    protected function getDispatcher(
+        string $driver,
+        EventBusInterface $eventBus,
+        ActivePagesRepositoryInterface $activePagesRepository,
+        PendingMessagesRepositoryInterface $pendingMessagesRepository
+    ): DispatcherInterface {
+        return $this->dispatcherFactory->make(
+            $driver,
+            $eventBus,
+            $activePagesRepository,
+            $pendingMessagesRepository,
+        );
     }
 
     /**
@@ -106,6 +153,7 @@ class ChannelManager implements ChannelManagerInterface
     /**
      * Register a callback to be executed when an event is fired.
      * The callback will receive the event instance.
+     *
      * @param class-string<EventInterface> $event
      */
     public function on(string $event, callable $callback): void
@@ -129,7 +177,6 @@ class ChannelManager implements ChannelManagerInterface
     /**
      * Get a channel instance by name.
      * If the channel is not instantiated, it will be created.
-     * @throws InvalidNestedConfigException
      */
     public function channel(string $channelName): ChannelInterface
     {
@@ -138,11 +185,8 @@ class ChannelManager implements ChannelManagerInterface
         }
 
         $channel = $this->makeChannel($channelName);
-
         $channel->setUserResolver($this->userResolver);
-
         $channel->registerExceptionHandler($this->handleException(...));
-
         $this->channels[$channelName] = $channel;
 
         return $channel;

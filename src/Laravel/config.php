@@ -16,11 +16,12 @@ return [
         'telegram' => [
             'driver' => 'telegram',
             'session' => env('THREAD_FLOW_SESSION', 'cache'),
+            'active_pages' => 'cache',
+            'pending_messages' => 'cache',
             'dispatcher' => 'sync',
             'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-            'api_token' => env('TELEGRAM_API_TOKEN', null),
-            'webhook_url' => env('TELEGRAM_WEBHOOK_URL', null),
-            'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET', null),
+            'api_token' => env('TELEGRAM_API_TOKEN'),
+            'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
             'timeout' => 30,
             'limit' => 100,
         ],
@@ -28,12 +29,13 @@ return [
         'whatsapp' => [
             'driver' => 'whatsapp',
             'session' => env('THREAD_FLOW_SESSION', 'cache'),
+            'active_pages' => 'cache',
+            'pending_messages' => 'cache',
             'dispatcher' => 'sync',
             'entry' => \App\ThreadFlow\Pages\IndexPage::class,
-            'from_phone_number_id' => env('WHATSAPP_FROM_PHONE_NUMBER_ID', null),
-            'api_token' => env('WHATSAPP_API_TOKEN', null),
-            'webhook_url' => env('WHATSAPP_WEBHOOK_URL', null),
-            'webhook_secret' => env('WHATSAPP_WEBHOOK_SECRET', null),
+            'from_phone_number_id' => env('WHATSAPP_FROM_PHONE_NUMBER_ID'),
+            'api_token' => env('WHATSAPP_API_TOKEN'),
+            'webhook_secret' => env('WHATSAPP_WEBHOOK_SECRET'),
             'timeout' => 30,
             'limit' => 100,
         ],
@@ -46,7 +48,7 @@ return [
     |
     | Here you may define all the session stores that ThreadFlow can use to store
     | user sessions. ThreadFlow supports a variety of great session stores
-    | which can all be used here. Supported drivers are: "cache", "array".
+    | which can all be used here. Supported drivers are: "cache", "array" and "database".
     |
      */
     'sessions' => [
@@ -84,6 +86,52 @@ return [
         'queue' => [
             'driver' => 'queue',
             'queue' => env('THREAD_FLOW_QUEUE', 'default'),
+        ],
+    ],
+
+    /*
+     |------------------------
+     | Active Pages
+     |------------------------
+     | Here you may define how to store pages that was visited but still active.
+     | For example the pages you can go back to or pages for inline keyboards.
+     | Supported drivers are: "cache", "array" and "eloquent".
+     |
+    */
+    'active_pages' => [
+        'database' => [
+            'driver' => 'eloquent',
+            'model' => \SequentSoft\ThreadFlow\Laravel\Models\ThreadFlowActivePage::class,
+        ],
+        'cache' => [
+            'driver' => 'cache',
+            'store' => env('THREAD_FLOW_ACTIVE_PAGES_CACHE_STORE', null),
+        ],
+        'array' => [
+            'driver' => 'array',
+        ],
+    ],
+
+    /*
+     |------------------------
+     | Pending Messages
+     |------------------------
+     | Here you may define how to store messages that was sent to user but user was busy at the moment.
+     | For example the messages that was sent to user but user was filling a form.
+     | Supported drivers are: "cache", "array" and "eloquent".
+     |
+    */
+    'pending_messages' => [
+        'database' => [
+            'driver' => 'eloquent',
+            'model' => \SequentSoft\ThreadFlow\Laravel\Models\ThreadFlowPendingMessage::class,
+        ],
+        'cache' => [
+            'driver' => 'cache',
+            'store' => env('THREAD_FLOW_PENDING_MESSAGES_CACHE_STORE', null),
+        ],
+        'array' => [
+            'driver' => 'array',
         ],
     ],
 ];

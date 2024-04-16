@@ -5,30 +5,32 @@ namespace SequentSoft\ThreadFlow\Chat;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Traits\HasUserResolver;
 
 class MessageContext implements MessageContextInterface
 {
+    use HasUserResolver;
+
     final public function __construct(
         protected string $channelName,
         protected ParticipantInterface $participant,
-        protected RoomInterface $room,
-        protected ?ParticipantInterface $forwardFrom = null,
-        protected ?IncomingMessageInterface $replyToMessage = null,
+        protected RoomInterface $room
     ) {
     }
 
-    public static function createFromIds(
-        string $channelName,
-        string $participantId,
-        ?string $roomId = null,
-        ?string $forwardFromId = null,
-    ): static {
+    public function getUser(): mixed
+    {
+        return $this->userResolver
+            ? call_user_func($this->userResolver, $this)
+            : null;
+    }
+
+    public static function createFromIds(string $channelName, string $participantId, ?string $roomId = null): static
+    {
         return new static(
             $channelName,
             new Participant($participantId),
             new Room($roomId ?: $participantId),
-            $forwardFromId ? new Participant($forwardFromId) : null,
         );
     }
 
@@ -47,13 +49,19 @@ class MessageContext implements MessageContextInterface
         return $this->room;
     }
 
-    public function getForwardFrom(): ?ParticipantInterface
+    public function __serialize(): array
     {
-        return $this->forwardFrom;
+        return [
+            'channel' => $this->channelName,
+            'participant' => $this->participant,
+            'room' => $this->room,
+        ];
     }
 
-    public function getReplyToMessage(): ?IncomingMessageInterface
+    public function __unserialize(array $data): void
     {
-        return $this->replyToMessage;
+        $this->channelName = $data['channel'];
+        $this->participant = $data['participant'];
+        $this->room = $data['room'];
     }
 }

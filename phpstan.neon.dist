@@ -1,5 +1,5 @@
 parameters:
-    level: 1
+    level: 5
     paths:
         - src
 
@@ -7,4 +7,3 @@ parameters:
 
     excludePaths:
         - src/Laravel/config.php
-        - src/Laravel

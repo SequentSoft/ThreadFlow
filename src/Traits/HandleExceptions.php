@@ -10,11 +10,20 @@ trait HandleExceptions
 {
     protected bool $exceptionsHandlersEnabled = true;
 
+    /**
+     * @var array<Closure>
+     */
     protected array $exceptionsHandlers = [];
 
-    // array of exceptions to handle later (delayed)
+    /**
+     * Array of exceptions to handle later (delayed)
+     * @var array<array{Throwable, MessageContextInterface}>
+     */
     protected array $exceptionsToHandle = [];
 
+    /**
+     * @return array<Closure>
+     */
     public function getExceptionsHandlers(): array
     {
         return $this->exceptionsHandlers;

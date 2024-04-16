@@ -5,8 +5,9 @@ namespace SequentSoft\ThreadFlow\Messages\Incoming\Regular;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\LocationIncomingMessageInterface;
+use Stringable;
 
-class LocationIncomingMessage extends IncomingMessage implements LocationIncomingMessageInterface
+class LocationIncomingMessage extends IncomingMessage implements LocationIncomingMessageInterface, Stringable
 {
     final public function __construct(
         string $id,
@@ -44,5 +45,10 @@ class LocationIncomingMessage extends IncomingMessage implements LocationIncomin
     public function getLongitude(): float
     {
         return $this->longitude;
+    }
+
+    public function __toString()
+    {
+        return $this->getText();
     }
 }

@@ -4,6 +4,8 @@ namespace SequentSoft\ThreadFlow\Contracts\Dispatcher;
 
 use Closure;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
+use SequentSoft\ThreadFlow\Contracts\Page\ActivePagesRepositoryInterface;
+use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessagesRepositoryInterface;
 
 interface DispatcherFactoryInterface
 {
@@ -11,8 +13,8 @@ interface DispatcherFactoryInterface
 
     public function make(
         string $dispatcherName,
-        ?string $entryPage,
         EventBusInterface $eventBus,
-        Closure $outgoing,
+        ActivePagesRepositoryInterface $activePagesRepository,
+        PendingMessagesRepositoryInterface $pendingMessagesRepository,
     ): DispatcherInterface;
 }

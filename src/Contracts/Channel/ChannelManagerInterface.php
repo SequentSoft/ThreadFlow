@@ -10,7 +10,7 @@ interface ChannelManagerInterface
 
     public function getUserResolver(): ?Closure;
 
-    public function registerChannelDriver(string $channelName, Closure $callback): void;
+    public function registerChannelDriver(string $driverName, Closure $callback): void;
 
     public function registerExceptionHandler(Closure $callback): void;
 

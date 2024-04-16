@@ -10,12 +10,13 @@ use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
-use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherFactoryInterface;
 use SequentSoft\ThreadFlow\Contracts\Dispatcher\DispatcherInterface;
 use SequentSoft\ThreadFlow\Contracts\Events\EventBusInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\SimpleKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ClickIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Service\BotStartedIncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
@@ -23,7 +24,6 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionClosedEvent;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
-use SequentSoft\ThreadFlow\Events\Message\IncomingMessageDispatchingEvent;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Testing\PendingTestInput;
@@ -35,16 +35,21 @@ use Throwable;
 abstract class Channel implements ChannelInterface
 {
     use HandleExceptions;
-    use TestInputResults;
     use HasUserResolver;
+    use TestInputResults;
+
+    protected ?SessionInterface $activeSession = null;
 
     public function __construct(
         protected string $channelName,
         protected ConfigInterface $config,
         protected SessionStoreInterface $sessionStore,
-        protected DispatcherFactoryInterface $dispatcherFactory,
+        protected DispatcherInterface $dispatcher,
         protected EventBusInterface $eventBus,
     ) {
+        $this->dispatcher->setOutgoingCallback(
+            $this->outgoing(...)
+        );
     }
 
     public function getName(): string
@@ -66,7 +71,7 @@ abstract class Channel implements ChannelInterface
         string $text,
         DateTimeImmutable $date,
         MessageContextInterface $context
-    ): ?CommonIncomingMessageInterface {
+    ): ?BasicIncomingMessageInterface {
         return new TextIncomingMessage($id, $context, $date, $text);
     }
 
@@ -74,10 +79,16 @@ abstract class Channel implements ChannelInterface
         MessageContextInterface $context,
         Closure $callback
     ): mixed {
+        if ($this->activeSession) {
+            return call_user_func($callback, $this->activeSession);
+        }
+
         return $this->sessionStore->useSession($context, function (SessionInterface $session) use ($callback) {
+            $this->activeSession = $session;
             $this->eventBus->fire(new SessionStartedEvent($session));
             $result = call_user_func($callback, $session);
             $this->eventBus->fire(new SessionClosedEvent($session));
+            $this->activeSession = null;
 
             return $result;
         });
@@ -87,7 +98,7 @@ abstract class Channel implements ChannelInterface
      * This method is called when a new message is received from the channel.
      * It is the main entry point for the channel to handle incoming messages.
      */
-    public function incoming(CommonIncomingMessageInterface $message): void
+    public function incoming(BasicIncomingMessageInterface $message): void
     {
         try {
             $this->useSession(
@@ -99,7 +110,7 @@ abstract class Channel implements ChannelInterface
         }
     }
 
-    protected function dispatch(CommonIncomingMessageInterface $message, SessionInterface $session): void
+    protected function dispatch(BasicIncomingMessageInterface $message, SessionInterface $session): void
     {
         // Reset the session if the bot has been started or restarted.
         // This is useful for channels like Telegram where the bot can be restarted.
@@ -108,29 +119,56 @@ abstract class Channel implements ChannelInterface
         }
 
         if ($this->userResolver) {
-            $session->setUserResolver(
-                fn (SessionInterface $session) => call_user_func($this->userResolver, $session, $message->getContext())
-            );
+            $message->getContext()->setUserResolver($this->userResolver);
         }
 
-        $this->eventBus->fire(new IncomingMessageDispatchingEvent($message, $session));
+        $page = $this->getIncomingMessagePage($session);
 
-        $this->getDispatcher()->incoming($message, $session);
+        $message = $this->prepareIncomingMessage($message, $session, $page);
+
+        $this->dispatcher->incoming($message, $session, $page);
     }
 
-    protected function getEntryPageClass(): string
+    protected function prepareIncomingKeyboardClick(
+        BasicIncomingMessageInterface $message,
+        SessionInterface $session,
+        SimpleKeyboardInterface $keyboard
+    ): ?ClickIncomingMessageInterface {
+        return null;
+    }
+
+    protected function prepareIncomingMessage(
+        BasicIncomingMessageInterface $message,
+        SessionInterface $session,
+        PageInterface $page
+    ): BasicIncomingMessageInterface {
+        $keyboard = $page->getLastKeyboard();
+
+        if ($keyboard && $click = $this->prepareIncomingKeyboardClick($message, $session, $keyboard)) {
+            return $click;
+        }
+
+        return $message;
+    }
+
+    protected function getIncomingMessagePage(SessionInterface $session): PageInterface
+    {
+        if ($page = $session->getCurrentPage()) {
+            return $page;
+        }
+
+        $pageClass = $this->getEntryPage();
+
+        if ($pageClass instanceof PageInterface) {
+            return $pageClass;
+        }
+
+        return new $pageClass();
+    }
+
+    protected function getEntryPage(): string|PageInterface
     {
         return $this->config->get('entry');
-    }
-
-    protected function getDispatcher(): DispatcherInterface
-    {
-        return $this->dispatcherFactory->make(
-            $this->config->get('dispatcher'),
-            $this->getEntryPageClass(),
-            $this->eventBus,
-            $this->outgoing(...)
-        );
     }
 
     public function on(string $event, callable $callback): void
@@ -152,8 +190,8 @@ abstract class Channel implements ChannelInterface
 
     public function dispatchTo(
         MessageContextInterface $context,
-        PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
-    ): ?CommonOutgoingMessageInterface {
+        PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
+    ): ?BasicOutgoingMessageInterface {
         $pageOrMessage->setContext($context);
 
         return $this->useSession(
@@ -171,25 +209,25 @@ abstract class Channel implements ChannelInterface
         MessageContextInterface $messageContext,
         PageInterface $contextPage,
         SessionInterface $session,
-        PageInterface|CommonOutgoingMessageInterface $pageOrMessage,
-    ): ?CommonOutgoingMessageInterface {
+        PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
+    ): ?BasicOutgoingMessageInterface {
         if ($session->getCurrentPage()->isDontDisturb()) {
-            $session->pushPendingInteraction($pageOrMessage);
+            $this->dispatcher->pushPendingMessage($messageContext, $session, $pageOrMessage);
+
             return null;
         }
 
         if ($this->userResolver) {
-            $session->setUserResolver(
-                fn (SessionInterface $session) => call_user_func($this->userResolver, $session, $messageContext)
-            );
+            $messageContext->setUserResolver($this->userResolver);
         }
 
         if ($pageOrMessage instanceof PageInterface) {
-            $this->getDispatcher()->transition($messageContext, $session, $pageOrMessage, $contextPage);
+            $this->dispatcher->transition($messageContext, $session, $pageOrMessage, $contextPage);
+
             return null;
         }
 
-        return $this->getDispatcher()->outgoing($pageOrMessage, $session, null);
+        return $this->dispatcher->outgoing($pageOrMessage, $session, null);
     }
 
     protected function makeTextMessage(
@@ -200,23 +238,9 @@ abstract class Channel implements ChannelInterface
             ->setContext($messageContext);
     }
 
-    /**
-     * This method is used for testing purposes to create an incoming message from text.
-     * Can be overridden in specific channel implementation.
-     */
-    protected function testInputText(string $text, MessageContextInterface $context): CommonIncomingMessageInterface
-    {
-        return new TextIncomingMessage(
-            'test',
-            $context,
-            new DateTimeImmutable(),
-            $text,
-        );
-    }
-
     protected function pendingTestInputCallback(
         Closure $prepareSession,
-        CommonIncomingMessageInterface $message
+        BasicIncomingMessageInterface $message
     ): ResultsRecorderInterface {
         return $this->captureTestInputResults(
             $this->eventBus,
@@ -229,21 +253,15 @@ abstract class Channel implements ChannelInterface
 
     public function test(): PendingTestInput
     {
-        $pendingTestInput = new PendingTestInput(
+        return new PendingTestInput(
             $this->channelName,
             $this->pendingTestInputCallback(...)
         );
-
-        $pendingTestInput->setTextMessageResolver(function (string $text, MessageContextInterface $context) {
-            return $this->testInputText($text, $context);
-        });
-
-        return $pendingTestInput;
     }
 
     abstract protected function outgoing(
-        CommonOutgoingMessageInterface $message,
+        BasicOutgoingMessageInterface $message,
         ?SessionInterface $session,
         ?PageInterface $contextPage
-    ): CommonOutgoingMessageInterface;
+    ): BasicOutgoingMessageInterface;
 }

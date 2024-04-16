@@ -5,6 +5,8 @@ namespace SequentSoft\ThreadFlow\Page;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormFieldInterface;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\MarkdownOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Keyboard\Button;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\HtmlOutgoingMessage;
@@ -112,6 +114,16 @@ class BaseFormPage extends AbstractPage
         $fieldDescription = $currentField->getDescription();
         $currentValueText = $this->form->getCurrentValueText();
 
+        if ($fieldDescription instanceof TextOutgoingMessageInterface) {
+            $fieldDescription = $fieldDescription->getText();
+        } elseif ($fieldDescription instanceof HtmlOutgoingMessage) {
+            $fieldDescription = $fieldDescription->getHtml();
+        } elseif ($fieldDescription instanceof MarkdownOutgoingMessageInterface) {
+            $fieldDescription = $fieldDescription->getMarkdown();
+        } else {
+            $fieldDescription = '';
+        }
+
         $message = implode("\n", [
             $this->isFieldFirst($currentField, $fields) && $formDescription ? "{$formDescription}\n" : '',
             $fieldCaption ? "<b>{$fieldCaption}</b>\n" : '',
@@ -165,7 +177,7 @@ class BaseFormPage extends AbstractPage
             return $result;
         }
 
-        $fields =  $this->form->fields();
+        $fields = $this->form->fields();
 
         // if not field that need to fill, then return the main page
         if (! $currentField = $this->getCurrentField($fields)) {

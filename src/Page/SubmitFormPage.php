@@ -10,6 +10,7 @@ use SequentSoft\ThreadFlow\Keyboard\Button;
 use SequentSoft\ThreadFlow\Messages\Incoming\Regular\FormResultIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\HtmlOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\Traits\ConfirmableCancelTrait;
+use SequentSoft\ThreadFlow\Page\Responses\AnswerToPage;
 
 class SubmitFormPage extends AbstractPage
 {
@@ -54,7 +55,7 @@ class SubmitFormPage extends AbstractPage
             ->withKeyboard($this->buttons());
     }
 
-    public function answer(IncomingMessageInterface $message)
+    public function answer(IncomingMessageInterface $message): mixed
     {
         if ($result = $this->handleConfirmableCancelAnswer(
             message: $message,

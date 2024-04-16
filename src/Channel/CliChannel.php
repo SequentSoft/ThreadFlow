@@ -6,8 +6,8 @@ use Closure;
 use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\DataFetchers\DataFetcherInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\CommonIncomingMessageInterface;
-use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\CommonOutgoingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\BasicIncomingMessageInterface;
+use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 
@@ -25,8 +25,9 @@ class CliChannel extends Channel
         $fetcher->fetch(function (array $update) use ($messageContext) {
             $message = $update['message'] ?? '';
 
-            if ($message instanceof CommonIncomingMessageInterface) {
+            if ($message instanceof BasicIncomingMessageInterface) {
                 $this->incoming($message);
+
                 return;
             }
 
@@ -42,10 +43,10 @@ class CliChannel extends Channel
     }
 
     protected function outgoing(
-        CommonOutgoingMessageInterface $message,
+        BasicOutgoingMessageInterface $message,
         ?SessionInterface $session,
         ?PageInterface $contextPage
-    ): CommonOutgoingMessageInterface {
+    ): BasicOutgoingMessageInterface {
         if ($this->callback !== null) {
             return call_user_func($this->callback, $message, $session, $contextPage);
         }

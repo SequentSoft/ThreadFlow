@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class () extends Migration {
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('thread_flow_pending_messages', function (Blueprint $table) {
+            $table->id();
+            $table->string('channel_name');
+            $table->string('channel_context');
+            $table->string('session_id')->index();
+            $table->text('data');
+            $table->timestamp('created_at');
+
+            $table->index(['channel_name', 'channel_context']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('thread_flow_pending_messages');
+    }
+};

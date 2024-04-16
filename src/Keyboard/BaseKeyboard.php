@@ -2,13 +2,57 @@
 
 namespace SequentSoft\ThreadFlow\Keyboard;
 
-use SequentSoft\ThreadFlow\Contracts\Keyboard\KeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\BaseKeyboardInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\ButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\ButtonWithCallbackDataInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\RowInterface;
 
-abstract class BaseKeyboard implements KeyboardInterface
+abstract class BaseKeyboard implements BaseKeyboardInterface
 {
     final public function __construct(
+        /**
+         * @var array<RowInterface>
+         */
         protected array $rows,
     ) {
+    }
+
+    /**
+     * @return array<ButtonInterface>
+     */
+    public function getButtons(): array
+    {
+        $buttons = [];
+
+        foreach ($this->rows as $row) {
+            foreach ($row->getButtons() as $button) {
+                $buttons[] = $button;
+            }
+        }
+
+        return $buttons;
+    }
+
+    public function getButtonByKey(string $key): ?ButtonWithCallbackDataInterface
+    {
+        foreach ($this->getButtons() as $button) {
+            if ($button instanceof ButtonWithCallbackDataInterface && $button->getCallbackData() === $key) {
+                return $button;
+            }
+        }
+
+        return null;
+    }
+
+    public function getButtonByTitle(string $title): ?ButtonInterface
+    {
+        foreach ($this->getButtons() as $button) {
+            if ($button->getTitle() === $title) {
+                return $button;
+            }
+        }
+
+        return null;
     }
 
     public function getRows(): array
@@ -16,7 +60,7 @@ abstract class BaseKeyboard implements KeyboardInterface
         return $this->rows;
     }
 
-    public static function makeFromKeyboard(KeyboardInterface $keyboard): KeyboardInterface
+    public static function makeFromKeyboard(BaseKeyboardInterface $keyboard): BaseKeyboardInterface
     {
         return new static($keyboard->getRows());
     }
