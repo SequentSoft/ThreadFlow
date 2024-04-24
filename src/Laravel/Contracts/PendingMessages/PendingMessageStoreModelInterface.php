@@ -2,7 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Laravel\Contracts\PendingMessages;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder as BuilderInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\PendingMessages\PendingMessageInterface;
@@ -11,10 +12,10 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 interface PendingMessageStoreModelInterface
 {
     public function scopeFilterByContextAndSession(
-        Builder $query,
+        Builder|BuilderInterface $query,
         MessageContextInterface $context,
         SessionInterface $session
-    ): Builder;
+    ): Builder|BuilderInterface;
 
     public function getSerializedPendingMessage(): string;
 

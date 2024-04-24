@@ -2,7 +2,8 @@
 
 namespace SequentSoft\ThreadFlow\Laravel\Models;
 
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Contracts\Database\Eloquent\Builder as BuilderInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
@@ -38,10 +39,10 @@ class ThreadFlowActivePage extends Model implements ActivePageStoreModelInterfac
     }
 
     public function scopeFilterByContextAndSession(
-        Builder $query,
+        Builder|BuilderInterface $query,
         MessageContextInterface $context,
         SessionInterface $session
-    ): Builder {
+    ): Builder|BuilderInterface {
         return $query->where('channel_name', $context->getChannelName())
             ->where('channel_context', $this->makeChannelContextKey($context))
             ->where('session_id', $session->getId());
