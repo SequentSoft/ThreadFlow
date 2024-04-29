@@ -224,13 +224,15 @@ class BaseDispatcher implements DispatcherInterface
             return;
         }
 
-        if (! $contextPage->isTrackingPrev() && $contextPage->getPrevPageId()) {
+        if (! $contextPage->keepPrevPageReferenceAfterTransition() && $contextPage->getPrevPageId()) {
             $this->destroyActivePage($messageContext, $session, [$contextPage->getPrevPageId()], $whitelist);
             $contextPage->setPrevPageId(null);
         }
 
-        $this->activePagesRepository->put($messageContext, $session, $contextPage);
-        $page->setPrevPageId($contextPage->getId());
+        if ($page->autoSetPrevPageReference()) {
+            $this->activePagesRepository->put($messageContext, $session, $contextPage);
+            $page->setPrevPageId($contextPage->getId());
+        }
     }
 
     /**

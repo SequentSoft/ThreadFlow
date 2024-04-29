@@ -27,7 +27,7 @@ class SubmitFormPage extends AbstractPage
         return true;
     }
 
-    public function isTrackingPrev(): bool
+    public function keepPrevPageReferenceAfterTransition(): bool
     {
         return false;
     }

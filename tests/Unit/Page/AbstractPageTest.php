@@ -180,7 +180,7 @@ it('can send text answer with keyboard and access latest sent keyboard', functio
     $lastKeyboard = $page->getLastKeyboard();
     $lastKeyboardFirstButton = $lastKeyboard->getButtons()[0];
 
-    expect($page->isTrackingPrev())->toBeTrue()
+    expect($page->keepPrevPageReferenceAfterTransition())->toBeTrue()
         ->and($lastKeyboard)
         ->toBeInstanceOf(SimpleKeyboardInterface::class)
         ->and($lastKeyboardFirstButton)
@@ -219,7 +219,7 @@ it('can store prev page', function () {
     $page->setSession($this->session);
     $page->setContext($this->messageContext);
 
-    expect($page->getPrevPage())
+    expect($page->resolvePrevPage())
         ->toBeNull()
         ->and($page->getPrevPageId())
         ->toBeNull();
@@ -231,7 +231,7 @@ it('can store prev page', function () {
         ->with($this->messageContext, $this->session, 'prev-page-test-id')
         ->andReturn($prevPage);
 
-    expect($page->getPrevPage())
+    expect($page->resolvePrevPage())
         ->toBe($prevPage)
         ->and($page->getPrevPageId())
         ->toBe('prev-page-test-id');

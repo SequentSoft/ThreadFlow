@@ -59,7 +59,7 @@ abstract class AbstractPage implements PageInterface
      */
     protected ?string $id = null;
 
-    protected bool $trackingPrev = false;
+    protected bool $keepPrevPageReferenceAfterTransition = false;
 
     protected ?SimpleKeyboardInterface $lastKeyboard = null;
 
@@ -73,15 +73,19 @@ abstract class AbstractPage implements PageInterface
         return $this->lastKeyboard;
     }
 
-    /**
-     * This method is used to determine whether to store a reference
-     * to the previous page after moving to the next page
-     * can be overridden in the child class
-     * (by default, the reference is stored if the previous page has a back button)
-     */
-    public function isTrackingPrev(): bool
+    public function keepPrevPageReferenceAfterTransition(): bool
     {
-        return $this->trackingPrev;
+        return $this->keepPrevPageReferenceAfterTransition;
+    }
+
+    protected function hasGetPrevPageMethod(): bool
+    {
+        return method_exists($this, 'getPrevPage');
+    }
+
+    public function autoSetPrevPageReference(): bool
+    {
+        return ! $this->hasGetPrevPageMethod();
     }
 
     public function setPrevPageId(?string $prevId): static
@@ -96,8 +100,12 @@ abstract class AbstractPage implements PageInterface
         return $this->prevPageId;
     }
 
-    public function getPrevPage(): ?PageInterface
+    public function resolvePrevPage(): ?PageInterface
     {
+        if ($this->hasGetPrevPageMethod()) {
+            return call_user_func([$this, 'getPrevPage']);
+        }
+
         if (! $id = $this->getPrevPageId()) {
             return null;
         }
@@ -441,7 +449,7 @@ abstract class AbstractPage implements PageInterface
 
             foreach ($keyboard?->getButtons() ?? [] as $button) {
                 if ($button instanceof BackButtonInterface) {
-                    $this->trackingPrev = true;
+                    $this->keepPrevPageReferenceAfterTransition = true;
                 }
             }
         }

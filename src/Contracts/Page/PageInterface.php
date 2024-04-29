@@ -13,7 +13,7 @@ interface PageInterface
 {
     public function isDontDisturb(): bool;
 
-    public function isTrackingPrev(): bool;
+    public function keepPrevPageReferenceAfterTransition(): bool;
 
     public function getId(): string;
 
@@ -29,7 +29,7 @@ interface PageInterface
 
     public function getPrevPageId(): ?string;
 
-    public function getPrevPage(): ?PageInterface;
+    public function resolvePrevPage(): ?PageInterface;
 
     public function getLastKeyboard(): ?SimpleKeyboardInterface;
 
@@ -40,6 +40,8 @@ interface PageInterface
     public function isBackground(): bool;
 
     public function getAttributes(): array;
+
+    public function autoSetPrevPageReference(): bool;
 
     public function execute(
         EventBusInterface $eventBus,
