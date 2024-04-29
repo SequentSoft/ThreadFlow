@@ -4,11 +4,13 @@ namespace SequentSoft\ThreadFlow\Page;
 
 use SequentSoft\ThreadFlow\Contracts\Forms\FormFieldInterface;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\MarkdownOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Keyboard\Button;
+use SequentSoft\ThreadFlow\Messages\Incoming\Regular\ClickIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\HtmlOutgoingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\Traits\ConfirmableCancelTrait;
@@ -22,6 +24,11 @@ class BaseFormPage extends AbstractPage
         protected PageInterface $page,
         protected ?string $fieldKey = null,
     ) {
+    }
+
+    public function setForm(FormInterface $form): void
+    {
+        $this->form = $form;
     }
 
     public function isDontDisturb(): bool
@@ -86,7 +93,7 @@ class BaseFormPage extends AbstractPage
                 $isRequired ? null : Button::text($emptyButtonText, '$empty'),
                 $hasValue ? Button::text($dontChangeButtonText, '$dontChange') : null,
             ]),
-            $isFirstField ? null : Button::back($backButtonText)->autoHandleAnswer(),
+            $isFirstField ? null : Button::back($backButtonText),
             $this->getConfirmableCancelButton($this->form->getCancelButtonText()),
         ]);
     }
@@ -124,12 +131,12 @@ class BaseFormPage extends AbstractPage
             $fieldDescription = '';
         }
 
-        $message = implode("\n", [
+        $message = implode("\n", array_filter([
             $this->isFieldFirst($currentField, $fields) && $formDescription ? "{$formDescription}\n" : '',
             $fieldCaption ? "<b>{$fieldCaption}</b>\n" : '',
             $fieldDescription,
             $filledValue ? "\n<b>{$currentValueText}</b>:\n{$filledValue}" : '',
-        ]);
+        ]));
 
         return HtmlOutgoingMessage::make($message)
             ->withKeyboard($this->getFieldButtons($currentField, $fields), $fieldCaption);
@@ -167,6 +174,16 @@ class BaseFormPage extends AbstractPage
      */
     public function answer(IncomingMessageInterface $message): mixed
     {
+        if ($message instanceof ClickIncomingMessage && $message->getButton() instanceof BackButtonInterface) {
+            $prev = $this->resolvePrevPage();
+
+            if ($prev instanceof BaseFormPage) {
+                $prev->setForm($this->form);
+            }
+
+            return $prev;
+        }
+
         if ($result = $this->handleConfirmableCancelAnswer(
             message: $message,
             page: $this->page,
