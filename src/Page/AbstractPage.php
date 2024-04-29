@@ -312,7 +312,7 @@ abstract class AbstractPage implements PageInterface
             $button = $message->getButton();
 
             if ($button instanceof BackButtonInterface && $button->isAutoHandleAnswer()) {
-                return $this->getPrevPage();
+                return $this->resolvePrevPage();
             }
 
             if ($button instanceof TextButtonInterface && $page = $button->getAutoHandleAnswerPage()) {
