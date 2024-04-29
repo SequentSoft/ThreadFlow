@@ -32,6 +32,7 @@ interface ChannelInterface
     public function dispatchTo(
         MessageContextInterface $context,
         PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
+        bool $force = false,
     ): ?BasicOutgoingMessageInterface;
 
     public function registerExceptionHandler(Closure $callback): void;

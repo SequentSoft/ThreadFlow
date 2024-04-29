@@ -191,6 +191,7 @@ abstract class Channel implements ChannelInterface
     public function dispatchTo(
         MessageContextInterface $context,
         PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
+        bool $force = false,
     ): ?BasicOutgoingMessageInterface {
         $pageOrMessage->setContext($context);
 
@@ -200,7 +201,8 @@ abstract class Channel implements ChannelInterface
                 $context,
                 $session->getCurrentPage(),
                 $session,
-                $pageOrMessage
+                $pageOrMessage,
+                $force
             )
         );
     }
@@ -210,8 +212,9 @@ abstract class Channel implements ChannelInterface
         PageInterface $contextPage,
         SessionInterface $session,
         PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
+        bool $force = false,
     ): ?BasicOutgoingMessageInterface {
-        if ($session->getCurrentPage()->isDontDisturb()) {
+        if (! $force && $session->getCurrentPage()->isDontDisturb()) {
             $this->dispatcher->pushPendingMessage($messageContext, $session, $pageOrMessage);
 
             return null;

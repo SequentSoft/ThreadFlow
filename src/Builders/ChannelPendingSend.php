@@ -15,12 +15,21 @@ use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 
 class ChannelPendingSend
 {
+    protected bool $force = false;
+
     public function __construct(
         protected ChannelInterface $channel,
         protected Closure $makeTextMessageCallback,
         protected ?ParticipantInterface $participant = null,
         protected ?RoomInterface $room = null,
     ) {
+    }
+
+    public function force(): static
+    {
+        $this->force = true;
+
+        return $this;
     }
 
     public function withParticipant(ParticipantInterface|string $participant): static
@@ -62,7 +71,7 @@ class ChannelPendingSend
 
     public function showPage(PageInterface $page): void
     {
-        $this->channel->dispatchTo($this->createMessageContext(), $page);
+        $this->channel->dispatchTo($this->createMessageContext(), $page, $this->force);
     }
 
     public function sendMessage(
@@ -74,6 +83,6 @@ class ChannelPendingSend
             $message = call_user_func($this->makeTextMessageCallback, $message, $context);
         }
 
-        return $this->channel->dispatchTo($context, $message);
+        return $this->channel->dispatchTo($context, $message, $this->force);
     }
 }
