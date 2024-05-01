@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Forms;
 
+use Closure;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormFieldInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingMessageInterface;
 
@@ -14,6 +15,8 @@ class TextFormField implements FormFieldInterface
     protected ?string $emptyButtonText = null;
 
     protected ?string $dontChangeButtonText = null;
+
+    protected ?Closure $onChangeCallback;
 
     final public function __construct(
         protected string $key,
@@ -28,6 +31,18 @@ class TextFormField implements FormFieldInterface
         string|OutgoingMessageInterface|null $description = null
     ): static {
         return new static($key, $caption, $description);
+    }
+
+    public function onChange(Closure $callback): static
+    {
+        $this->onChangeCallback = $callback;
+
+        return $this;
+    }
+
+    public function getOnChangeCallback(): ?Closure
+    {
+        return $this->onChangeCallback;
     }
 
     public function rules(array $rules, array $messages = []): static

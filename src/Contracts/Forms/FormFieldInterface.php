@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Forms;
 
+use Closure;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingMessageInterface;
 
 interface FormFieldInterface
@@ -11,6 +12,10 @@ interface FormFieldInterface
     public function caption(?string $caption): static;
 
     public function description(string|OutgoingMessageInterface|null $description): static;
+
+    public function onChange(Closure $callback): static;
+
+    public function getOnChangeCallback(): ?Closure;
 
     public function emptyButtonText(string $text): static;
 

@@ -212,7 +212,14 @@ class BaseFormPage extends AbstractPage
                 ->withKeyboard($this->getFieldButtons($currentField, $fields));
         }
 
-        $this->form->setValue($key, $this->prepareValueForStore($currentField, $message));
+        $oldValue = $this->form->getValue($key);
+        $newValue = $this->prepareValueForStore($currentField, $message);
+
+        $this->form->setValue($key, $newValue);
+
+        if ($onChangeCallback = $currentField->getOnChangeCallback()) {
+            $onChangeCallback($newValue, $oldValue, $this->form);
+        }
 
         return $this->getNextStep($key, $fields);
     }
