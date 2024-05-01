@@ -80,7 +80,7 @@ class BaseFormPage extends AbstractPage
 
     protected function getFieldButtons(FormFieldInterface $field, array $fields): array
     {
-        $isRequired = in_array('required', $field->getRules());
+        $isRequired = in_array('required', $field->getValidationRules());
         $isFirstField = $this->isFieldFirst($field, $fields);
         $hasValue = $this->form->getValue($field->getKey());
 

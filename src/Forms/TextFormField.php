@@ -8,9 +8,11 @@ use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\OutgoingMessageIn
 
 class TextFormField implements FormFieldInterface
 {
-    protected array $rules = [];
+    protected array $validationRules = [];
 
-    protected array $messages = [];
+    protected array $validationMessages = [];
+
+    protected array $validationAttributes = [];
 
     protected ?string $emptyButtonText = null;
 
@@ -45,10 +47,11 @@ class TextFormField implements FormFieldInterface
         return $this->onChangeCallback;
     }
 
-    public function rules(array $rules, array $messages = []): static
+    public function rules(array $rules, array $messages = [], array $attributes = []): static
     {
-        $this->rules = $rules;
-        $this->messages = $messages;
+        $this->validationRules = $rules;
+        $this->validationMessages = $messages;
+        $this->validationAttributes = $attributes;
 
         return $this;
     }
@@ -91,14 +94,19 @@ class TextFormField implements FormFieldInterface
         return $this->description;
     }
 
-    public function getRules(): array
+    public function getValidationRules(): array
     {
-        return $this->rules;
+        return $this->validationRules;
     }
 
-    public function getMessages(): array
+    public function getValidationMessages(): array
     {
-        return $this->messages;
+        return $this->validationMessages;
+    }
+
+    public function getValidationAttributes(): array
+    {
+        return $this->validationAttributes;
     }
 
     public function getKey(): string

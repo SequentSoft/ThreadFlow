@@ -25,9 +25,11 @@ interface FormFieldInterface
 
     public function getDescription(): string|OutgoingMessageInterface|null;
 
-    public function getRules(): array;
+    public function getValidationRules(): array;
 
-    public function getMessages(): array;
+    public function getValidationMessages(): array;
+
+    public function getValidationAttributes(): array;
 
     public function getKey(): string;
 

@@ -16,7 +16,7 @@ class SimpleFormPage extends BaseFormPage
 
     protected function validate(FormFieldInterface $field, IncomingMessageInterface $message): ?string
     {
-        $rules = $field->getRules();
+        $rules = $field->getValidationRules();
 
         if (! $rules) {
             return null;
@@ -27,7 +27,8 @@ class SimpleFormPage extends BaseFormPage
         $validator = $this->validationFactory()->make(
             [$key => $this->prepareValueForValidation($field, $message)],
             [$key => $rules],
-            $field->getMessages()
+            $field->getValidationMessages(),
+            $field->getValidationAttributes(),
         );
 
         if (! $validator->fails()) {
