@@ -127,7 +127,7 @@ class BaseFormPage extends AbstractPage
             $fieldDescription = $fieldDescription->getHtml();
         } elseif ($fieldDescription instanceof MarkdownOutgoingMessageInterface) {
             $fieldDescription = $fieldDescription->getMarkdown();
-        } else {
+        } elseif (! is_string($fieldDescription)) {
             $fieldDescription = '';
         }
 
