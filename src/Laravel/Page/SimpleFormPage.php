@@ -24,11 +24,13 @@ class SimpleFormPage extends BaseFormPage
 
         $key = $field->getKey();
 
+        $validationAttributes = $field->getValidationAttributes() ?: [$key => '[' . $field->getKey() . ']'];
+
         $validator = $this->validationFactory()->make(
             [$key => $this->prepareValueForValidation($field, $message)],
             [$key => $rules],
             $field->getValidationMessages(),
-            $field->getValidationAttributes(),
+            $validationAttributes,
         );
 
         if (! $validator->fails()) {
