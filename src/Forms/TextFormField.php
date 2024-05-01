@@ -16,7 +16,7 @@ class TextFormField implements FormFieldInterface
 
     protected ?string $dontChangeButtonText = null;
 
-    protected ?Closure $onChangeCallback;
+    protected ?Closure $onChangeCallback = null;
 
     final public function __construct(
         protected string $key,

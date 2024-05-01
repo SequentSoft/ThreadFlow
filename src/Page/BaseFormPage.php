@@ -215,11 +215,11 @@ class BaseFormPage extends AbstractPage
         $oldValue = $this->form->getValue($key);
         $newValue = $this->prepareValueForStore($currentField, $message);
 
-        $this->form->setValue($key, $newValue);
-
         if ($onChangeCallback = $currentField->getOnChangeCallback()) {
-            $onChangeCallback($newValue, $oldValue, $this->form);
+            $newValue = $onChangeCallback($newValue, $oldValue, $this->form);
         }
+
+        $this->form->setValue($key, $newValue);
 
         return $this->getNextStep($key, $fields);
     }
