@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Contracts\Forms;
 
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 
 interface FormInterface
@@ -22,7 +23,7 @@ interface FormInterface
 
     public function prepareForDisplay(FormFieldInterface $field, mixed $storedValue): ?string;
 
-    public function fields(): array;
+    public function fields(MessageContextInterface $messageContext): array;
 
     public function getCancelButtonText(): string;
 

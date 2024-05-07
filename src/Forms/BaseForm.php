@@ -2,6 +2,7 @@
 
 namespace SequentSoft\ThreadFlow\Forms;
 
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormFieldInterface;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
@@ -66,7 +67,7 @@ abstract class BaseForm implements FormInterface
         return null;
     }
 
-    abstract public function fields(): array;
+    abstract public function fields(MessageContextInterface $messageContext): array;
 
     public function getCancelButtonText(): string
     {

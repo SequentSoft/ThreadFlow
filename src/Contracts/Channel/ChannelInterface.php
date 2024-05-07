@@ -3,7 +3,7 @@
 namespace SequentSoft\ThreadFlow\Contracts\Channel;
 
 use Closure;
-use SequentSoft\ThreadFlow\Builders\ChannelPendingSend;
+use SequentSoft\ThreadFlow\Channel\Builders\ChannelPendingSend;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;

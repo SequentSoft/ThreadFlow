@@ -1,6 +1,6 @@
 <?php
 
-use SequentSoft\ThreadFlow\Builders\ChannelPendingSend;
+use SequentSoft\ThreadFlow\Channel\Builders\ChannelPendingSend;
 use SequentSoft\ThreadFlow\Channel\Channel;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;

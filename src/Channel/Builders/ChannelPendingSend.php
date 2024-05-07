@@ -1,6 +1,6 @@
 <?php
 
-namespace SequentSoft\ThreadFlow\Builders;
+namespace SequentSoft\ThreadFlow\Channel\Builders;
 
 use Closure;
 use SequentSoft\ThreadFlow\Chat\MessageContext;

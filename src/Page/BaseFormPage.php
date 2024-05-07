@@ -105,7 +105,7 @@ class BaseFormPage extends AbstractPage
 
     public function show(): mixed
     {
-        $fields = $this->form->fields();
+        $fields = $this->form->fields($this->getContext());
         $currentField = $this->getCurrentField($fields);
 
         // if the form is empty and there are no fields, then return the main page
@@ -194,7 +194,7 @@ class BaseFormPage extends AbstractPage
             return $result;
         }
 
-        $fields = $this->form->fields();
+        $fields = $this->form->fields($this->getContext());
 
         // if not field that need to fill, then return the main page
         if (! $currentField = $this->getCurrentField($fields)) {
