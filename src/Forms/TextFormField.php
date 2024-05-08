@@ -37,7 +37,7 @@ class TextFormField implements FormFieldInterface
         return new static($key, $caption, $description);
     }
 
-    public function disable($isDisabled = true): static
+    public function disable(bool|Closure $isDisabled = true): static
     {
         $this->disabled = $isDisabled;
 
