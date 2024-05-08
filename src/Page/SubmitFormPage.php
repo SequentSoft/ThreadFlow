@@ -46,6 +46,9 @@ class SubmitFormPage extends AbstractPage
         $message = $this->form->getConfirmQuestionText() . "\n\n";
 
         foreach ($this->form->fields($this->getContext()) as $field) {
+            if ($field->isDisabled()) {
+                continue;
+            }
             $caption = $field->getCaption() ?? $field->getKey();
             $value = $this->form->prepareForDisplay($field, $this->form->getValue($field->getKey()));
             $message .= "<b>{$caption}</b>:\n{$value}\n\n";
