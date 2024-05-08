@@ -30,7 +30,7 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
      *
      * @throws InvalidArgumentException
      */
-    public function make(string $name, string $channelName): SessionStoreInterface
+    public function make(string $name): SessionStoreInterface
     {
         $config = $this->config->get($name);
 
@@ -48,10 +48,6 @@ class SessionStoreFactory implements SessionStoreFactoryInterface
             );
         }
 
-        return call_user_func(
-            $this->drivers[$driverName],
-            $channelName,
-            new Config($config)
-        );
+        return call_user_func($this->drivers[$driverName], new Config($config));
     }
 }

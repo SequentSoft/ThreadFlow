@@ -52,7 +52,7 @@ class CacheSessionStore extends BaseSessionStore
 
     public function useSession(MessageContextInterface $context, callable $callback): mixed
     {
-        $key = $this->makeKeyString($this->channelName, $context);
+        $key = $context->asKey();
         $lock = $this->acquireLock($key);
         $session = $this->load($key);
 

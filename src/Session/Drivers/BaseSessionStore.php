@@ -2,18 +2,16 @@
 
 namespace SequentSoft\ThreadFlow\Session\Drivers;
 
-use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
 use SequentSoft\ThreadFlow\Contracts\Serializers\SerializerInterface;
 use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
+use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Exceptions\Session\SessionSizeLimitExceededException;
 use SequentSoft\ThreadFlow\Session\Session;
-use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 
 abstract class BaseSessionStore implements SessionStoreInterface
 {
     public function __construct(
-        protected string $channelName,
         protected ConfigInterface $config,
         protected SerializerInterface $serializer,
     ) {
@@ -51,14 +49,6 @@ abstract class BaseSessionStore implements SessionStoreInterface
     protected function getMaxSize(): int
     {
         return $this->getConfig()->get('max_size', 1024 * 1024 * 0.5); // 512 KB by default
-    }
-
-    protected function makeKeyString(string $channelName, MessageContextInterface $context): string
-    {
-        $roomId = $context->getRoom()->getId();
-        $participantId = $context->getParticipant()->getId();
-
-        return "{$channelName}:{$roomId}:{$participantId}";
     }
 
     protected function getConfig(): ConfigInterface

@@ -11,12 +11,11 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionInterface;
 class ArraySessionStore extends BaseSessionStore
 {
     public function __construct(
-        protected string $channelName,
         protected ConfigInterface $config,
         protected SerializerInterface $serializer,
         protected ArraySessionStoreStorage $storage,
     ) {
-        parent::__construct($channelName, $config, $serializer);
+        parent::__construct($config, $serializer);
     }
 
     /**
@@ -24,7 +23,7 @@ class ArraySessionStore extends BaseSessionStore
      */
     public function useSession(MessageContextInterface $context, callable $callback): mixed
     {
-        $key = $this->makeKeyString($this->channelName, $context);
+        $key = $context->asKey();
 
         $session = $this->load($key);
 

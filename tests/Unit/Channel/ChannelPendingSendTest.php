@@ -8,6 +8,7 @@ use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\BasicOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Page\PageInterface;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
+use SequentSoft\ThreadFlow\Page\AbstractPage;
 
 beforeEach(function () {
     $this->outgoingMessageMakeCallback = function ($text, $context) {
@@ -68,7 +69,7 @@ it('can set a room', function () {
 
 it('can show a page', function () {
     $channel = Mockery::mock(ChannelInterface::class);
-    $page = Mockery::mock(\SequentSoft\ThreadFlow\Page\AbstractPage::class);
+    $page = Mockery::mock(AbstractPage::class);
     $channelPendingSend = new ChannelPendingSend($channel, $this->outgoingMessageMakeCallback);
 
     $channel->shouldReceive('getName')->once()->andReturn('test');
@@ -97,6 +98,28 @@ it('can send a message', function () {
     $channel->shouldReceive('dispatchTo')->once()->andReturn($message);
 
     $result = $channelPendingSend->sendMessage($message);
+
+    expect($result)->toBe($message);
+});
+
+it('can force sending a message', function () {
+    $channel = Mockery::mock(ChannelInterface::class);
+    $message = Mockery::mock(BasicOutgoingMessageInterface::class);
+    $channelPendingSend = new ChannelPendingSend($channel, $this->outgoingMessageMakeCallback);
+
+    $channel->shouldReceive('getName')->once()->andReturn('test');
+    $channelPendingSend->withRoom('test-id');
+
+    $channel->shouldReceive('dispatchTo')
+        ->once()
+        ->withArgs(function ($context, $message, $force) {
+            expect($force)->toBeTrue();
+
+            return true;
+        })
+        ->andReturn($message);
+
+    $result = $channelPendingSend->force()->sendMessage($message);
 
     expect($result)->toBe($message);
 });

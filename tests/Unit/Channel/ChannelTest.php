@@ -3,7 +3,6 @@
 use SequentSoft\ThreadFlow\Channel\Builders\ChannelPendingSend;
 use SequentSoft\ThreadFlow\Channel\Channel;
 use SequentSoft\ThreadFlow\Chat\MessageContext;
-use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\ParticipantInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\RoomInterface;
 use SequentSoft\ThreadFlow\Contracts\Config\ConfigInterface;
@@ -40,10 +39,6 @@ beforeEach(function () {
     };
 });
 
-test('channel implements ChannelInterface', function () {
-    expect($this->channel)->toBeInstanceOf(ChannelInterface::class);
-});
-
 test('getName returns correct channel name', function () {
     expect($this->channel->getName())->toBe('testChannel');
 });
@@ -62,6 +57,21 @@ test('forRoom returns ChannelPendingSend with correct room', function () {
 
     expect($pendingSend)->toBeInstanceOf(ChannelPendingSend::class)
         ->and($pendingSend->getRoom())->toBeInstanceOf(RoomInterface::class);
+});
+
+test('forContext returns ChannelPendingSend with correct room and participant', function () {
+    $context = Mockery::mock(MessageContext::class);
+    $room = Mockery::mock(RoomInterface::class);
+    $participant = Mockery::mock(ParticipantInterface::class);
+
+    $context->shouldReceive('getRoom')->andReturn($room);
+    $context->shouldReceive('getParticipant')->andReturn($participant);
+
+    $pendingSend = $this->channel->forContext($context);
+
+    expect($pendingSend)->toBeInstanceOf(ChannelPendingSend::class)
+        ->and($pendingSend->getRoom())->toBeInstanceOf(RoomInterface::class)
+        ->and($pendingSend->getParticipant())->toBeInstanceOf(ParticipantInterface::class);
 });
 
 test('on registers event listener correctly', function () {
@@ -130,6 +140,8 @@ test('dispatchTo handles context and page correctly', function () {
     $page = Mockery::mock(PageInterface::class);
     $context = Mockery::mock(MessageContext::class);
 
+    $context->shouldReceive('asKey')->once()->andReturn('test-key');
+
     $session->shouldReceive('getCurrentPage')->andReturn($page);
 
     $page->shouldReceive('isDontDisturb')->andReturn(false);
@@ -151,6 +163,8 @@ test('dispatchTo returns correct OutgoingMessageInterface instance', function ()
     $context = Mockery::mock(MessageContext::class);
     $session = Mockery::mock(SessionInterface::class);
     $page = Mockery::mock(PageInterface::class);
+
+    $context->shouldReceive('asKey')->once()->andReturn('test-key');
 
     $this->config->shouldReceive('get')->andReturn('sync');
 

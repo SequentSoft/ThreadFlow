@@ -29,6 +29,8 @@ interface ChannelInterface
 
     public function forRoom(string|RoomInterface $room): ChannelPendingSend;
 
+    public function forContext(MessageContextInterface $context): ChannelPendingSend;
+
     public function dispatchTo(
         MessageContextInterface $context,
         PageInterface|BasicOutgoingMessageInterface $pageOrMessage,

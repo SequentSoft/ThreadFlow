@@ -49,6 +49,15 @@ class MessageContext implements MessageContextInterface
         return $this->room;
     }
 
+    public function asKey(): string
+    {
+        $channelName = $this->channelName;
+        $roomId = $this->room->getId();
+        $participantId = $this->participant->getId();
+
+        return "{$channelName}:{$roomId}:{$participantId}";
+    }
+
     public function __serialize(): array
     {
         return [

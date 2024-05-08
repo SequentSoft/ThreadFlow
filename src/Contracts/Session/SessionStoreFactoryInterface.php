@@ -8,5 +8,5 @@ interface SessionStoreFactoryInterface
 {
     public function registerDriver(string $name, Closure $callback): void;
 
-    public function make(string $name, string $channelName): SessionStoreInterface;
+    public function make(string $name): SessionStoreInterface;
 }

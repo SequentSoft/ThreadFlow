@@ -3,7 +3,6 @@
 namespace SequentSoft\ThreadFlow\Channel;
 
 use Closure;
-use DateTimeImmutable;
 use SequentSoft\ThreadFlow\Channel\Builders\ChannelPendingSend;
 use SequentSoft\ThreadFlow\Contracts\Channel\ChannelInterface;
 use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
@@ -24,7 +23,6 @@ use SequentSoft\ThreadFlow\Contracts\Session\SessionStoreInterface;
 use SequentSoft\ThreadFlow\Contracts\Testing\ResultsRecorderInterface;
 use SequentSoft\ThreadFlow\Events\Bot\SessionClosedEvent;
 use SequentSoft\ThreadFlow\Events\Bot\SessionStartedEvent;
-use SequentSoft\ThreadFlow\Messages\Incoming\Regular\TextIncomingMessage;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Testing\PendingTestInput;
 use SequentSoft\ThreadFlow\Traits\HandleExceptions;
@@ -38,7 +36,7 @@ abstract class Channel implements ChannelInterface
     use HasUserResolver;
     use TestInputResults;
 
-    protected ?SessionInterface $activeSession = null;
+    protected array $activeSessions = [];
 
     public function __construct(
         protected string $channelName,
@@ -62,36 +60,28 @@ abstract class Channel implements ChannelInterface
         return $this->config;
     }
 
-    /**
-     * This method is used for cli channels to make incoming message from input text.
-     * Can be overridden in specific channel implementation.
-     */
-    protected function makeIncomingMessageFromText(
-        string $id,
-        string $text,
-        DateTimeImmutable $date,
-        MessageContextInterface $context
-    ): ?BasicIncomingMessageInterface {
-        return new TextIncomingMessage($id, $context, $date, $text);
-    }
-
     private function useSession(
         MessageContextInterface $context,
         Closure $callback
     ): mixed {
-        if ($this->activeSession) {
-            return call_user_func($callback, $this->activeSession);
+        $contextKey = $context->asKey();
+
+        if (isset($this->activeSessions[$contextKey])) {
+            return call_user_func($callback, $this->activeSessions[$contextKey]);
         }
 
-        return $this->sessionStore->useSession($context, function (SessionInterface $session) use ($callback) {
-            $this->activeSession = $session;
-            $this->eventBus->fire(new SessionStartedEvent($session));
-            $result = call_user_func($callback, $session);
-            $this->eventBus->fire(new SessionClosedEvent($session));
-            $this->activeSession = null;
+        return $this->sessionStore->useSession(
+            $context,
+            function (SessionInterface $session) use ($contextKey, $callback) {
+                $this->activeSessions[$contextKey] = $session;
+                $this->eventBus->fire(new SessionStartedEvent($session));
+                $result = call_user_func($callback, $session);
+                $this->eventBus->fire(new SessionClosedEvent($session));
+                unset($this->activeSessions[$contextKey]);
 
-            return $result;
-        });
+                return $result;
+            }
+        );
     }
 
     /**
@@ -188,6 +178,13 @@ abstract class Channel implements ChannelInterface
             ->withRoom($room);
     }
 
+    public function forContext(MessageContextInterface $context): ChannelPendingSend
+    {
+        return (new ChannelPendingSend($this, $this->makeTextMessage(...)))
+            ->withRoom($context->getRoom())
+            ->withParticipant($context->getParticipant());
+    }
+
     public function dispatchTo(
         MessageContextInterface $context,
         PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
@@ -209,7 +206,7 @@ abstract class Channel implements ChannelInterface
 
     protected function processDispatchTo(
         MessageContextInterface $messageContext,
-        PageInterface $contextPage,
+        ?PageInterface $contextPage,
         SessionInterface $session,
         PageInterface|BasicOutgoingMessageInterface $pageOrMessage,
         bool $force = false,

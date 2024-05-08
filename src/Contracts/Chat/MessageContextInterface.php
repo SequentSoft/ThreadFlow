@@ -17,4 +17,6 @@ interface MessageContextInterface
     public function setUserResolver(?Closure $userResolver): void;
 
     public function getUserResolver(): ?Closure;
+
+    public function asKey(): string;
 }

@@ -17,7 +17,6 @@ use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Laravel\Console\ActivePagesTableThreadFlowCommand;
-use SequentSoft\ThreadFlow\Laravel\Console\CliThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\PendingMessagesTableThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\SessionTableThreadFlowCommand;
@@ -172,8 +171,7 @@ class ServiceProvider extends BaseServiceProvider
 
             $factory->registerDriver(
                 'array',
-                fn (string $channelName, ConfigInterface $config) => new ArraySessionStore(
-                    $channelName,
+                fn (ConfigInterface $config) => new ArraySessionStore(
                     $config,
                     $this->app->make(SerializerInterface::class),
                     $this->app->make(ArraySessionStoreStorage::class),
@@ -182,8 +180,7 @@ class ServiceProvider extends BaseServiceProvider
 
             $factory->registerDriver(
                 'cache',
-                fn (string $channelName, ConfigInterface $config) => new CacheSessionStore(
-                    $channelName,
+                fn (ConfigInterface $config) => new CacheSessionStore(
                     $config,
                     $this->app->make(SerializerInterface::class),
                 )
@@ -191,8 +188,7 @@ class ServiceProvider extends BaseServiceProvider
 
             $factory->registerDriver(
                 'eloquent',
-                fn (string $channelName, ConfigInterface $config) => new EloquentSessionStore(
-                    $channelName,
+                fn (ConfigInterface $config) => new EloquentSessionStore(
                     $config,
                     $this->app->make(SerializerInterface::class),
                 )
@@ -232,7 +228,6 @@ class ServiceProvider extends BaseServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 GenerateThreadFlowPageCommand::class,
-                CliThreadFlowCommand::class,
                 SessionTableThreadFlowCommand::class,
                 ActivePagesTableThreadFlowCommand::class,
                 PendingMessagesTableThreadFlowCommand::class,
