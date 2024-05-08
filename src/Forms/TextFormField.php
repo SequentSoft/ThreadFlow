@@ -18,7 +18,7 @@ class TextFormField implements FormFieldInterface
 
     protected ?string $dontChangeButtonText = null;
 
-    protected bool $disabled = false;
+    protected bool|Closure $disabled = false;
 
     protected ?Closure $onChangeCallback = null;
 
@@ -46,6 +46,10 @@ class TextFormField implements FormFieldInterface
 
     public function isDisabled(): bool
     {
+        if ($this->disabled instanceof Closure) {
+            return (bool) call_user_func($this->disabled);
+        }
+
         return $this->disabled;
     }
 
