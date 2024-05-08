@@ -18,6 +18,8 @@ class TextFormField implements FormFieldInterface
 
     protected ?string $dontChangeButtonText = null;
 
+    protected bool $disabled = false;
+
     protected ?Closure $onChangeCallback = null;
 
     final public function __construct(
@@ -33,6 +35,18 @@ class TextFormField implements FormFieldInterface
         string|OutgoingMessageInterface|null $description = null
     ): static {
         return new static($key, $caption, $description);
+    }
+
+    public function disable($isDisabled = true): static
+    {
+        $this->disabled = $isDisabled;
+
+        return $this;
+    }
+
+    public function isDisabled(): bool
+    {
+        return $this->disabled;
     }
 
     public function onChange(Closure $callback): static

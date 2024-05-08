@@ -66,7 +66,7 @@ class BaseFormPage extends AbstractPage
         $currentFieldFound = false;
 
         foreach ($fields as $field) {
-            if ($currentFieldFound) {
+            if ($currentFieldFound && ! $field->isDisabled()) {
                 return $field->getKey();
             }
 

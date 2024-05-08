@@ -13,6 +13,10 @@ interface FormFieldInterface
 
     public function description(string|OutgoingMessageInterface|null $description): static;
 
+    public function disable($isDisabled = true): static;
+
+    public function isDisabled(): bool;
+
     public function onChange(Closure $callback): static;
 
     public function getOnChangeCallback(): ?Closure;
