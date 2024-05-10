@@ -49,7 +49,9 @@ class ServiceProvider extends BaseServiceProvider
 
         $this->app->singleton(ChannelManagerInterface::class, function () {
             return new ChannelManager(
-                new Config($this->app->make('config')->get('thread-flow', [])),
+                new Config(
+                    $this->app->make('config')->get('thread-flow.channels', [])
+                ),
                 $this->app->make(SessionStoreFactoryInterface::class),
                 $this->app->make(DispatcherFactoryInterface::class),
                 $this->app->make(PendingMessagesStorageFactoryInterface::class),

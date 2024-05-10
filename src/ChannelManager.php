@@ -146,7 +146,6 @@ class ChannelManager implements ChannelManagerInterface
     protected function getChannelConfig(string $channelName): ConfigInterface
     {
         return $this->config
-            ->getNested('channels')
             ->getNested($channelName);
     }
 

@@ -14,7 +14,6 @@ use SequentSoft\ThreadFlow\Page\ActivePages\StorageDrivers\ArrayActivePagesStora
 use SequentSoft\ThreadFlow\PendingMessages\StorageDrivers\ArrayPendingMessagesStorage;
 
 beforeEach(function () {
-    $this->config = Mockery::mock(ConfigInterface::class);
     $this->channelsConfig = Mockery::mock(ConfigInterface::class);
     $this->channelConfig = Mockery::mock(ConfigInterface::class);
 
@@ -25,7 +24,7 @@ beforeEach(function () {
     $this->pendingMessagesStorageFactory = Mockery::mock(PendingMessagesStorageFactoryInterface::class);
 
     $this->channelManager = new ChannelManager(
-        $this->config,
+        $this->channelsConfig,
         $this->sessionStoreFactory,
         $this->dispatcherFactory,
         $this->pendingMessagesStorageFactory,
@@ -60,7 +59,7 @@ test('makeChannel creates a channel successfully', function () {
     $channel->shouldReceive('setUserResolver')->with(Mockery::type('null'))->once();
 
     $this->channelManager->registerChannelDriver($driverName, $callback);
-    $this->config->shouldReceive('getNested')->with('channels')->andReturn($this->channelsConfig);
+
     $this->channelsConfig->shouldReceive('getNested')->with($driverName)->andReturn($this->channelConfig);
     $this->channelConfig->shouldReceive('get')->with('session')->once()->andReturn('array');
     $this->channelConfig->shouldReceive('get')->with('driver')->once()->andReturn($driverName);
@@ -85,7 +84,6 @@ test('makeChannel creates a channel successfully', function () {
 test('channel throws exception if driver not registered', function () {
     $driverName = 'nonExistentChannel';
 
-    $this->config->shouldReceive('getNested')->with('channels')->andReturn($this->channelsConfig);
     $this->channelsConfig->shouldReceive('getNested')->with($driverName)->andReturn($this->channelConfig);
     $this->channelConfig->shouldReceive('get')->with('driver')->once()->andReturn($driverName);
 
