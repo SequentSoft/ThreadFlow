@@ -4,9 +4,11 @@ namespace Tests\Feature\Basic;
 
 use SequentSoft\ThreadFlow\Channel\TestChannel;
 use SequentSoft\ThreadFlow\Config;
+use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\ClickIncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Dispatcher\FakeDispatcherFactory;
 use SequentSoft\ThreadFlow\Events\EventBus;
+use SequentSoft\ThreadFlow\Keyboard\Button;
 use SequentSoft\ThreadFlow\Messages\Outgoing\Regular\TextOutgoingMessage;
 use SequentSoft\ThreadFlow\Page\AbstractPage;
 use SequentSoft\ThreadFlow\Page\ActivePages\ActivePagesStorageFactory;
@@ -94,14 +96,6 @@ test('simple answer', function () {
 });
 
 test('simple transition', function () {
-    class SecondPage extends AbstractPage
-    {
-        public function show()
-        {
-            return TextOutgoingMessage::make('Second page');
-        }
-    }
-
     class SimpleWelcomePage extends AbstractPage
     {
         public function answer(IncomingMessageInterface $message)
@@ -110,9 +104,49 @@ test('simple transition', function () {
         }
     }
 
+    class SecondPage extends AbstractPage
+    {
+        public function show()
+        {
+            return TextOutgoingMessage::make('Second page');
+        }
+    }
+
     $this->channelManager->channel('testChannel')
         ->test()
         ->withPage(new SimpleWelcomePage())
         ->input('test message')
         ->assertState(SecondPage::class);
+});
+
+test('click button', function () {
+    class WelcomePageWithButtons extends AbstractPage
+    {
+        public function show()
+        {
+            return TextOutgoingMessage::make('Welcome')
+                ->withKeyboard([
+                    Button::text('Go to next page', 'next'),
+                ]);
+        }
+
+        public function answer(ClickIncomingMessageInterface $message)
+        {
+            if ($message->isClicked('next')) {
+                return 'some message text';
+            }
+        }
+    }
+
+    $this->channelManager->channel('testChannel')
+        ->test()
+        ->withPage(new WelcomePageWithButtons())
+        ->input('hello')
+        ->assertState(WelcomePageWithButtons::class);
+
+    $this->channelManager->channel('testChannel')
+        ->test()
+        ->click('next')
+        ->assertOutgoingMessagesCount(1)
+        ->assertOutgoingMessageText('some message text');
 });
