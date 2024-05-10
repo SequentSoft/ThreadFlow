@@ -77,7 +77,6 @@ beforeEach(function () {
 });
 
 test('simple answer', function () {
-
     class SimpleTextAnswerPage extends AbstractPage
     {
         public function show(): string
@@ -92,11 +91,9 @@ test('simple answer', function () {
         ->input('Hello')
         ->assertOutgoingMessageText('Hello')
         ->assertOutgoingMessagesCount(1);
-
 });
 
 test('simple transition', function () {
-
     class SecondPage extends AbstractPage
     {
         public function show()
