@@ -3,8 +3,10 @@
 namespace SequentSoft\ThreadFlow\Page;
 
 use SequentSoft\ThreadFlow\Contracts\Forms\FormFieldInterface;
+use SequentSoft\ThreadFlow\Contracts\Forms\FormFieldOptionsInterface;
 use SequentSoft\ThreadFlow\Contracts\Forms\FormInterface;
 use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\BackButtonInterface;
+use SequentSoft\ThreadFlow\Contracts\Keyboard\Buttons\ButtonWithCallbackDataInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Incoming\Regular\IncomingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\MarkdownOutgoingMessageInterface;
 use SequentSoft\ThreadFlow\Contracts\Messages\Outgoing\Regular\TextOutgoingMessageInterface;
@@ -78,6 +80,36 @@ class BaseFormPage extends AbstractPage
         return null;
     }
 
+    protected function getAnswers(FormFieldOptionsInterface $field): array
+    {
+        $options = $field->getOptions();
+        $answers = [];
+
+        foreach ($options as $key => $value) {
+            $preparedKey = is_string($key) ? $key : (string) $key;
+            $answers[] = Button::text($value, $preparedKey);
+        }
+
+        return $answers;
+    }
+
+    protected function getChosenAnswer(FormFieldInterface $field, IncomingMessageInterface $message): ?string
+    {
+        if ($field instanceof FormFieldOptionsInterface && $message instanceof ClickIncomingMessage) {
+            $options = $field->getOptions();
+            $clickedButton = $message->getButton();
+
+            if ($clickedButton instanceof ButtonWithCallbackDataInterface) {
+                $clickedKey = $clickedButton->getCallbackData();
+                if (array_key_exists($clickedKey, $options)) {
+                    return $options[$clickedKey];
+                }
+            }
+        }
+
+        return null;
+    }
+
     protected function getFieldButtons(FormFieldInterface $field, array $fields): array
     {
         $isRequired = in_array('required', $field->getValidationRules());
@@ -88,11 +120,18 @@ class BaseFormPage extends AbstractPage
         $dontChangeButtonText = $field->getDontChangeButtonText() ?? $this->form->getDontChangeButtonText();
         $backButtonText = $this->form->getBackButtonText();
 
+        if ($field instanceof FormFieldOptionsInterface) {
+            $answers = $this->getAnswers($field);
+        } else {
+            $answers = [];
+        }
+
         return array_filter([
             array_filter([
                 $isRequired ? null : Button::text($emptyButtonText, '$empty'),
                 $hasValue ? Button::text($dontChangeButtonText, '$dontChange') : null,
             ]),
+            ...$answers,
             $isFirstField ? null : Button::back($backButtonText),
             $this->getConfirmableCancelButton($this->form->getCancelButtonText()),
         ]);
@@ -148,6 +187,14 @@ class BaseFormPage extends AbstractPage
             return null;
         }
 
+        if ($field instanceof FormFieldOptionsInterface) {
+            $chosenAnswer = $this->getChosenAnswer($field, $message);
+
+            if ($chosenAnswer !== null) {
+                return $chosenAnswer;
+            }
+        }
+
         return $this->form->prepareForValidation($field, $message);
     }
 
@@ -155,6 +202,14 @@ class BaseFormPage extends AbstractPage
     {
         if ($message->isClicked('$empty')) {
             return null;
+        }
+
+        if ($field instanceof FormFieldOptionsInterface) {
+            $chosenAnswer = $this->getChosenAnswer($field, $message);
+
+            if ($chosenAnswer !== null) {
+                return $chosenAnswer;
+            }
         }
 
         return $this->form->prepareForStore($field, $message);
@@ -205,6 +260,15 @@ class BaseFormPage extends AbstractPage
 
         if ($message->isClicked('$dontChange')) {
             return $this->getNextStep($key, $fields);
+        }
+
+        // validate selected option or show options again
+        if (! $message->isClicked('$empty') && $currentField instanceof FormFieldOptionsInterface) {
+            $chosenAnswer = $this->getChosenAnswer($currentField, $message);
+
+            if (! $currentField->isCustomOptionAllowed() && $chosenAnswer === null) {
+                return $this->show();
+            }
         }
 
         if ($validationErrorMessage = $this->validate($currentField, $message)) {

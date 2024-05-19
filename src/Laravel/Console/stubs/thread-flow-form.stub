@@ -1,0 +1,18 @@
+<?php
+
+namespace {{ namespace }};
+
+use SequentSoft\ThreadFlow\Contracts\Chat\MessageContextInterface;
+use SequentSoft\ThreadFlow\Forms\TextFormField;
+use SequentSoft\ThreadFlow\Forms\SelectFormField;
+use SequentSoft\ThreadFlow\Forms\BaseForm;
+
+class {{ class }} extends BaseForm
+{
+    public function fields(MessageContextInterface $messageContext): array
+    {
+        return [
+            // TextFormField::make('name', 'What is your name?', 'Please enter your name'),
+        ];
+    }
+}

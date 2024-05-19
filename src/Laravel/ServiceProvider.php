@@ -17,6 +17,7 @@ use SequentSoft\ThreadFlow\Dispatcher\DispatcherFactory;
 use SequentSoft\ThreadFlow\Dispatcher\SyncDispatcher;
 use SequentSoft\ThreadFlow\Events\EventBus;
 use SequentSoft\ThreadFlow\Laravel\Console\ActivePagesTableThreadFlowCommand;
+use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowFormCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\GenerateThreadFlowPageCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\PendingMessagesTableThreadFlowCommand;
 use SequentSoft\ThreadFlow\Laravel\Console\SessionTableThreadFlowCommand;
@@ -230,6 +231,7 @@ class ServiceProvider extends BaseServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 GenerateThreadFlowPageCommand::class,
+                GenerateThreadFlowFormCommand::class,
                 SessionTableThreadFlowCommand::class,
                 ActivePagesTableThreadFlowCommand::class,
                 PendingMessagesTableThreadFlowCommand::class,
